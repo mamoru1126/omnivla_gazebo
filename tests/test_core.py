@@ -1,0 +1,319 @@
+"""omnivla_nav の ROS / torch 非依存部分の単体テスト.
+
+  python3 -m pytest -q tests          (コンテナ内)
+  python3 tests/test_core.py          (pytest が無い環境でも実行可)
+"""
+from __future__ import annotations
+
+import math
+import os
+import shutil
+import sys
+import tempfile
+
+import numpy as np
+from PIL import Image
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+
+from omnivla_nav import controller, data_utils, expert, geometry, sim_map, topomap, trajectory_io, viz  # noqa: E402
+
+WORLDS = os.path.join(REPO, "ros2_ws", "src", "omnivla_gazebo", "worlds")
+
+
+# ---------------------------------------------------------------- geometry
+def test_local_world_roundtrip():
+    rng = np.random.default_rng(0)
+    for _ in range(50):
+        o = rng.uniform(-5, 5, 2)
+        yaw = rng.uniform(-math.pi, math.pi)
+        pts = rng.uniform(-10, 10, (7, 2))
+        back = geometry.to_world(geometry.to_local(pts, o, yaw), o, yaw)
+        assert np.allclose(back, pts)
+
+
+def test_local_axes():
+    # 北 (+y) を向いたロボットにとって、北は前 (+x)、西 (-x) は左 (+y)
+    assert np.allclose(geometry.to_local([0.0, 2.0], [0, 0], math.pi / 2), [2.0, 0.0])
+    assert np.allclose(geometry.to_local([-1.0, 0.0], [0, 0], math.pi / 2), [0.0, 1.0])
+
+
+def _upstream_goal_pose(cur_xy, cur_yaw, goal_xy, goal_yaw, spacing=0.1, thres=30.0):
+    """公式 run_omnivla.py の GPS(UTM)->goal_pose 計算をそのまま再現 (コンパスは北から時計回り)."""
+    cur_compass = 90.0 - math.degrees(cur_yaw)
+    goal_compass = 90.0 - math.degrees(goal_yaw)
+    cc = -cur_compass / 180.0 * math.pi
+    gc = -goal_compass / 180.0 * math.pi
+    dx, dy = goal_xy[0] - cur_xy[0], goal_xy[1] - cur_xy[1]
+    rel_x = dx * math.cos(cc) + dy * math.sin(cc)
+    rel_y = -dx * math.sin(cc) + dy * math.cos(cc)
+    r = math.hypot(rel_x, rel_y)
+    if r > thres:
+        rel_x *= thres / r
+        rel_y *= thres / r
+    return np.array([rel_y / spacing, -rel_x / spacing, math.cos(gc - cc), math.sin(gc - cc)])
+
+
+def test_goal_pose_matches_upstream_convention():
+    rng = np.random.default_rng(1)
+    for _ in range(100):
+        cur = rng.uniform(-20, 20, 2)
+        goal = cur + rng.uniform(-40, 40, 2)
+        cy, gy = rng.uniform(-math.pi, math.pi, 2)
+        rel = geometry.relative_pose((cur[0], cur[1], cy), (goal[0], goal[1], gy))
+        ours = data_utils.normalize_goal_pose(*rel, metric_spacing=0.1, max_goal_dist=30.0)
+        ref = _upstream_goal_pose(cur, cy, goal, gy)
+        assert np.allclose(ours, ref, atol=1e-5), (ours, ref)
+
+
+# ---------------------------------------------------------------- data_utils
+def test_action_targets_straight_and_turn():
+    n = 20
+    # +y 方向へ 0.1m/frame で直進 (yaw = 90deg)
+    pos = np.stack([np.zeros(n), 0.1 * np.arange(n)], 1)
+    yaw = np.full(n, math.pi / 2)
+    a = data_utils.compute_action_targets(pos, yaw, 3, metric_spacing=0.1)
+    assert a.shape == (8, 4)
+    assert np.allclose(a[:, 0], np.arange(1, 9), atol=1e-6)
+    assert np.allclose(a[:, 1], 0, atol=1e-6)
+    assert np.allclose(a[:, 2], 1) and np.allclose(a[:, 3], 0, atol=1e-6)
+    # 末尾はパディング (止まる)
+    a_end = data_utils.compute_action_targets(pos, yaw, n - 3, metric_spacing=0.1)
+    assert np.allclose(a_end[2:, 0], 2.0)
+    # 左旋回 (反時計回りの円弧) -> y > 0, sin > 0
+    th = np.linspace(0, math.pi / 2, n)
+    pos_c = np.stack([np.sin(th), 1 - np.cos(th)], 1)
+    a_c = data_utils.compute_action_targets(pos_c, th, 0, metric_spacing=0.1)
+    assert np.all(a_c[1:, 1] > 0) and np.all(a_c[:, 3] > 0)
+
+
+def test_flip_and_sampling():
+    a = np.arange(32, dtype=np.float32).reshape(8, 4)
+    g = np.array([1, 2, 3, 4], np.float32)
+    fa, fg = data_utils.flip_left_right(a, g)
+    assert np.allclose(fa[:, 1], -a[:, 1]) and np.allclose(fa[:, 3], -a[:, 3]) and np.allclose(fa[:, 0], a[:, 0])
+    assert fg.tolist() == [1, -2, 3, -4]
+    rng = np.random.default_rng(0)
+    cfg = data_utils.GoalSamplingConfig()
+    for t, n in [(0, 100), (95, 100), (98, 100), (10, 12)]:
+        for m in (4, 5, 6):
+            off = data_utils.sample_goal_offset(rng, t, n, m, cfg)
+            assert 1 <= off <= n - 1 - t
+            if m == 6:
+                assert off <= cfg.image_goal_offset[1]
+    counts = {4: 0, 5: 0, 6: 0}
+    for _ in range(2000):
+        counts[data_utils.choose_modality(rng, cfg.modality_weights)] += 1
+    assert 850 < counts[6] < 1150
+
+
+def test_make_targets_and_augment():
+    rng = np.random.default_rng(3)
+    n = 40
+    pos = np.stack([0.1 * np.arange(n), np.zeros(n)], 1)
+    yaw = np.zeros(n)
+    cfg = data_utils.GoalSamplingConfig()
+    mod, gt, act, gp = data_utils.make_targets(rng, pos, yaw, 5, cfg, 0.1, force_modality=6)
+    assert mod == 6 and 5 < gt <= 35 and act.shape == (8, 4) and gp.shape == (4,)
+    assert abs(gp[0] - (gt - 5)) < 1e-4  # 0.1m/frame -> 正規化で 1/frame
+    cur = Image.new("RGB", (640, 480), (200, 10, 10))
+    goal = Image.new("RGB", (640, 480), (10, 200, 10))
+    c2, g2, a2, gp2 = data_utils.augment_pair(rng, cur, goal, act, gp, data_utils.AugmentConfig(), train=True)
+    assert c2.size == (224, 224) and g2.size == (224, 224)
+    c3, _, a3, _ = data_utils.augment_pair(rng, cur, goal, act, gp, data_utils.AugmentConfig(), train=False)
+    assert np.allclose(a3, act) and c3.size == (224, 224)
+    box = data_utils.random_crop_box(rng, 640, 480, 0.2, 0.1)
+    assert 0 <= box[0] <= 64 and 0 <= box[1] <= 96 and box[2] - box[0] >= 512 and box[3] - box[1] >= 288
+
+
+def test_modality_ids():
+    assert data_utils.modality_id("image") == 6 and data_utils.modality_id("pose") == 4
+    assert data_utils.modality_id("language") == 7 and data_utils.modality_id(5) == 5
+    assert data_utils.modality_id("8") == 8
+
+
+# ---------------------------------------------------------------- controller
+def test_upstream_controller():
+    cfg = controller.ControllerConfig()
+    v, w = controller.upstream_command(np.array([0.5, 0.0, 1.0, 0.0]), cfg)
+    assert math.isclose(v, 0.3) and math.isclose(w, 0.0, abs_tol=1e-9)
+    v, w = controller.upstream_command(np.array([0.5, 0.2, 1.0, 0.0]), cfg)
+    # v=1.5->0.5, w=atan(0.4)*3->1.0 ; rd=0.5 < maxv/maxw=1 -> v=0.3*0.5, w=0.3
+    assert math.isclose(v, 0.15, rel_tol=1e-6) and math.isclose(w, 0.3, rel_tol=1e-6)
+    v, w = controller.upstream_command(np.array([0.0, 0.0, 0.0, 1.0]), cfg)  # 公式では NameError だった分岐
+    assert v == 0.0 and math.isclose(w, 0.3)
+    wps = np.zeros((8, 4))
+    wps[:, 0] = np.linspace(0.1, 0.8, 8)
+    wps[:, 2] = 1.0
+    v, w = controller.compute_command(wps, cfg)
+    assert v > 0 and abs(w) < 1e-9
+    v2, w2 = controller.compute_command(wps, controller.ControllerConfig(mode="pure_pursuit"))
+    assert v2 > 0 and abs(w2) < 1e-9
+
+
+# ---------------------------------------------------------------- sim_map
+SDF = """<?xml version="1.0"?>
+<sdf version="1.9"><world name="test_world">
+  <model name="ground"><static>true</static><link name="l"><collision name="c"><geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry></collision></link></model>
+  <model name="wall"><static>true</static><pose>0 0 0 0 0 0</pose><link name="l">
+    <collision name="c1"><pose>0 -3 1 0 0 0</pose><geometry><box><size>8 0.2 2</size></box></geometry></collision>
+    <collision name="c2"><pose>0 3 1 0 0 0</pose><geometry><box><size>8 0.2 2</size></box></geometry></collision>
+    <collision name="c3"><pose>-4 0 1 0 0 0</pose><geometry><box><size>0.2 6 2</size></box></geometry></collision>
+    <collision name="c4"><pose>4 0 1 0 0 0</pose><geometry><box><size>0.2 6 2</size></box></geometry></collision>
+    <collision name="mid"><pose>0 0.5 0.5 0 0 0</pose><geometry><box><size>0.4 5 1</size></box></geometry></collision>
+  </link></model>
+  <model name="rot"><static>true</static><pose>2 -1.5 0 0 0 0.785398</pose><link name="l"><collision name="c"><pose>0 0 0.3 0 0 0</pose><geometry><box><size>1 0.3 0.6</size></box></geometry></collision></link></model>
+  <model name="pole"><static>true</static><pose>-2 1 0 0 0 0</pose><link name="l"><collision name="c"><pose>0 0 1 0 0 0</pose><geometry><cylinder><radius>0.2</radius><length>2</length></cylinder></geometry></collision></link></model>
+  <model name="high"><static>true</static><pose>-2 -1.5 0 0 0 0</pose><link name="l"><collision name="c"><pose>0 0 2.5 0 0 0</pose><geometry><box><size>1 1 0.2</size></box></geometry></collision></link></model>
+  <include><uri>model://omnivla_robot</uri><name>omnivla_robot</name><pose>-3 -2 0.02 0 0 1.5708</pose></include>
+</world></sdf>"""
+
+
+def test_sdf_map_and_planner():
+    obs = sim_map.extract_obstacles(SDF)
+    names = {o.name.split("/")[0] for o in obs}
+    assert "high" not in names and "ground" not in names and {"wall", "rot", "pole"} <= names
+    grid = sim_map.rasterize(obs, resolution=0.05)
+    occ = lambda x, y: bool(grid.occupied[grid.world_to_cell(x, y)[1], grid.world_to_cell(x, y)[0]])  # noqa: E731
+    assert occ(0, 0.5) and occ(-2, 1.0) and occ(2, -1.5) and not occ(-2, -1.5) and not occ(-3, -2)
+    # 45 度回転した箱: 長軸方向は占有, 短軸方向の外側は空き
+    assert occ(2 + 0.4 * math.cos(math.pi / 4), -1.5 + 0.4 * math.sin(math.pi / 4))
+    assert not occ(2 - 0.4 * math.sin(math.pi / 4), -1.5 + 0.4 * math.cos(math.pi / 4))
+    spawn = sim_map.robot_spawn_pose(SDF)
+    assert spawn is not None and np.allclose(spawn, (-3, -2, 1.5708), atol=1e-4)
+    assert sim_map.world_name(SDF) == "test_world"
+    planner = sim_map.PathPlanner(grid, inflate=0.35)
+    path = planner.plan((-3, 0), (3, 0), rng=np.random.default_rng(0), noise=0.5)
+    assert path is not None and np.allclose(path[0], (-3, 0), atol=0.06) and np.allclose(path[-1], (3, 0), atol=0.06)
+    d = grid.distance_map()
+    ix, iy = grid.world_to_cell(path[:, 0], path[:, 1])
+    assert d[iy, ix].min() > 0.3  # 膨張半径 (0.35) - 1 セル程度の余裕
+    assert min(path[:, 1]) < -1.9  # 中央の壁 (y in [-2, 3]) の下側を回り込む
+    assert planner.plan((-3, 0), (10, 10)) is None  # 囲いの外は到達不能
+
+
+def test_generated_worlds_are_navigable():
+    rng = np.random.default_rng(0)
+    for name in ("office_0", "park_0"):
+        path = os.path.join(WORLDS, f"{name}.sdf")
+        if not os.path.exists(path):
+            continue
+        grid = sim_map.build_occupancy_from_sdf(path, resolution=0.1)
+        planner = sim_map.PathPlanner(grid, inflate=0.4)
+        spawn = sim_map.robot_spawn_pose(path)
+        assert spawn is not None and planner.is_free(*spawn[:2]), name
+        comp = planner.component(*spawn[:2])
+        assert (planner.labels == comp).sum() * 0.01 > 60, name  # 60 m^2 以上走れる
+        ok = 0
+        for _ in range(5):
+            goal = planner.sample_free(rng, component=comp)
+            if planner.plan(spawn[:2], goal) is not None:
+                ok += 1
+        assert ok >= 4, name
+
+
+def test_expert_follower_kinematic_sim():
+    """エキスパート (計画 + pure pursuit) を運動学シミュレーションで走らせ、衝突せずゴールできるか."""
+    path = os.path.join(WORLDS, "office_0.sdf")
+    if not os.path.exists(path):
+        return
+    grid = sim_map.build_occupancy_from_sdf(path, resolution=0.05)
+    planner = sim_map.PathPlanner(grid, inflate=0.4)
+    spawn = sim_map.robot_spawn_pose(path)
+    comp = planner.component(*spawn[:2])
+    rng = np.random.default_rng(2)
+    dt, rate = 0.05, 3.0
+    successes = 0
+    for ep in range(6):
+        sx, sy = planner.sample_free(rng, comp, min_clearance=0.6)
+        pose = (sx, sy, float(rng.uniform(-math.pi, math.pi)))
+        for _ in range(30):
+            gx, gy = planner.sample_free(rng, comp, min_clearance=0.55)
+            if 3.0 <= math.hypot(gx - sx, gy - sy) <= 12.0:
+                break
+        route = planner.plan(pose[:2], (gx, gy), rng=rng, noise=0.6)
+        assert route is not None
+        f = expert.PathFollower(route, expert.FollowerConfig(speed=0.3))
+        rec, t, last_rec = [], 0.0, -1e9
+        for _ in range(int(240 / dt)):
+            v, w, done = f.step(pose)
+            if t - last_rec >= 1.0 / rate - 1e-9:
+                rec.append(pose)
+                last_rec = t
+            if done:
+                successes += 1
+                break
+            pose = expert.unicycle_step(pose, v, w, dt)
+            t += dt
+            assert grid.clearance(pose[0], pose[1]) > 0.25 * 0.6, f"collision in episode {ep}"
+        rec = np.array(rec)
+        step = data_utils.summarize_spacing(rec[:, :2])
+        assert step is not None and 0.06 < step < 0.11, step  # 0.3m/s, 3Hz -> ~0.1m/frame (旋回時は小さい)
+    assert successes == 6
+
+
+# ---------------------------------------------------------------- io / topomap / viz
+def test_trajectory_io_roundtrip():
+    tmp = tempfile.mkdtemp()
+    try:
+        w = trajectory_io.TrajectoryWriter(tmp, "traj_a", resize=(64, 48), metadata={"world": "x"})
+        for k in range(5):
+            w.add(np.full((48, 64, 3), k * 40, np.uint8), 0.1 * k, 0.0, 0.0, stamp=k / 3)
+        assert w.close(min_frames=3)
+        w2 = trajectory_io.TrajectoryWriter(tmp, "traj_short")
+        w2.add(Image.new("RGB", (10, 10)), 0, 0, 0)
+        assert not w2.close(min_frames=3) and not os.path.exists(os.path.join(tmp, "traj_short"))
+        found = trajectory_io.find_trajectories(tmp)
+        assert len(found) == 1
+        data = trajectory_io.load_trajectory(found[0])
+        assert data["position"].shape == (5, 2) and math.isclose(data["position"][-1, 0], 0.4)
+        assert Image.open(trajectory_io.image_path(found[0], 4)).size == (64, 48)
+        assert trajectory_io.load_meta(found[0])["world"] == "x"
+    finally:
+        shutil.rmtree(tmp)
+
+
+def test_topomap_and_tracker():
+    tmp = tempfile.mkdtemp()
+    try:
+        w = topomap.TopomapWriter(os.path.join(tmp, "g"))
+        for k in range(3):
+            w.add(Image.new("RGB", (32, 32), (k * 80, 0, 0)), (float(k), 0.0, 0.0))
+        nodes = topomap.load_goal_sequence(os.path.join(tmp, "g"))
+        assert [n.pose[0] for n in nodes] == [0.0, 1.0, 2.0]
+        tr = topomap.GoalTracker(nodes[1:], subgoal_radius=0.5, goal_radius=0.3, lookahead_nodes=1)
+        assert not tr.update((0.0, 0.0, 0.0)) and tr.index == 0
+        assert tr.update((0.7, 0.0, 0.0)) and tr.index == 1 and not tr.done
+        tr.update((1.9, 0.0, 0.0))
+        assert tr.done
+        img = Image.new("RGB", (32, 32))
+        img.save(os.path.join(tmp, "single.png"))
+        assert len(topomap.load_goal_sequence(os.path.join(tmp, "single.png"))) == 1
+    finally:
+        shutil.rmtree(tmp)
+
+
+def test_viz():
+    wps = np.zeros((8, 4))
+    wps[:, 0] = np.linspace(0.1, 0.8, 8)
+    wps[:, 1] = np.linspace(0, 0.2, 8)
+    img = viz.render_debug(np.zeros((480, 640, 3), np.uint8), Image.new("RGB", (100, 80)), wps,
+                           goal_local=(3.0, 1.0), lines=["a", "b"], gt_waypoints=wps * 0.9)
+    assert img.size == (640, 480)
+
+
+if __name__ == "__main__":
+    failed = 0
+    for name, fn in sorted(globals().items()):
+        if name.startswith("test_") and callable(fn):
+            try:
+                fn()
+                print(f"PASS {name}")
+            except Exception as e:  # noqa: BLE001
+                failed += 1
+                import traceback
+
+                traceback.print_exc()
+                print(f"FAIL {name}: {e}")
+    sys.exit(1 if failed else 0)
