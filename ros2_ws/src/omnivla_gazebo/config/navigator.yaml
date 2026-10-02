@@ -1,0 +1,41 @@
+# omnivla_navigator のパラメータ (navigate.launch.py の引数で一部上書きできる)
+omnivla_navigator:
+  ros__parameters:
+    # ---- model ----
+    vla_path: /checkpoints/omnivla-original   # 公式チェックポイント (または merge_lora.py の出力)
+    checkpoint_step: -1                       # -1: ディレクトリ内の最大 step を自動検出
+    finetuned_dir: ""                         # finetune_omnivla.py の出力 (…/checkpoints/step_XXXX)
+    device: cuda:0
+    metric_waypoint_spacing: 0.0              # 0: 自動 (finetune_meta.json の値 / 無ければ 0.1 = 公式推論)
+    merge_lora: true
+    # ---- task ----
+    modality: image                           # image | image_pose | pose | language | language_pose
+    instruction: ""                           # language 系: 例 "move toward blue trash bin"
+    goal_path: ""                             # ゴール画像 1 枚 or topomap ディレクトリ
+    reach_check: auto                         # auto(姿勢があれば真値, 無ければ画像類似度) | pose | image | none
+    subgoal_radius: 0.6
+    goal_radius: 0.4
+    image_reach_threshold: 0.92
+    lookahead_nodes: 1
+    stop_at_goal: true
+    autostart: true
+    # ---- control (公式 run_omnivla.py と同じ既定値) ----
+    control_rate: 3.0
+    controller: upstream                      # upstream | pure_pursuit
+    waypoint_index: 4
+    dt: 0.3333333
+    max_v: 0.3
+    max_w: 0.3
+    lookahead: 0.5
+    max_image_age: 1.0
+    cmd_timeout: 1.5
+    # ---- io ----
+    image_topic: /camera/image_raw
+    odom_topic: /odom
+    cmd_vel_topic: /cmd_vel
+    publish_debug_image: true
+    save_debug_dir: ""
+    log_csv: ""
+    camera_hfov: 1.75
+    camera_height: 0.35
+    camera_x: 0.17

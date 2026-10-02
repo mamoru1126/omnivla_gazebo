@@ -1,0 +1,12 @@
+# pip constraints for the OmniVLA environment (Python 3.10 / Ubuntu 22.04 / ROS 2 Humble)
+# - torch 2.2 / tensorflow 2.15 は numpy 1.x 前提
+# - transformers は OmniVLA 指定の fork (4.40.1) を使うので、周辺は当時の版に揃える
+numpy==1.26.4
+torch==2.2.0
+torchvision==0.17.0
+torchaudio==2.2.0
+huggingface_hub==0.29.1
+accelerate==0.34.2
+protobuf<5
+# colcon (ament_python --symlink-install) が使う setup.py develop を壊さないため
+setuptools<70

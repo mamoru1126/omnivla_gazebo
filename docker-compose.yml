@@ -1,0 +1,82 @@
+# OmniVLA x Gazebo
+#   docker compose build
+#   docker compose run --rm shell bash scripts/download_checkpoints.sh
+#   xhost +local:root && docker compose up sim          # Gazebo (GUI)
+#   docker compose run --rm nav                          # OmniVLA navigator (別端末)
+# 変数は .env (cp .env.example .env) で変更できる
+x-omnivla: &omnivla
+  image: omnivla_gazebo:latest
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  network_mode: host          # ROS 2 (DDS) / gz-transport をコンテナ間・ホストと共有
+  ipc: host                   # DDS 共有メモリ / DataLoader の共有メモリ
+  environment:
+    DISPLAY: ${DISPLAY:-:0}
+    QT_X11_NO_MITSHM: "1"
+    NVIDIA_VISIBLE_DEVICES: all
+    NVIDIA_DRIVER_CAPABILITIES: all   # compute + graphics (Gazebo のカメラ描画に必要)
+    ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
+    GZ_PARTITION: ${GZ_PARTITION:-omnivla}
+    HF_HOME: /root/.cache/huggingface
+    # navigator 用 (ros2 launch は空の引数 "name:=" を受け付けないので、コンテナ内の bash で組み立てる)
+    GOAL_PATH: ${GOAL_PATH:-}
+    FINETUNED_DIR: ${FINETUNED_DIR:-}
+    MODALITY: ${MODALITY:-image}
+    CONTROLLER: ${CONTROLLER:-upstream}
+  volumes:
+    - ./:/workspace
+    - ${CHECKPOINT_DIR:-./checkpoints}:/checkpoints
+    - ${DATA_DIR:-./data}:/data
+    - ${RUNS_DIR:-./runs}:/runs
+    - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    - hf-cache:/root/.cache/huggingface
+  working_dir: /workspace
+  stdin_open: true
+  tty: true
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+
+services:
+  # Gazebo Harmonic + ros_gz_bridge
+  sim:
+    <<: *omnivla
+    command: ros2 launch omnivla_gazebo sim.launch.py world:=${WORLD:-office_0} headless:=${HEADLESS:-false} rviz:=${RVIZ:-false}
+
+  # OmniVLA navigator (GPU 約 16GB)
+  nav:
+    <<: *omnivla
+    command:
+      - bash
+      - -c
+      - >-
+        exec ros2 launch omnivla_gazebo navigate.launch.py
+        modality:=$${MODALITY} controller:=$${CONTROLLER}
+        $${GOAL_PATH:+goal_path:=$$GOAL_PATH}
+        $${FINETUNED_DIR:+finetuned_dir:=$$FINETUNED_DIR}
+
+  # 自動データ収集 (sim と同じ WORLD で起動)
+  explore:
+    <<: *omnivla
+    command: >
+      ros2 launch omnivla_gazebo explore.launch.py
+      world:=${WORLD:-office_0} num_episodes:=${EPISODES:-50} seed:=${SEED:-0}
+      out_dir:=/data/raw/${WORLD:-office_0}
+
+  # ファインチューニング (sim / nav は止めてから)
+  train:
+    <<: *omnivla
+    command: python3 training/finetune_omnivla.py --config ${TRAIN_CONFIG:-training/configs/finetune_gazebo.yaml}
+
+  # 対話シェル
+  shell:
+    <<: *omnivla
+    command: bash
+
+volumes:
+  hf-cache:
