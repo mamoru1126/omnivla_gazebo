@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniVLA × Gazebo 統合ガイド</title>
+<meta name="description" content="OmniVLA を Gazebo 上で自律移動させるまでの手順 (環境構築 → 動作確認 → ゴール画像作成 → 自律移動 → データ収集 → ファインチューニング → 評価)">
+<style>
+:root {
+  --bg: #f7f6f2; --surface: #ffffff; --surface2: #efede6; --text: #1f2328; --muted: #5d6470;
+  --line: #d9d6cc; --accent: #2f6fdb; --accent-soft: #e3ecfb; --ok: #2e8b57; --ok-soft: #e1f2e8;
+  --warn: #b7791f; --warn-soft: #fbf0dc; --code-bg: #1e2430; --code-text: #e6e9ef; --step: #2f6fdb;
+  --c-sim: #2e8b57; --c-ros: #7a4fd0; --c-vla: #d0602f; --c-data: #b7791f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171c; --surface: #1c2027; --surface2: #232833; --text: #e6e9ef; --muted: #9aa3b2;
+    --line: #333a46; --accent: #6ea0ff; --accent-soft: #1f2d48; --ok: #5cc48a; --ok-soft: #173326;
+    --warn: #e0a84c; --warn-soft: #3a2e17; --code-bg: #0f1217; --code-text: #e6e9ef; --step: #6ea0ff;
+    --c-sim: #5cc48a; --c-ros: #a98bf0; --c-vla: #f08a5d; --c-data: #e0a84c;
+  }
+}
+:root[data-theme="dark"] {
+    --bg: #14171c; --surface: #1c2027; --surface2: #232833; --text: #e6e9ef; --muted: #9aa3b2;
+    --line: #333a46; --accent: #6ea0ff; --accent-soft: #1f2d48; --ok: #5cc48a; --ok-soft: #173326;
+    --warn: #e0a84c; --warn-soft: #3a2e17; --code-bg: #0f1217; --code-text: #e6e9ef; --step: #6ea0ff;
+    --c-sim: #5cc48a; --c-ros: #a98bf0; --c-vla: #f08a5d; --c-data: #e0a84c;
+  }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", system-ui, sans-serif;
+  line-height: 1.75; font-size: 16px;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 80px; }
+header.hero { padding: 56px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+.kicker { color: var(--accent); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+h1 { font-size: clamp(26px, 4.5vw, 38px); line-height: 1.3; margin: 8px 0 12px; }
+.lead { color: var(--muted); max-width: 760px; }
+h2 { font-size: 24px; margin: 56px 0 12px; padding-top: 8px; }
+h3 { font-size: 18px; margin: 28px 0 8px; }
+a { color: var(--accent); }
+code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .9em;
+  background: var(--surface2); padding: 1px 6px; border-radius: 4px; }
+pre { background: var(--code-bg); color: var(--code-text); padding: 14px 16px; border-radius: 8px;
+  overflow-x: auto; font-size: 13.5px; line-height: 1.6; margin: 10px 0; }
+pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+pre .c { color: #8b95a7; }
+nav.toc { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; }
+nav.toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 28px; }
+@media (max-width: 640px) { nav.toc ol { columns: 1; } }
+nav.toc li { break-inside: avoid; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 14px 0; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 640px; height: auto; }
+.diagram svg text { font-family: inherit; }
+.caption { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+.step { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px 20px 14px 70px; margin: 18px 0; }
+.step::before { counter-increment: step; content: counter(step); position: absolute; left: 18px; top: 18px;
+  width: 34px; height: 34px; border-radius: 50%; background: var(--step); color: #fff; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; }
+@media (max-width: 560px) { .step { padding-left: 18px; padding-top: 62px; } }
+.step h3 { margin-top: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.tag { font-size: 12px; padding: 2px 9px; border-radius: 99px; background: var(--surface2); color: var(--muted); }
+.tag.time { background: var(--accent-soft); color: var(--accent); }
+.check { background: var(--ok-soft); border-left: 4px solid var(--ok); border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 15px; }
+.check b { color: var(--ok); }
+.note { background: var(--warn-soft); border-left: 4px solid var(--warn); border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 15px; }
+.note b { color: var(--warn); }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 10px 0; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--surface2); font-weight: 700; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+.terms { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; }
+@media (max-width: 560px) { .terms { grid-template-columns: 1fr; } .terms dt { margin-top: 8px; } }
+.terms dt { font-weight: 700; }
+.terms dd { margin: 0; color: var(--muted); }
+footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+.theme-toggle { position: fixed; right: 14px; top: 14px; background: var(--surface); color: var(--text);
+  border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="表示テーマ切り替え">◐ テーマ</button>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">OMNIVLA × GAZEBO HARMONIC × ROS 2 HUMBLE</div>
+  <h1>OmniVLA を Gazebo で自律移動させるまでの統合ガイド</h1>
+  <p class="lead">
+    「目的地の画像」と「今見えている画像」から OmniVLA が軌跡を生成し、ロボットがそれに沿って少し進む ―
+    これを繰り返してゴールにたどり着くまでを、リポジトリ
+    <a href="https://github.com/mamoru1126/omnivla_gazebo">mamoru1126/omnivla_gazebo</a> を使って順に組み上げる手順です。
+    最初はゼロショット (公式の重みそのまま) で動かし、その後 Gazebo のデータでファインチューニングして見え方の差を埋めます。
+  </p>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <ol>
+    <li><a href="#whole">全体像</a></li>
+    <li><a href="#loop">1 ステップで何が起きるか</a></li>
+    <li><a href="#roadmap">ロードマップ</a></li>
+    <li><a href="#setup">手順 1〜3: 環境構築と動作確認</a></li>
+    <li><a href="#nav">手順 4〜6: Gazebo で自律移動</a></li>
+    <li><a href="#ft">手順 7〜9: データ収集と学習</a></li>
+    <li><a href="#eval">手順 10: 評価と比較</a></li>
+    <li><a href="#real">実機へ持っていくとき</a></li>
+    <li><a href="#trouble">つまずきやすい点</a></li>
+    <li><a href="#terms">用語</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<h2 id="whole">全体像</h2>
+<p>
+  Docker コンテナを役割ごとに 3 つ並べ、ROS 2 のトピックでつなぎます。Gazebo が「ロボットの目と足」、
+  OmniVLA navigator が「どちらに進むかを決める頭」です。ファインチューニング時は Gazebo 側でデータを集め、学習コンテナで LoRA を学習します。
+</p>
+<div class="diagram" role="img" aria-label="システム構成図">
+<svg viewBox="0 0 940 430" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <!-- sim -->
+  <rect x="20" y="30" width="270" height="250" rx="14" fill="none" stroke="var(--c-sim)" stroke-width="2"/>
+  <text x="38" y="58" font-size="15" font-weight="700" fill="var(--c-sim)">sim コンテナ</text>
+  <text x="38" y="80" font-size="13" fill="var(--muted)">Gazebo Harmonic + ros_gz_bridge</text>
+  <rect x="40" y="96" width="230" height="76" rx="8" fill="var(--surface2)"/>
+  <text x="54" y="120" font-size="13.5" fill="var(--text)">ワールド (office / park)</text>
+  <text x="54" y="142" font-size="12.5" fill="var(--muted)">手続き生成・テクスチャ付き</text>
+  <text x="54" y="160" font-size="12.5" fill="var(--muted)">→ 2D 地図も SDF から自動生成</text>
+  <rect x="40" y="184" width="230" height="80" rx="8" fill="var(--surface2)"/>
+  <text x="54" y="208" font-size="13.5" fill="var(--text)">差動二輪ロボット</text>
+  <text x="54" y="228" font-size="12.5" fill="var(--muted)">前方カメラ 640×480, 画角≈100°</text>
+  <text x="54" y="246" font-size="12.5" fill="var(--muted)">真値オドメトリ / DiffDrive</text>
+
+  <!-- nav -->
+  <rect x="380" y="30" width="270" height="250" rx="14" fill="none" stroke="var(--c-vla)" stroke-width="2"/>
+  <text x="398" y="58" font-size="15" font-weight="700" fill="var(--c-vla)">nav コンテナ (GPU ≈16GB)</text>
+  <text x="398" y="80" font-size="13" fill="var(--muted)">navigator ノード (3Hz)</text>
+  <rect x="400" y="96" width="230" height="56" rx="8" fill="var(--surface2)"/>
+  <text x="414" y="120" font-size="13.5" fill="var(--text)">GoalTracker</text>
+  <text x="414" y="140" font-size="12.5" fill="var(--muted)">サブゴール画像列をたどる</text>
+  <rect x="400" y="160" width="230" height="56" rx="8" fill="var(--surface2)"/>
+  <text x="414" y="184" font-size="13.5" fill="var(--text)">OmniVLA 7B (policy.py)</text>
+  <text x="414" y="204" font-size="12.5" fill="var(--muted)">現在画像+ゴール画像 → 8点軌跡</text>
+  <rect x="400" y="224" width="230" height="44" rx="8" fill="var(--surface2)"/>
+  <text x="414" y="251" font-size="13.5" fill="var(--text)">制御則 → (v, ω)</text>
+
+  <!-- arrows sim<->nav -->
+  <line x1="290" y1="110" x2="378" y2="110" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="298" y="102" font-size="12" fill="var(--c-ros)">/camera/…</text>
+  <line x1="290" y1="150" x2="378" y2="150" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="312" y="142" font-size="12" fill="var(--c-ros)">/odom</text>
+  <line x1="378" y1="246" x2="292" y2="246" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="306" y="238" font-size="12" fill="var(--c-ros)">/cmd_vel</text>
+
+  <!-- goals -->
+  <rect x="720" y="30" width="200" height="110" rx="14" fill="none" stroke="var(--c-data)" stroke-width="2"/>
+  <text x="738" y="58" font-size="15" font-weight="700" fill="var(--c-data)">ゴール画像列</text>
+  <text x="738" y="82" font-size="12.5" fill="var(--muted)">/data/goals/&lt;名前&gt;/</text>
+  <text x="738" y="102" font-size="12.5" fill="var(--muted)">0.jpg 1.jpg … N.jpg</text>
+  <text x="738" y="122" font-size="12.5" fill="var(--muted)">poses.yaml (任意)</text>
+  <line x1="718" y1="96" x2="652" y2="120" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- debug -->
+  <rect x="720" y="170" width="200" height="110" rx="14" fill="none" stroke="var(--c-ros)" stroke-width="2"/>
+  <text x="738" y="198" font-size="15" font-weight="700" fill="var(--c-ros)">確認用出力</text>
+  <text x="738" y="222" font-size="12.5" fill="var(--muted)">/omnivla/debug_image</text>
+  <text x="738" y="242" font-size="12.5" fill="var(--muted)">/omnivla/path (RViz)</text>
+  <text x="738" y="262" font-size="12.5" fill="var(--muted)">/omnivla/status (JSON)</text>
+  <line x1="652" y1="225" x2="718" y2="225" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- data / train -->
+  <rect x="20" y="320" width="270" height="90" rx="14" fill="none" stroke="var(--c-data)" stroke-width="2"/>
+  <text x="38" y="348" font-size="15" font-weight="700" fill="var(--c-data)">explore コンテナ</text>
+  <text x="38" y="370" font-size="12.5" fill="var(--muted)">お手本走行 (経路計画+追従) を記録</text>
+  <text x="38" y="390" font-size="12.5" fill="var(--muted)">→ /data/raw/&lt;world&gt;/ (GNM 形式)</text>
+  <line x1="155" y1="282" x2="155" y2="318" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="380" y="320" width="270" height="90" rx="14" fill="none" stroke="var(--c-vla)" stroke-width="2"/>
+  <text x="398" y="348" font-size="15" font-weight="700" fill="var(--c-vla)">train コンテナ (GPU ≈20GB)</text>
+  <text x="398" y="370" font-size="12.5" fill="var(--muted)">LoRA ファインチューニング</text>
+  <text x="398" y="390" font-size="12.5" fill="var(--muted)">→ /runs/&lt;run&gt;/checkpoints/step_*</text>
+  <line x1="292" y1="365" x2="378" y2="365" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+  <path d="M515,318 C515,300 515,296 515,282" stroke="var(--c-vla)" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <text x="524" y="304" font-size="12" fill="var(--c-vla)">finetuned_dir で差し替え</text>
+</svg>
+</div>
+<p class="caption">全コンテナは同じイメージ (docker-compose の sim / nav / explore / train / shell サービス)。ホストネットワーク共有で ROS 2 と gz-transport がつながる。</p>
+
+<!-- ============================================================ -->
+<h2 id="loop">1 ステップ (約 0.33 秒) で何が起きるか</h2>
+<p>OmniVLA は「遠くのゴールまでの完全な経路」は出しません。出すのは<strong>次の約 1m 分の 8 点の軌跡</strong>だけです。
+それを少しだけ実行して、また撮り直して推論する、を繰り返すことで前に進みます。</p>
+<div class="diagram" role="img" aria-label="制御ループ">
+<svg viewBox="0 0 940 250" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <g font-size="13">
+    <rect x="15" y="40" width="160" height="96" rx="10" fill="var(--surface2)" stroke="var(--c-sim)"/>
+    <text x="30" y="66" font-weight="700" fill="var(--c-sim)">① 観測</text>
+    <text x="30" y="90" fill="var(--text)">カメラ画像 1 枚</text>
+    <text x="30" y="110" fill="var(--muted)">真値の位置姿勢</text>
+
+    <rect x="200" y="40" width="160" height="96" rx="10" fill="var(--surface2)" stroke="var(--c-data)"/>
+    <text x="215" y="66" font-weight="700" fill="var(--c-data)">② サブゴール</text>
+    <text x="215" y="90" fill="var(--text)">今目指す画像 i</text>
+    <text x="215" y="110" fill="var(--muted)">近づいたら i+1 へ</text>
+
+    <rect x="385" y="40" width="170" height="96" rx="10" fill="var(--surface2)" stroke="var(--c-vla)"/>
+    <text x="400" y="66" font-weight="700" fill="var(--c-vla)">③ OmniVLA</text>
+    <text x="400" y="90" fill="var(--text)">224×224 ×2 枚を入力</text>
+    <text x="400" y="110" fill="var(--muted)">→ 8点 (x, y, 向き)</text>
+
+    <rect x="580" y="40" width="160" height="96" rx="10" fill="var(--surface2)" stroke="var(--c-ros)"/>
+    <text x="595" y="66" font-weight="700" fill="var(--c-ros)">④ 制御</text>
+    <text x="595" y="90" fill="var(--text)">5 点目を狙う</text>
+    <text x="595" y="110" fill="var(--muted)">v≤0.3 m/s, ω≤0.3</text>
+
+    <rect x="765" y="40" width="160" height="96" rx="10" fill="var(--surface2)" stroke="var(--c-sim)"/>
+    <text x="780" y="66" font-weight="700" fill="var(--c-sim)">⑤ 実行</text>
+    <text x="780" y="90" fill="var(--text)">/cmd_vel を送る</text>
+    <text x="780" y="110" fill="var(--muted)">約 1/3 秒走る</text>
+  </g>
+  <g stroke="var(--muted)" stroke-width="2" fill="none">
+    <line x1="176" y1="88" x2="198" y2="88" marker-end="url(#ar2)"/>
+    <line x1="361" y1="88" x2="383" y2="88" marker-end="url(#ar2)"/>
+    <line x1="556" y1="88" x2="578" y2="88" marker-end="url(#ar2)"/>
+    <line x1="741" y1="88" x2="763" y2="88" marker-end="url(#ar2)"/>
+    <path d="M845,138 C845,215 95,215 95,140" marker-end="url(#ar2)"/>
+  </g>
+  <text x="470" y="232" text-anchor="middle" font-size="13" fill="var(--muted)">最後のゴール画像に到達したら停止 (到達判定は真値の距離、または画像の類似度)</text>
+</svg>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="roadmap">ロードマップ</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>段階</th><th>手順</th><th>ゴール</th><th>目安時間</th></tr></thead>
+  <tbody>
+    <tr><td>A. 準備</td><td>1〜3</td><td>イメージ構築・重み取得・GPU 推論の確認</td><td>1〜1.5 時間 (大半はダウンロード)</td></tr>
+    <tr><td>B. ゼロショット走行</td><td>4〜6</td><td>Gazebo で OmniVLA が動いてゴールを目指す</td><td>30 分</td></tr>
+    <tr><td>C. 適応</td><td>7〜9</td><td>Gazebo データで LoRA 学習</td><td>収集 1〜3 時間 + 学習 2〜4 時間</td></tr>
+    <tr><td>D. 比較</td><td>10</td><td>学習前後の成功率を同条件で比較</td><td>30 分〜</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="note"><b>前提:</b> Linux + NVIDIA GPU (VRAM 24GB 推奨, RTX 3090 クラス) + Docker + NVIDIA Container Toolkit。
+コマンドはすべてリポジトリのルートで実行します。<code>ros2 …</code> / <code>python3 …</code> はコンテナ内 (<code>docker compose run --rm shell bash</code>) で実行します。</div>
+
+<!-- ============================================================ -->
+<h2 id="setup">A. 環境構築と動作確認</h2>
+<ol class="steps">
+  <li class="step">
+    <h3>Docker イメージを作る</h3>
+    <div class="meta"><span class="tag time">20〜40 分</span><span class="tag">1 回だけ</span></div>
+    <pre><code>git clone https://github.com/mamoru1126/omnivla_gazebo
+cd omnivla_gazebo
+cp .env.example .env
+docker compose build</code></pre>
+    <p>Ubuntu 22.04 / Python 3.10 / ROS 2 Humble / Gazebo Harmonic / PyTorch 2.2 / OmniVLA を 1 つのイメージにまとめます。
+    OmniVLA はコミット固定で、公式の <code>pyproject.toml</code> の不具合 (カンマ抜け) を直してからインストールします。</p>
+    <div class="check"><b>確認:</b> ビルドの最後に <code>torch 2.2.0 transformers 4.40.1 …</code> とユニットテストの <code>PASS</code> が並べば OK。</div>
+  </li>
+
+  <li class="step">
+    <h3>公式チェックポイントを取得する</h3>
+    <div class="meta"><span class="tag time">回線次第 (約 16GB)</span></div>
+    <pre><code>docker compose run --rm shell bash scripts/download_checkpoints.sh
+<span class="c"># → ./checkpoints/omnivla-original/  (model-0000x-of-00004.safetensors, action_head--120000_checkpoint.pt …)</span></code></pre>
+    <p>置き場所を別ディスクにしたい場合は <code>.env</code> の <code>CHECKPOINT_DIR</code> を変更します。</p>
+  </li>
+
+  <li class="step">
+    <h3>GPU で推論できるか確かめる (Gazebo なし)</h3>
+    <div class="meta"><span class="tag time">5 分</span><span class="tag">ここで止まるなら GPU/重みの問題</span></div>
+    <pre><code>docker compose run --rm shell python3 scripts/smoke_test_policy.py</code></pre>
+    <p>公式リポジトリ同梱のサンプル画像で、画像ゴール・言語・ポーズの各モードの推論を行い、
+    8 点の軌跡と速度指令を表示、<code>./runs/smoke_test/*.jpg</code> に可視化を保存します。</p>
+    <div class="check"><b>確認:</b> 各モードで waypoint が表示され、レイテンシが数百 ms 以下。VRAM 使用量は約 16GB。</div>
+  </li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="nav">B. Gazebo で自律移動 (ゼロショット)</h2>
+<ol class="steps" style="counter-reset: step 3">
+  <li class="step">
+    <h3>Gazebo を起動する</h3>
+    <div class="meta"><span class="tag time">1 分</span><span class="tag">端末 1</span></div>
+    <pre><code>xhost +local:root          <span class="c"># コンテナから画面を出す許可</span>
+docker compose up sim      <span class="c"># WORLD=park_0 で屋外ワールド, HEADLESS=true で GUI なし</span></code></pre>
+    <div class="check"><b>確認:</b> 別端末で <code>docker compose run --rm shell ros2 topic hz /camera/image_raw</code> が約 15Hz、
+    <code>/odom</code> が約 50Hz で流れていること。</div>
+  </li>
+
+  <li class="step">
+    <h3>目的地までのゴール画像列を作る</h3>
+    <div class="meta"><span class="tag time">1〜2 分</span><span class="tag">端末 2</span></div>
+    <pre><code>docker compose run --rm shell ros2 launch omnivla_gazebo topomap.launch.py \
+    world:=office_0 out_dir:=/data/goals/demo goal_x:=7.5 goal_y:=4.0</code></pre>
+    <p>地図上で現在位置から (7.5, 4.0) までの経路を計画し、<strong>1m ごとにロボットをテレポートさせて前方の画像を撮影</strong>します。
+    撮り終えたらロボットはスタート位置に戻ります。これが「目的地の画像」を細かく区切ったサブゴール列になります。</p>
+    <div class="grid2">
+      <div class="card"><b>なぜ 1 枚でなく列にするのか</b><br>
+      OmniVLA は数 m 先までしか見通せない反応型の方策です。部屋をまたぐ遠いゴールは、見える範囲の画像を順にたどる方が安定します。</div>
+      <div class="card"><b>他の作り方</b><br>
+      <code>mode:=distance</code>: 手動操縦しながら 1m ごとに保存<br>
+      <code>mode:=manual</code>: Enter を押した地点で保存<br>
+      画像 1 枚だけでも可 (<code>goal_path</code> にファイルを指定)。</div>
+    </div>
+    <div class="note"><b>座標の選び方:</b> <code>ros2_ws/src/omnivla_gazebo/maps/office_0.png</code> が地図 (黒=障害物, 赤=スポーン位置)。
+    引数は <code>7.5</code> のように小数で書く。</div>
+  </li>
+
+  <li class="step">
+    <h3>OmniVLA で自律移動させる</h3>
+    <div class="meta"><span class="tag time">モデル読み込み 1 分 + 走行</span><span class="tag">端末 2</span></div>
+    <pre><code>GOAL_PATH=/data/goals/demo docker compose run --rm nav
+
+<span class="c"># 様子を見る (端末 3)</span>
+docker compose run --rm shell ros2 run rqt_image_view rqt_image_view /omnivla/debug_image
+docker compose run --rm shell ros2 topic echo /omnivla/status</code></pre>
+    <p>デバッグ画像には「現在画像 + 予測軌跡の投影」「今のサブゴール画像」「俯瞰の軌跡」「速度・サブゴール番号・レイテンシ」が並びます。
+    ログに <code>subgoal -&gt; 3/14</code> のように進捗が出て、最後に <code>final goal reached</code> で停止します。</p>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>よく使う切り替え</th><th>指定方法</th></tr></thead>
+      <tbody>
+        <tr><td>ゴール画像 + 相対位置も与える</td><td><code>MODALITY=image_pose</code></td></tr>
+        <tr><td>言語指示で動かす</td><td><code>ros2 launch omnivla_gazebo navigate.launch.py modality:=language instruction:="move toward blue trash bin"</code></td></tr>
+        <tr><td>滑らかな追従に変える</td><td><code>CONTROLLER=pure_pursuit</code> (既定は公式と同じ制御則)</td></tr>
+        <tr><td>途中で止める / 再開</td><td><code>ros2 topic pub --once /omnivla/enable std_msgs/msg/Bool "{data: false}"</code></td></tr>
+        <tr><td>走行中にゴールを変える</td><td><code>ros2 topic pub --once /omnivla/goal_dir std_msgs/msg/String "{data: /data/goals/other}"</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note"><b>ここで期待すること:</b> ゼロショットでは、実写で学習したモデルが Gazebo の見た目に慣れていないため、
+    壁に寄る・サブゴールを見失うといった失敗が起きえます。どの程度できるかを次の評価で数値にしておくと、学習後の比較ができます。</div>
+  </li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="ft">C. Gazebo の見え方に適応させる (ファインチューニング)</h2>
+<div class="diagram" role="img" aria-label="学習データの作り方">
+<svg viewBox="0 0 940 210" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <text x="20" y="30" font-size="14" font-weight="700" fill="var(--text)">記録された 1 本の走行 (3Hz, 1 フレーム ≈ 0.1m)</text>
+  <g>
+    <line x1="40" y1="80" x2="900" y2="80" stroke="var(--line)" stroke-width="3"/>
+    <g fill="var(--surface2)" stroke="var(--muted)">
+      <rect x="40" y="62" width="34" height="36" rx="4"/><rect x="100" y="62" width="34" height="36" rx="4"/>
+      <rect x="160" y="62" width="34" height="36" rx="4"/><rect x="220" y="62" width="34" height="36" rx="4"/>
+    </g>
+    <rect x="280" y="58" width="40" height="44" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="300" y="85" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent)">t</text>
+    <g fill="var(--ok-soft)" stroke="var(--ok)">
+      <rect x="340" y="62" width="34" height="36" rx="4"/><rect x="390" y="62" width="34" height="36" rx="4"/>
+      <rect x="440" y="62" width="34" height="36" rx="4"/><rect x="490" y="62" width="34" height="36" rx="4"/>
+      <rect x="540" y="62" width="34" height="36" rx="4"/><rect x="590" y="62" width="34" height="36" rx="4"/>
+      <rect x="640" y="62" width="34" height="36" rx="4"/><rect x="690" y="62" width="34" height="36" rx="4"/>
+    </g>
+    <g fill="var(--surface2)" stroke="var(--muted)"><rect x="740" y="62" width="34" height="36" rx="4"/></g>
+    <rect x="790" y="58" width="40" height="44" rx="4" fill="var(--warn-soft)" stroke="var(--c-data)" stroke-width="2"/>
+    <text x="810" y="85" text-anchor="middle" font-size="12" font-weight="700" fill="var(--c-data)">goal</text>
+    <g fill="var(--surface2)" stroke="var(--muted)"><rect x="846" y="62" width="34" height="36" rx="4"/></g>
+  </g>
+  <text x="300" y="130" text-anchor="middle" font-size="13" fill="var(--accent)">入力: 現在画像</text>
+  <text x="532" y="130" text-anchor="middle" font-size="13" fill="var(--ok)">正解: t+1〜t+8 の位置と向き (真値)</text>
+  <text x="810" y="130" text-anchor="middle" font-size="13" fill="var(--c-data)">入力: ゴール画像 / 相対位置</text>
+  <text x="470" y="175" text-anchor="middle" font-size="13" fill="var(--muted)">ゴールは同じ走行の「未来のフレーム」からランダムに選ぶ (hindsight relabeling) → 1 本の走行から大量の学習サンプルができる</text>
+</svg>
+</div>
+
+<ol class="steps" style="counter-reset: step 6">
+  <li class="step">
+    <h3>お手本走行を自動で集める</h3>
+    <div class="meta"><span class="tag time">1 エピソード 30〜60 秒</span><span class="tag">GUI なしが速い</span></div>
+    <pre><code>WORLD=office_0 HEADLESS=true docker compose up sim                 <span class="c"># 端末 1</span>
+WORLD=office_0 EPISODES=100 docker compose run --rm explore        <span class="c"># 端末 2 → /data/raw/office_0/</span></code></pre>
+    <p>各エピソードで「ランダムな位置にテレポート → ランダムなゴールまで経路計画 (毎回少しずつ違う経路) →
+    0.3 m/s で追従しながら画像と真値位置を 3Hz で記録 → ゴールで停止」を繰り返します。衝突・スタックしたエピソードは破棄されます。</p>
+    <p>見た目の多様性が汎化に効くので、ワールドを増やして集めるのがおすすめです:</p>
+    <pre><code>docker compose run --rm shell python3 tools/generate_worlds.py --worlds office park --seeds 1 2 3
+<span class="c"># → office_1..3, park_1..3 ができる。WORLD=office_1 などで sim と explore を起動</span></code></pre>
+    <div class="check"><b>確認:</b> <code>python3 training/inspect_dataset.py /data/raw --num_viz 16</code> で
+    「1 フレームあたりの移動量 ≈ 0.1m」「正解軌跡 (緑) が画像上の進行方向と一致」していること。目安は合計 1〜3 時間分。</div>
+  </li>
+
+  <li class="step">
+    <h3>LoRA で学習する</h3>
+    <div class="meta"><span class="tag time">5000 step で 2〜4 時間 (目安)</span><span class="tag">sim / nav は停止</span></div>
+    <pre><code>docker compose stop sim
+<span class="c"># まず数 step だけ回して VRAM と配管を確認</span>
+docker compose run --rm shell python3 training/finetune_omnivla.py \
+    --config training/configs/finetune_gazebo.yaml --dry_run true
+<span class="c"># 本番</span>
+docker compose run --rm train</code></pre>
+    <ul>
+      <li>公式と同じ設定: 全 Linear 層に LoRA (r=32)、軌跡ヘッドも学習、損失は軌跡の二乗誤差 + 平滑化項、lr 1e-4</li>
+      <li>入力モードは「画像のみ : 画像+位置 : 位置のみ = 2 : 1 : 1」で混ぜて学習 (設定で変更可)</li>
+      <li>学習前 (= ゼロショット) の検証誤差も最初に記録されます</li>
+    </ul>
+    <div class="note"><b>VRAM が足りないとき:</b> <code>batch_size: 1</code> にして <code>grad_accumulation_steps</code> を増やす、
+    または <code>lora_target: llm</code> (画像エンコーダには LoRA を入れない)。</div>
+  </li>
+
+  <li class="step">
+    <h3>学習結果を確認する</h3>
+    <div class="meta"><span class="tag time">10 分</span></div>
+    <pre><code>/runs/&lt;run&gt;/
+├── metrics.csv                   <span class="c"># 学習損失・検証誤差 (JSON lines)</span>
+├── viz/step_005000/sample_*.jpg  <span class="c"># 予測 (青) と正解 (緑) の比較</span>
+├── split.json                    <span class="c"># 学習/検証に使った走行</span>
+└── checkpoints/step_005000/      <span class="c"># LoRA アダプタ + ヘッド (数百 MB)</span>
+
+<span class="c"># 記録データ上で学習前後を比較 (ADE: 8点平均の位置誤差, FDE: 最終点の誤差)</span>
+python3 training/eval_offline.py --split /runs/&lt;run&gt;/split.json
+python3 training/eval_offline.py --split /runs/&lt;run&gt;/split.json \
+    --finetuned_dir /runs/&lt;run&gt;/checkpoints/step_005000</code></pre>
+  </li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="eval">D. 学習後の自律移動と比較</h2>
+<ol class="steps" style="counter-reset: step 9">
+  <li class="step">
+    <h3>学習済みモデルで走らせ、成功率を比べる</h3>
+    <div class="meta"><span class="tag time">20 タスクで 30 分程度</span></div>
+    <pre><code>docker compose up sim                                                          <span class="c"># 端末 1</span>
+FINETUNED_DIR=/runs/&lt;run&gt;/checkpoints/step_005000 docker compose run --rm nav  <span class="c"># 端末 2 (未指定ならゼロショット)</span>
+docker compose run --rm shell ros2 launch omnivla_gazebo eval.launch.py \
+    world:=office_0 num_tasks:=20 mode:=single label:=finetuned                 <span class="c"># 端末 3</span></code></pre>
+    <p>評価ノードが「ゴール地点で画像を撮る → スタートへテレポート → navigator にゴールを送る → 到達/タイムアウト/衝突を監視」を自動で繰り返し、
+    <code>/runs/eval/&lt;label&gt;_&lt;world&gt;_&lt;時刻&gt;/summary.json</code> に成功率・SPL・衝突回数をまとめます。
+    <code>seed</code> が同じならタスクも同じなので、ゼロショットと学習後をそのまま比較できます。</p>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>mode</th><th>内容</th><th>何を測るか</th></tr></thead>
+      <tbody>
+        <tr><td><code>single</code></td><td>2〜5m 先のゴール画像 1 枚</td><td>見えているゴールへ向かう基本能力</td></tr>
+        <tr><td><code>route</code></td><td>経路沿いのサブゴール画像列</td><td>長距離・部屋をまたぐ移動 (実運用に近い)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>公式形式の重みが必要なら <code>python3 training/merge_lora.py --finetuned_dir … --out_dir /checkpoints/omnivla-gazebo</code> でマージできます
+    (公式の <code>run_omnivla.py</code> でもそのまま読めます)。</p>
+  </li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="real">実機へ持っていくとき</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Gazebo での部品</th><th>実機での置き換え</th></tr></thead>
+  <tbody>
+    <tr><td><code>/camera/image_raw</code> (シミュレータのカメラ)</td><td>実カメラのトピック (<code>image_topic</code> パラメータで変更)。画角・高さを学習時と近づける</td></tr>
+    <tr><td><code>/odom</code> (真値)</td><td>位置推定の出力 (GNSS/LiDAR 等)。画像のみモード + 画像類似度の到達判定なら位置は必須ではない</td></tr>
+    <tr><td>テレポートで作るゴール画像列</td><td>手動走行しながら <code>topomap.launch.py mode:=distance</code> で記録</td></tr>
+    <tr><td><code>/cmd_vel</code></td><td>実機の速度指令トピック。<code>max_v</code>, <code>max_w</code> を機体に合わせる</td></tr>
+  </tbody>
+</table>
+</div>
+<p>推論部分 (<code>omnivla_nav/policy.py</code>) は ROS に依存しないので、ROS 以外のロボット制御系からもそのまま呼べます。</p>
+
+<!-- ============================================================ -->
+<h2 id="trouble">つまずきやすい点</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>症状</th><th>原因と対処</th></tr></thead>
+  <tbody>
+    <tr><td>Gazebo の画面が出ない</td><td>ホストで <code>xhost +local:root</code>。<code>DISPLAY</code> を確認。不要なら <code>HEADLESS=true</code></td></tr>
+    <tr><td><code>waiting for camera image</code> が続く</td><td>描画に GPU のグラフィックス機能が必要。NVIDIA Container Toolkit と <code>NVIDIA_DRIVER_CAPABILITIES=all</code> (compose で設定済み) を確認。<code>docker compose logs sim</code></td></tr>
+    <tr><td>テレポートが失敗する</td><td>コンテナ間で <code>GZ_PARTITION</code> が一致しているか (<code>gz service -l | grep set_pose</code>)</td></tr>
+    <tr><td>トピックが見えない</td><td>全サービスで同じ <code>ROS_DOMAIN_ID</code>。ホストの ROS 2 と混ざるなら ID を変える</td></tr>
+    <tr><td>CUDA out of memory</td><td>Gazebo + navigator で約 17〜18GB。学習時は sim / nav を止める</td></tr>
+    <tr><td>ロボットが壁に寄る・ゴールを見失う</td><td>ゼロショットの限界。サブゴール間隔を詰める (<code>spacing:=0.7</code>)、<code>image_pose</code> モードを試す、ファインチューニングする</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="terms">用語</h2>
+<dl class="terms">
+  <dt>OmniVLA</dt><dd>画像・位置・言語のどれでもゴールを指定できるナビゲーション用 VLA (7B, OpenVLA ベース)</dd>
+  <dt>modality</dt><dd>ゴールの与え方。image (画像) / pose (相対位置) / language (言語) とその組み合わせ</dd>
+  <dt>topomap</dt><dd>経路沿いに並べたサブゴール画像の列。これを順にたどって遠いゴールへ行く</dd>
+  <dt>waypoint</dt><dd>モデルが出力する 8 点の目標位置 (ロボット座標: x 前, y 左)。1 単位 = 0.1m</dd>
+  <dt>ゼロショット</dt><dd>Gazebo のデータで追加学習していない、公式の重みそのままの状態</dd>
+  <dt>LoRA</dt><dd>元の重みは固定し、小さな追加行列だけを学習する手法。保存も数百 MB で済む</dd>
+  <dt>SPL</dt><dd>成功率を経路の効率で重み付けした指標 (最短経路長 / 実際の走行距離)</dd>
+</dl>
+
+<footer>
+  リポジトリ: <a href="https://github.com/mamoru1126/omnivla_gazebo">mamoru1126/omnivla_gazebo</a> ·
+  公式 OmniVLA: <a href="https://github.com/NHirose/OmniVLA">NHirose/OmniVLA</a> ·
+  公式スクリプトの入力固定などの調査: <a href="https://github.com/mamoru1126/omnivla_gazebo/blob/master/docs/omnivla_input_review.md">docs/omnivla_input_review.md</a>
+</footer>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, btn = document.getElementById("themeToggle"), saved = null;
+  try { saved = localStorage.getItem("omnivla-theme"); } catch (e) {}
+  if (saved) root.setAttribute("data-theme", saved);
+  btn.addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("omnivla-theme", next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
