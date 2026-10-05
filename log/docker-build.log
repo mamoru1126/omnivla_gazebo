@@ -1,0 +1,12 @@
+ => ERROR [explore  6/12] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://gi  1.1s
+------
+ > [explore  6/12] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.load(open('pyproject.toml','rb'))"     && python3 -m pip install -c /tmp/constraints.txt -e /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest:
+0.998 Traceback (most recent call last):
+0.998   File "<string>", line 1, in <module>
+0.998   File "/usr/lib/python3/dist-packages/pip/_vendor/tomli/_parser.py", line 73, in load
+0.999     return loads(s, parse_float=parse_float)
+0.999   File "/usr/lib/python3/dist-packages/pip/_vendor/tomli/_parser.py", line 81, in loads
+0.999     src = s.replace("\r\n", "\n")
+0.999 TypeError: a bytes-like object is required, not 'str'
+------
+failed to solve: process "/bin/bash -o pipefail -c git init -q ${OMNIVLA_ROOT} && cd ${OMNIVLA_ROOT}     && git remote add origin ${OMNIVLA_REPO}     && git fetch -q --depth 1 origin ${OMNIVLA_COMMIT} && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)\"av\"[[:space:]]*$/\\1\"av\",/' pyproject.toml     && python3 -c \"from pip._vendor import tomli; tomli.load(open('pyproject.toml','rb'))\"     && python3 -m pip install -c /tmp/constraints.txt -e ${OMNIVLA_ROOT}     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest" did not complete successfully: exit code: 1
