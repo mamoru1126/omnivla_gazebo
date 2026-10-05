@@ -141,6 +141,11 @@ def test_upstream_controller():
     v, w = controller.upstream_command(np.array([0.5, 0.2, 1.0, 0.0]), cfg)
     # v=1.5->0.5, w=atan(0.4)*3->1.0 ; rd=0.5 < maxv/maxw=1 -> v=0.3*0.5, w=0.3
     assert math.isclose(v, 0.15, rel_tol=1e-6) and math.isclose(w, 0.3, rel_tol=1e-6)
+    # 目標点が後方: その場で「目標のある側」に旋回する (公式の atan(dy/dx) では逆側に回っていた)
+    v, w = controller.upstream_command(np.array([-0.2, 0.4, 1.0, 0.0]), cfg)
+    assert v == 0.0 and w > 0
+    v, w = controller.upstream_command(np.array([-0.2, -0.4, 1.0, 0.0]), cfg)
+    assert v == 0.0 and w < 0
     v, w = controller.upstream_command(np.array([0.0, 0.0, 0.0, 1.0]), cfg)  # 公式では NameError だった分岐
     assert v == 0.0 and math.isclose(w, 0.3)
     wps = np.zeros((8, 4))
