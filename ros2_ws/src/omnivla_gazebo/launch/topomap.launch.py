@@ -13,7 +13,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-    nan = ".nan"  # YAML の NaN 表記
+    nan = "nan"  # 未指定 (launch_ros は float() で変換する)
     args = {
         "mode": ("route", str),
         "world": ("office_0", str),
