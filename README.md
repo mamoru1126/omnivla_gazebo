@@ -65,6 +65,36 @@ GOAL_PATH=/data/goals/demo docker compose run --rm nav
 > (黒=障害物, 赤=スポーン位置, 1px=0.05m の 2 倍表示) や `<world>.yaml` で確認できます。
 > 座標を指定するランチ引数は `8.0` のように小数で書いてください。
 
+### もう一度走らせる (再実行の手順)
+
+手順 4 の topomap 作成は、撮影後にロボットを**スタート地点へ・経路の進行方向を向けて**戻します。
+ただし次の場合はロボットがその姿勢にいないので、走らせる前にスタート姿勢へ戻してください。
+
+- 1 回走らせた後 (ロボットはゴール付近にいる)
+- Gazebo (`sim`) を再起動した後 (ワールドのスポーン姿勢に戻る。`office_0` はゴールと逆の −x 向き)
+
+ゴールが真後ろにあると、OmniVLA はゴール画像と現在画像の対応が取れないので、後ろ向きのまま前進してしまいます。
+
+```bash
+# Gazebo は起動したまま (docker compose up sim)
+
+# 1) ロボットを topomap 作成時のスタート姿勢に戻す (poses.yaml の start を読む)
+docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 --goal_dir /data/goals/demo
+
+# 2) 走らせる
+GOAL_PATH=/data/goals/demo docker compose run --rm nav
+```
+
+- navigator は起動するとすぐ走り出します (`autostart: true`)。必ず 1) の後に起動してください。
+  走行中の navigator を止めずに再スタートしたい場合は、1) の後に
+  `ros2 topic pub --once /omnivla/goal_dir std_msgs/msg/String "{data: /data/goals/demo}"` と
+  `ros2 topic pub --once /omnivla/enable std_msgs/msg/Bool "{data: true}"` を送ります。
+- 任意の姿勢から始めたい場合: `ros2 run omnivla_gazebo teleport --world office_0 --x -1.98 --y 0.0 --yaw 0.0` (yaw はラジアン)。
+- topomap を作り直す場合: スタート地点は「実行時のロボットの位置」になります。先に上の 1) でスタートへ戻すか
+  `start_x:=… start_y:=…` を指定してください。同じ `out_dir` に上書きするなら `overwrite:=true`
+  (無いと「ディレクトリが空ではない」で止まります)。
+- 2026-10-05 より前に作った topomap には start が記録されていないので、作り直すか `--x --y --yaw` で戻してください。
+
 ## 使い方の詳細
 
 ### ナビゲーション (`navigate.launch.py`)

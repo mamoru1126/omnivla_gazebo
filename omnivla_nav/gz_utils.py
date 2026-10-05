@@ -49,10 +49,23 @@ def main(argv: Optional[list] = None) -> int:
     ap = argparse.ArgumentParser(description="Teleport a model in a running Gazebo world")
     ap.add_argument("--world", required=True)
     ap.add_argument("--model", default="omnivla_robot")
-    ap.add_argument("--x", type=float, required=True)
-    ap.add_argument("--y", type=float, required=True)
+    ap.add_argument("--x", type=float)
+    ap.add_argument("--y", type=float)
     ap.add_argument("--yaw", type=float, default=0.0, help="[rad]")
+    ap.add_argument("--goal_dir", default="",
+                    help="topomap ディレクトリ: poses.yaml に記録された走行開始姿勢に戻す")
     args = ap.parse_args(argv)
+    if args.goal_dir:
+        from .topomap import load_start_pose
+
+        start = load_start_pose(args.goal_dir)
+        if start is None:
+            print(f"no start pose in {args.goal_dir}/poses.yaml (route モードで作り直してください)")
+            return 1
+        args.x, args.y, args.yaw = start
+        print(f"start pose from {args.goal_dir}: x={args.x:.2f} y={args.y:.2f} yaw={args.yaw:.2f}")
+    elif args.x is None or args.y is None:
+        ap.error("--x/--y or --goal_dir is required")
     ok, msg = set_model_pose(args.world, args.model, args.x, args.y, args.yaw)
     print(msg)
     return 0 if ok else 1
