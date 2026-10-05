@@ -39,7 +39,7 @@ from std_msgs.msg import Bool, String
 
 from .ros_utils import Latest, image_msg_to_rgb, make_twist, odom_to_pose2d, rgb_to_image_msg, stamp_to_sec
 
-from omnivla_nav.controller import ControllerConfig, compute_command  # noqa: E402
+from omnivla_nav.controller import ControllerConfig, StuckDetector, compute_command  # noqa: E402
 from omnivla_nav.data_utils import IMAGE_MODALITIES, POSE_MODALITIES, modality_id  # noqa: E402
 from omnivla_nav.navlog import NavRunLogger  # noqa: E402
 from omnivla_nav.geometry import quaternion_from_yaw, relative_pose, to_world, yaw_from_quaternion  # noqa: E402
@@ -72,6 +72,8 @@ class NavigatorNode(Node):
         p("goal_radius", 0.4)
         p("image_reach_threshold", 0.92)
         p("lookahead_nodes", 1)
+        p("pass_radius", 1.0)             # この距離以内でサブゴールが真横より後ろなら通過扱い
+        p("pass_angle_deg", 90.0)
         p("stop_at_goal", True)
         p("autostart", True)
         # control
@@ -84,6 +86,8 @@ class NavigatorNode(Node):
         p("lookahead", 0.5)
         p("max_image_age", 1.0)
         p("cmd_timeout", 1.5)
+        p("respect_predicted_speed", True)  # 予測軌跡が短い (減速の予測) ときは速度を落とす
+        p("stuck_timeout", 4.0)           # 前進指令中に この秒数 動かなければ停止 (0 で無効)
         # io
         p("image_topic", "/camera/image_raw")
         p("odom_topic", "/odom")
@@ -103,7 +107,9 @@ class NavigatorNode(Node):
         self.instruction = g("instruction") or None
         self.ctrl = ControllerConfig(mode=g("controller"), waypoint_index=int(g("waypoint_index")), dt=float(g("dt")),
                                      max_v=float(g("max_v")), max_w=float(g("max_w")),
-                                     lookahead=float(g("lookahead")), pp_speed=float(g("max_v")))
+                                     lookahead=float(g("lookahead")), pp_speed=float(g("max_v")),
+                                     respect_predicted_speed=bool(g("respect_predicted_speed")))
+        self.stuck = StuckDetector(timeout=float(g("stuck_timeout")))
         self.cam = CameraModel(hfov=float(g("camera_hfov")), height=float(g("camera_height")),
                                x_offset=float(g("camera_x")))
         self.rate = float(g("control_rate"))
@@ -119,7 +125,9 @@ class NavigatorNode(Node):
         self._tracker_kwargs = dict(reach_check=g("reach_check"), subgoal_radius=float(g("subgoal_radius")),
                                     goal_radius=float(g("goal_radius")),
                                     image_threshold=float(g("image_reach_threshold")),
-                                    lookahead_nodes=int(g("lookahead_nodes")))
+                                    lookahead_nodes=int(g("lookahead_nodes")),
+                                    pass_radius=float(g("pass_radius")),
+                                    pass_angle_deg=float(g("pass_angle_deg")))
 
         self.cmd_pub = self.create_publisher(Twist, g("cmd_vel_topic"), 10)
         self.path_pub = self.create_publisher(Path, "/omnivla/path", 10)
@@ -201,6 +209,12 @@ class NavigatorNode(Node):
         self.enabled = bool(msg.data)
         self.get_logger().info(f"enabled={self.enabled}")
         self._event(f"enabled={self.enabled}")
+        if self.enabled:
+            self.stuck.reset()
+            with self.lock:
+                tracker = self.tracker
+            if self.runlog is None and tracker is not None and not tracker.done:
+                self._open_runlog(tracker.nodes, "resumed (/omnivla/enable)")
         if not self.enabled:
             self._publish_cmd(0.0, 0.0)
 
@@ -211,6 +225,7 @@ class NavigatorNode(Node):
     def _set_goals(self, nodes, source: str):
         with self.lock:
             self.tracker = GoalTracker(nodes, **self._tracker_kwargs)
+        self.stuck.reset()
         self._open_runlog(nodes, source)
         if self.modality in POSE_MODALITIES and any(n.pose is None for n in nodes):
             self.get_logger().warn("pose modality selected but some goal nodes have no pose")
@@ -339,7 +354,8 @@ class NavigatorNode(Node):
 
         if tracker.update(pose, similarity):
             msg = f"subgoal -> {tracker.index}/{len(tracker.nodes) - 1}" + \
-                (" (final goal reached)" if tracker.done else "")
+                (" (final goal reached)" if tracker.done else "") + \
+                (f" [{tracker.last_reason}]" if tracker.last_reason else "")
             self.get_logger().info(msg)
             self._event(msg + (f" at ({pose[0]:.2f}, {pose[1]:.2f}, {math.degrees(pose[2]):.0f}deg)"
                                if pose is not None else ""))
@@ -364,6 +380,18 @@ class NavigatorNode(Node):
         out = self.policy.predict(img, goal_image=node.image if self.modality in IMAGE_MODALITIES else None,
                                   goal_pose=goal_local, instruction=self.instruction, modality=self.modality)
         v, w = compute_command(out.waypoints, self.ctrl)
+        if self.stuck.update(now, pose, v):
+            # 前進指令を出し続けているのに動いていない = 障害物に押し付けている。止めて終了
+            self._publish_cmd(0.0, 0.0)
+            self.enabled = False
+            self.state = "stuck"
+            msg = (f"stuck: no movement for {self.stuck.timeout:.0f}s while commanding v={v:.2f} "
+                   f"at ({pose[0]:.2f}, {pose[1]:.2f}) -> stopped")
+            self.get_logger().warn(msg)
+            self._event(msg)
+            self._close_runlog("stuck")
+            self._publish_status()
+            return
         self._publish_cmd(v, w)
         self.state = "running"
         self.step_count += 1

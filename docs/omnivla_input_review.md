@@ -17,6 +17,7 @@
 | L119 | `run()` が 1 回推論して `break` | ループしない | navigator が 3Hz で推論→制御を繰り返す |
 | L560-565, L160, L172-175, L420 | modality フラグ (`pose_goal` 等) とモデル (`vla`, `action_head` …) が `__main__` のグローバル変数 | import して使えない | 全てクラス/引数化 |
 | L203 | `clip_angle` が未定義 (waypoint が原点のとき NameError) | まれにクラッシュ | `omnivla_nav/controller.py` で実装 |
+| L196-235 | 速度を `dx / DT` で計算 (5 点目を 1/3 秒で到達する点とみなす) ので、予測軌跡が短くても上限速度に張り付く | 壁の手前でモデルが減速を予測しても止まらない | 予測 waypoint k の到達に必要な速度 `\|wp_k\| / ((k+1)·DT)` を上限に (曲率は保持, `respect_predicted_speed`) |
 | L209 | 旋回角を `np.arctan(dy / dx)` で計算。選んだ waypoint が後方 (dx<0) だと**左右が逆**になる (左後ろの目標で右旋回) | 曲がり角など大きく曲がる場面で逆方向に曲がる | `atan2(dy, dx)` に変更 (前方の点では同じ値) |
 | L12, L156, L484 | `sys.path.insert(0, '..')` と相対パス (`./omnivla-original`) | リポジトリ直下から実行する必要あり | 絶対パス/パラメータ化 |
 

@@ -126,10 +126,15 @@ class GoalTracker:
       "image" : 画像埋め込みのコサイン類似度 >= image_threshold
       "auto"  : 姿勢があれば pose、無ければ image
       "none"  : 自動では進めない (最終ゴールの判定もしない)
+
+    pose 判定では、途中のサブゴールは「半径内に入った」以外に「pass_radius 以内まで近づいて、
+    もう真横より後ろ (|方位| > pass_angle) にある」でも通過扱いにする。少しずれてサブゴールの周りを
+    回ってしまい、永遠に次へ進めない (= 後ろのサブゴールを追い続ける) のを防ぐ。最終ゴールには使わない。
     """
 
     def __init__(self, nodes: Sequence[GoalNode], reach_check: str = "auto", subgoal_radius: float = 0.6,
-                 goal_radius: float = 0.4, image_threshold: float = 0.92, lookahead_nodes: int = 2):
+                 goal_radius: float = 0.4, image_threshold: float = 0.92, lookahead_nodes: int = 2,
+                 pass_radius: float = 1.0, pass_angle_deg: float = 90.0):
         if not nodes:
             raise ValueError("empty goal sequence")
         self.nodes = list(nodes)
@@ -138,6 +143,9 @@ class GoalTracker:
         self.goal_radius = goal_radius
         self.image_threshold = image_threshold
         self.lookahead_nodes = max(0, int(lookahead_nodes))
+        self.pass_radius = float(pass_radius)
+        self.pass_angle = math.radians(pass_angle_deg)
+        self.last_reason: Optional[str] = None
         self.index = 0
         self.done = False
         self.last_similarity: Optional[float] = None
@@ -161,14 +169,24 @@ class GoalTracker:
         if mode == "pose":
             if node.pose is None or robot_pose is None:
                 return False
-            d = math.hypot(node.pose[0] - robot_pose[0], node.pose[1] - robot_pose[1])
+            dx, dy = node.pose[0] - robot_pose[0], node.pose[1] - robot_pose[1]
+            d = math.hypot(dx, dy)
             self.last_distance = d
-            return d < (self.goal_radius if final else self.subgoal_radius)
+            if d < (self.goal_radius if final else self.subgoal_radius):
+                self.last_reason = "within radius"
+                return True
+            if not final and d < self.pass_radius and len(robot_pose) > 2:
+                bearing = (math.atan2(dy, dx) - robot_pose[2] + math.pi) % (2 * math.pi) - math.pi
+                if abs(bearing) > self.pass_angle:
+                    self.last_reason = f"passed (d={d:.2f}m, {math.degrees(bearing):+.0f}deg)"
+                    return True
+            return False
         if mode == "image":
             if similarity_fn is None:
                 return False
             s = float(similarity_fn(node))
             self.last_similarity = s
+            self.last_reason = f"image similarity {s:.3f}"
             return s >= self.image_threshold
         return False
 
