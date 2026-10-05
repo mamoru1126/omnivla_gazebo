@@ -46,6 +46,9 @@ RUN curl -fsSL https://packages.osrfoundation.org/gazebo.gpg -o /usr/share/keyri
 
 # ---- PyTorch ----------------------------------------------------------------
 COPY docker/constraints.txt /tmp/constraints.txt
+# Ubuntu 22.04 の pip 22 / setuptools 59 は pyproject.toml の [project] を読めず、
+# OmniVLA が "UNKNOWN-0.0.0" (依存なし) としてインストールされてしまうため先に更新する
+RUN python3 -m pip install -U "pip>=24,<26" "setuptools>=68,<70" wheel
 RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0
 
 # ---- OmniVLA (コミット固定) ---------------------------------------------------
@@ -60,7 +63,7 @@ RUN git init -q ${OMNIVLA_ROOT} && cd ${OMNIVLA_ROOT} \
     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())" \
     && touch prismatic/vla/datasets/rlds/oxe/utils/__init__.py \
     && python3 -m pip install -c /tmp/constraints.txt ${OMNIVLA_ROOT} \
-    && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest
+    && python3 -m pip install -c /tmp/constraints.txt "scipy>=1.10,<1.15" pyyaml pytest
 
 # ---- 本リポジトリ ------------------------------------------------------------
 # 実行時は docker-compose で /workspace にマウントする (イメージ単体でも動くようにコピーもしておく)
