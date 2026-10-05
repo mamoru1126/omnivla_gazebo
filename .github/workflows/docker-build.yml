@@ -31,6 +31,27 @@ jobs:
           set -o pipefail
           mkdir -p log
           DOCKER_BUILDKIT=1 docker build --progress=plain -f docker/Dockerfile -t omnivla_gazebo:ci . 2>&1 | tee log/ci-docker-build.log
+      - name: Launch files start without argument errors
+        run: |
+          set -o pipefail
+          docker run --rm omnivla_gazebo:ci bash -c '
+            fail=0
+            check() {
+              timeout 20 "$@" > /tmp/out.log 2>&1
+              if grep -q "Caught exception\|Traceback\|InvalidParameterValue\|ParameterException" /tmp/out.log; then
+                echo "FAIL: $*"; cat /tmp/out.log; fail=1
+              else
+                echo "OK:   $*"
+              fi
+            }
+            check ros2 launch omnivla_gazebo topomap.launch.py world:=office_0 out_dir:=/tmp/goals goal_x:=7.5 goal_y:=4.0
+            check ros2 launch omnivla_gazebo topomap.launch.py mode:=distance out_dir:=/tmp/goals2
+            check ros2 launch omnivla_gazebo explore.launch.py world:=office_0 out_dir:=/tmp/raw num_episodes:=1
+            check ros2 launch omnivla_gazebo collect_teleop.launch.py out_dir:=/tmp/teleop
+            check ros2 launch omnivla_gazebo eval.launch.py world:=office_0 out_dir:=/tmp/eval num_tasks:=1
+            check ros2 launch omnivla_gazebo sim.launch.py headless:=true
+            exit $fail
+          ' 2>&1 | tee log/ci-launch-check.log
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
@@ -41,10 +62,11 @@ jobs:
         if: always()
         run: |
           cp log/ci-docker-build.log /tmp/build.log || echo "no log" > /tmp/build.log
+          cp log/ci-launch-check.log /tmp/launch.log || echo "not run" > /tmp/launch.log
           grep -n -i -E "error|failed|conflict|cannot|not found" /tmp/build.log | tail -200 > /tmp/errors.txt || true
           tail -n 400 /tmp/build.log > /tmp/tail.log
           cd /tmp && rm -rf cilog && mkdir cilog && cd cilog && git init -q
-          cp /tmp/tail.log /tmp/errors.txt .
+          cp /tmp/tail.log /tmp/errors.txt /tmp/launch.log .
           echo "run=${{ github.run_id }} sha=${{ github.sha }} status=${{ job.status }}" > info.txt
           git -c user.name=ci -c user.email=ci@example.com add . && git -c user.name=ci -c user.email=ci@example.com commit -qm "log ${{ github.run_id }}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/ci-logs
