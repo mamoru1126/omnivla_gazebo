@@ -54,7 +54,7 @@ RUN git init -q ${OMNIVLA_ROOT} && cd ${OMNIVLA_ROOT} \
     && git remote add origin ${OMNIVLA_REPO} \
     && git fetch -q --depth 1 origin ${OMNIVLA_COMMIT} && git checkout -q FETCH_HEAD \
     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml \
-    && python3 -c "from pip._vendor import tomli; tomli.load(open('pyproject.toml','rb'))" \
+    && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())" \
     && python3 -m pip install -c /tmp/constraints.txt -e ${OMNIVLA_ROOT} \
     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest
 
