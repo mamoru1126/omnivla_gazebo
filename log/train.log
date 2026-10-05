@@ -1,0 +1,31 @@
+ubuntu@PC-20211221A020:~/omnivla_gazebo$ docker compose run --rm train  
+Using OmniVLA constants:
+  NUM_ACTIONS_CHUNK = 8
+  ACTION_DIM = 4
+  POSE_DIM = 4
+  ACTION_PROPRIO_NORMALIZATION_TYPE = bounds_q99
+If needed, manually set the correct constants in `prismatic/vla/constants.py`!
+2026-10-05 08:03:53.229893: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-05 08:03:53.252249: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-10-05 08:03:53.252284: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-10-05 08:03:53.253067: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-10-05 08:03:53.256870: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-10-05 08:03:53.793864: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2026-10-05 08:03:55.019300: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 08:03:55.023022: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2026-10-05 08:03:55.025202: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:901] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+[finetune] trajectories: train=95 val=5
+[finetune] loading base model /checkpoints/omnivla-original (heads from /checkpoints/omnivla-original @ 120000)
+Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4/4 [00:00<00:00,  9.05it/s]
+trainable params: 110,721,024 || all params: 7,651,958,208 || trainable%: 1.4470
+[finetune] trainable params: 228.3M
+[finetune] samples: train=13849 (13944 frames), val=100
+[finetune] [val step 0] ADE=0.113m FDE=0.161m pose/ade=0.152 image_pose/ade=0.116 image/ade=0.088
+[finetune] step 1 loss=0.7717 lr=1.09e-05 4.70s/step mem=19.0GB
+[finetune] step 10 loss=0.6761 lr=1.90e-05 4.52s/step mem=20.0GB
+[finetune] step 20 loss=0.5437 lr=2.80e-05 4.54s/step mem=20.0GB
+[finetune] step 30 loss=0.2990 lr=3.70e-05 4.56s/step mem=20.0GB
+[finetune] step 40 loss=0.3104 lr=4.60e-05 4.55s/step mem=20.0GB
+[finetune] step 50 loss=0.2906 lr=5.50e-05 4.55s/step mem=20.0GB
+[finetune] step 60 loss=0.2166 lr=6.40e-05 4.57s/step mem=20.0GB
