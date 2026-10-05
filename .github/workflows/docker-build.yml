@@ -1,0 +1,36 @@
+name: docker-build
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docker/**"
+      - "omnivla_nav/**"
+      - "ros2_ws/**"
+      - "tests/**"
+      - ".github/workflows/docker-build.yml"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Free disk space (image is ~15GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune -af
+          df -h /
+      - uses: actions/checkout@v4
+      - name: Build image (also runs import check + unit tests inside)
+        run: |
+          set -o pipefail
+          mkdir -p log
+          DOCKER_BUILDKIT=1 docker build --progress=plain -f docker/Dockerfile -t omnivla_gazebo:ci . 2>&1 | tee log/ci-docker-build.log
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-build-log
+          path: log/ci-docker-build.log
