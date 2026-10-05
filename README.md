@@ -181,7 +181,27 @@ docker compose stop sim                       # GPU メモリを空ける
 docker compose run --rm train                 # = python3 training/finetune_omnivla.py --config training/configs/finetune_gazebo.yaml
 # 最初に配管と VRAM だけ確認したいとき
 docker compose run --rm shell python3 training/finetune_omnivla.py --config training/configs/finetune_gazebo.yaml --dry_run true
+
+# 途中のチェックポイントから学習を再開する (例: step 1000 から 2000 step 追加 ≒ 2.5 時間)
+docker compose run --rm shell python3 training/finetune_omnivla.py \
+    --config training/configs/finetune_gazebo.yaml \
+    --resume_from /runs/<run>/checkpoints/step_001000 \
+    --max_steps 2000
+
+# 学習したモデルで走らせる (走行ログは log/nav/<日時>/ に自動保存)
+docker compose up sim                                                                   # 端末 1
+docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 --goal_dir /data/goals/demo
+FINETUNED_DIR=/runs/<run>/checkpoints/step_003000 GOAL_PATH=/data/goals/demo docker compose run --rm nav
+
+# 走行ログの解析 (地図上の軌跡・予測と、曲がるべき所で曲がっているかのレポート)
+docker compose run --rm shell python3 tools/plot_nav_log.py log/nav/latest
 ```
+
+- `<run>` は `runs/` 以下の学習ごとのディレクトリ (例: `omnivla_gazebo_20261005_080359`)。
+  再開した学習は新しい `<run>` に保存され、step 番号は続きから数えます (step 1000 + 2000 → `step_003000`)。
+- 学習中は 500 step ごとに `[val step …] ADE=… turn: ADE=… heading_err=…` が出ます。
+  `turn:` の値が下がっていれば曲がり角の学習が進んでいます。途中のチェックポイントで試すときは学習を Ctrl+C で止めます
+  (`saved …/step_XXXXXX` が出てから。走行と学習は同時に GPU に載りません)。
 
 - 学習サンプル: 軌跡上の時刻 t の画像を現在画像、同じ軌跡の未来フレームをゴール画像/ゴール姿勢とし (hindsight relabeling)、
   真値オドメトリから未来 8 点の waypoint を正解とする。modality は `image`:`image_pose`:`pose` = 2:1:1 (設定可)。
@@ -192,7 +212,7 @@ docker compose run --rm shell python3 training/finetune_omnivla.py --config trai
   既定では「この先 1m 以内に 45° 以上曲がる」サンプル (自然には約 1 割) を学習の 5 割で引きます
   (`turn_sample_ratio`, `turn_threshold_deg`, `turn_horizon`。0 で一様)。
   検証も半分を曲がるサンプルにして、`turn: ADE / FDE / heading_err` を別に表示します。曲がり角で失敗するならここを見ます。
-- 途中から再開: `--resume_from /runs/<run>/checkpoints/step_XXXXXX --max_steps 2000` (指定 step 数だけ追加で学習)。
+- 途中から再開: `--resume_from` で指定した step から `--max_steps` だけ追加で学習 (コマンドは上)。
 - VRAM が足りない場合: `batch_size: 1` + `grad_accumulation_steps` を増やす、`lora_target: llm` (視覚エンコーダに LoRA を入れない)。
 - 重要: `metric_waypoint_spacing` (既定 0.1m) は推論側と一致させる (navigator は `finetune_meta.json` から自動で読む)。
 
