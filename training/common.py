@@ -36,6 +36,7 @@ def evaluate(vla, head_fn: Callable, pose_projector, loader, num_patches: int, d
              metric_spacing: float, max_batches: Optional[int] = None, viz_dir: Optional[str] = None,
              num_viz: int = 0) -> Dict[str, float]:
     sums: Dict[str, list] = defaultdict(list)
+    per_turn: Dict[str, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
     per_mod: Dict[int, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
     n_viz = 0
     for bi, batch in enumerate(loader):
@@ -45,11 +46,14 @@ def evaluate(vla, head_fn: Callable, pose_projector, loader, num_patches: int, d
         gt = batch["actions"].to(device)
         errs = trajectory_errors(pred, gt, metric_spacing)
         mods = batch["modality_id"].long().tolist()
+        turns = [bool(m.get("turn", False)) for m in batch.get("meta", [{}] * len(mods))]
         for k, v in errs.items():
             vals = v.cpu().numpy().tolist()
             sums[k].extend(vals)
             for m, val in zip(mods, vals):
                 per_mod[m][k].append(val)
+            for tflag, val in zip(turns, vals):
+                per_turn["turn" if tflag else "straight"][k].append(val)
         if viz_dir is not None and n_viz < num_viz:
             os.makedirs(viz_dir, exist_ok=True)
             pred_np = pred.cpu().numpy()
@@ -73,6 +77,12 @@ def evaluate(vla, head_fn: Callable, pose_projector, loader, num_patches: int, d
                 n_viz += 1
     out = {k: float(np.mean(v)) for k, v in sums.items() if v}
     out["num_samples"] = len(sums.get("ade", []))
+    for name, d in per_turn.items():
+        if d["ade"]:
+            out[f"{name}/ade"] = float(np.mean(d["ade"]))
+            out[f"{name}/fde"] = float(np.mean(d["fde"]))
+            out[f"{name}/yaw_err_deg"] = float(np.degrees(np.mean(d["yaw_err"])))
+            out[f"{name}/n"] = len(d["ade"])
     for m, d in sorted(per_mod.items()):
         name = MODALITY_NAMES.get(m, str(m))
         out[f"{name}/ade"] = float(np.mean(d["ade"]))

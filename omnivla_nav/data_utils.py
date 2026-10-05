@@ -7,6 +7,7 @@ OmniVLA (GNM_Dataset / 公式 inference) と同じ表現を使う:
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -239,6 +240,43 @@ def augment_pair(rng: np.random.Generator, cur: Image.Image, goal: Image.Image, 
         cur = color_jitter(cur, rng, aug.color_jitter)
         goal = color_jitter(goal, rng, aug.color_jitter)
     return cur, goal, actions, goal_pose
+
+
+def turn_flags(positions: np.ndarray, yaws: np.ndarray, horizon: int = 10, threshold_deg: float = 20.0) -> np.ndarray:
+    """各フレーム t について「この先 horizon フレーム以内に曲がるか」を返す (bool, 長さ N).
+
+    次のどちらかが threshold_deg を超えたら「曲がる」:
+      * 向きの変化 |yaw[t+k] - yaw[t]| (k <= horizon)
+      * horizon フレーム先の位置がどれだけ横にあるか (ロボット座標での方位角)
+    """
+    positions = np.asarray(positions, dtype=np.float64)
+    yaws = np.asarray(yaws, dtype=np.float64).reshape(-1)
+    n = len(yaws)
+    thr = math.radians(threshold_deg)
+    out = np.zeros(n, dtype=bool)
+    for t in range(n):
+        hi = min(n - 1, t + horizon)
+        if hi <= t:
+            continue
+        dyaw = np.abs((yaws[t + 1:hi + 1] - yaws[t] + np.pi) % (2 * np.pi) - np.pi)
+        if dyaw.size and dyaw.max() > thr:
+            out[t] = True
+            continue
+        local = to_local(positions[hi], positions[t], yaws[t])
+        if np.hypot(local[0], local[1]) > 0.2 and abs(math.atan2(local[1], local[0])) > thr:
+            out[t] = True
+    return out
+
+
+def balanced_weights(flags: Sequence[bool], ratio: float) -> np.ndarray:
+    """flags=True のサンプルが全体の ratio の割合で引かれるようなサンプリング重み (和 = 1)."""
+    flags = np.asarray(flags, dtype=bool)
+    n_pos, n_neg = int(flags.sum()), int((~flags).sum())
+    if ratio <= 0 or n_pos == 0 or n_neg == 0:
+        return np.full(len(flags), 1.0 / max(1, len(flags)))
+    ratio = min(max(float(ratio), 0.0), 1.0)
+    w = np.where(flags, ratio / n_pos, (1.0 - ratio) / n_neg)
+    return w / w.sum()
 
 
 def summarize_spacing(positions: np.ndarray) -> Optional[float]:

@@ -51,7 +51,8 @@ from omnivla_nav.trajectory_io import find_trajectories  # noqa: E402
 from prismatic.vla.action_tokenizer import ActionTokenizer  # noqa: E402
 
 from common import action_loss, evaluate  # noqa: E402
-from gazebo_dataset import GazeboDatasetConfig, GazeboNavDataset, parse_modality_weights, split_trajectories  # noqa: E402
+from gazebo_dataset import (GazeboDatasetConfig, GazeboNavDataset, WeightedEpochSampler,  # noqa: E402
+                            parse_modality_weights, split_trajectories)
 
 
 @dataclass
@@ -70,6 +71,10 @@ class FinetuneConfig:
     pose_goal_offset: List[int] = field(default_factory=lambda: [2, 300])
     modality_weights: Dict[str, float] = field(default_factory=lambda: {"image": 0.5, "image_pose": 0.25,
                                                                         "pose": 0.25})
+    turn_sample_ratio: float = 0.5     # 学習で「この先曲がる」サンプルを引く割合 (0 で一様 = 以前と同じ)
+    turn_threshold_deg: float = 45.0   # 曲がるサンプルの判定: turn_horizon フレーム以内に何度以上曲がるか
+    turn_horizon: int = 10
+    val_turn_ratio: float = 0.5        # 検証サンプルに含める曲がるサンプルの割合 (turn/ade で別集計)
     augment: bool = True
     crop_v: float = 0.1
     crop_h: float = 0.05
@@ -247,8 +252,13 @@ def save_checkpoint(run_dir: Path, step: int, cfg: FinetuneConfig, vla, action_h
 
 
 def make_loader(ds, cfg: FinetuneConfig, shuffle: bool, distributed: bool, rank: int, world: int, collate_fn):
-    sampler = DistributedSampler(ds, num_replicas=world, rank=rank, shuffle=shuffle, seed=cfg.seed) \
-        if distributed else None
+    if shuffle and cfg.turn_sample_ratio > 0:
+        # 曲がるサンプルを turn_sample_ratio の割合で引く (元データはほぼ直進なので、そのままだと直進ばかり学習する)
+        sampler = WeightedEpochSampler(ds.sample_weights(cfg.turn_sample_ratio), len(ds) // world, cfg.seed, rank)
+    elif distributed:
+        sampler = DistributedSampler(ds, num_replicas=world, rank=rank, shuffle=shuffle, seed=cfg.seed)
+    else:
+        sampler = None
     return DataLoader(ds, batch_size=cfg.batch_size, shuffle=(shuffle and sampler is None), sampler=sampler,
                       num_workers=cfg.num_workers, collate_fn=collate_fn, drop_last=shuffle,
                       pin_memory=True, persistent_workers=False), sampler
@@ -369,13 +379,19 @@ def main(argv=None):
                                 modality_weights=parse_modality_weights(cfg.modality_weights)),
         aug=AugmentConfig(enabled=cfg.augment, crop_v=cfg.crop_v, crop_h=cfg.crop_h, flip_prob=cfg.flip_prob,
                           color_jitter=cfg.color_jitter),
+        turn_horizon=cfg.turn_horizon,
+        turn_threshold_deg=cfg.turn_threshold_deg,
     )
     action_tokenizer = ActionTokenizer(processor.tokenizer)
     train_ds = GazeboNavDataset(train_dirs, processor, action_tokenizer, ds_cfg, train=True, seed=cfg.seed)
     val_ds = GazeboNavDataset(val_dirs, processor, action_tokenizer, ds_cfg, train=False, seed=cfg.seed,
-                              max_samples=cfg.val_batches * cfg.batch_size) if val_dirs else None
+                              max_samples=cfg.val_batches * cfg.batch_size,
+                              turn_ratio=cfg.val_turn_ratio) if val_dirs else None
     say(f"samples: train={len(train_ds)} ({train_ds.num_frames()} frames)"
-        + (f", val={len(val_ds)}" if val_ds else ""))
+        + (f", val={len(val_ds)} (turn {val_ds.turn_fraction() * 100:.0f}%)" if val_ds else ""))
+    say(f"turning samples in train data: {train_ds.turn_fraction() * 100:.1f}% "
+        f"(> {cfg.turn_threshold_deg:.0f}deg within {cfg.turn_horizon} frames) -> sampled at "
+        + (f"{cfg.turn_sample_ratio * 100:.0f}%" if cfg.turn_sample_ratio > 0 else "natural rate"))
 
     def collate_fn(items):
         return collate(items, processor.tokenizer.pad_token_id, processor.tokenizer.model_max_length)
@@ -399,6 +415,8 @@ def main(argv=None):
         head.train()
         pose_projector.train()
         say(f"[val step {step}] ADE={m.get('ade', float('nan')):.3f}m FDE={m.get('fde', float('nan')):.3f}m "
+            f"turn: ADE={m.get('turn/ade', float('nan')):.3f}m FDE={m.get('turn/fde', float('nan')):.3f}m "
+            f"heading_err={m.get('turn/yaw_err_deg', float('nan')):.1f}deg | "
             + " ".join(f"{k}={v:.3f}" for k, v in m.items() if k.endswith("/ade")))
         log.log(step, {f"val/{k}": v for k, v in m.items()})
         return m
