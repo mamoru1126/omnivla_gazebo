@@ -95,6 +95,28 @@ GOAL_PATH=/data/goals/demo docker compose run --rm nav
   (無いと「ディレクトリが空ではない」で止まります)。
 - 2026-10-05 より前に作った topomap には start が記録されていないので、作り直すか `--x --y --yaw` で戻してください。
 
+### 走行ログ (自動で保存)
+
+navigator は走行ごとに `log/nav/<日時>/` (リポジトリ直下) へログを保存します。何もしなくても毎回残ります。
+
+| ファイル | 中身 |
+|---|---|
+| `steps.csv` | 1 推論 (≈0.33 秒) ごと: 真値の位置姿勢, サブゴール番号と相対位置, 予測 8 点, 指令 (v, w), レイテンシ |
+| `events.log` | サブゴール切替・到達・停止などの出来事 |
+| `summary.json` | 到達したか, 最終距離, 走行距離, 終了理由 |
+| `meta.json` | 使ったモデル (finetuned_dir), modality, 制御則, 全パラメータ, ゴール列の姿勢 |
+| `debug/*.jpg`, `raw/*.jpg` | 毎ステップのデバッグ画像とカメラ画像 / `goals/*.jpg` 使ったゴール画像 |
+
+解析 (GPU 不要): `python3 tools/plot_nav_log.py log/nav/latest` で
+`overview.png` (地図上の走行軌跡と予測軌跡), `timeline.png`, `report.txt`
+(予測がサブゴールと逆を向いたステップ = モデル側の問題 / 指令が予測と逆のステップ = 制御側の問題) を作ります。
+
+うまくいかなかった走行は、そのディレクトリだけ push してください (1 走行 10〜30MB 程度):
+```bash
+git add log/nav/<日時> && git commit -m "nav log" && git push
+```
+画像が不要なら `log_debug_images` / `log_raw_images` を false に、ログ自体を止めるなら `log_dir` を空にします (`config/navigator.yaml`)。
+
 ## 使い方の詳細
 
 ### ナビゲーション (`navigate.launch.py`)

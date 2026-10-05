@@ -25,8 +25,8 @@ def generate_launch_description():
         "instruction": "",
         "controller": "upstream",
         "reach_check": "auto",
-        "save_debug_dir": "",
-        "log_csv": "",
+        "log_dir": "/workspace/log/nav",
+        "world": "",
     }
     decls = [DeclareLaunchArgument("params_file", default_value=os.path.join(pkg, "config", "navigator.yaml")),
              DeclareLaunchArgument("autostart", default_value="true")]

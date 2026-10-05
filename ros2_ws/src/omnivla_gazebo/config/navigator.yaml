@@ -34,8 +34,12 @@ omnivla_navigator:
     odom_topic: /odom
     cmd_vel_topic: /cmd_vel
     publish_debug_image: true
-    save_debug_dir: ""
-    log_csv: ""
+    # 走行ログ (1 走行ごとに <log_dir>/<時刻>/ : steps.csv, events.log, summary.json, debug/, raw/, goals/)
+    # /workspace はリポジトリのマウントなので、ホストの omnivla_gazebo/log/nav/ に出る。空文字で無効
+    log_dir: /workspace/log/nav
+    log_debug_images: true
+    log_raw_images: true
+    world: ""                                 # ログ解析で地図を描くため (compose の WORLD が渡される)
     camera_hfov: 1.75
     camera_height: 0.35
     camera_x: 0.17
