@@ -10,3 +10,5 @@ accelerate==0.34.2
 protobuf<5
 # colcon (ament_python --symlink-install) が使う setup.py develop を壊さないため
 setuptools<70
+# tensorflow 2.15 / tensorflow_datasets 4.9.3 世代 (最新版は protobuf>=5 を要求して TF と衝突する)
+tensorflow-metadata==1.14.0
