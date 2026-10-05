@@ -135,6 +135,7 @@ class TopomapRecorderNode(Node):
             self._save(self._fresh_image(self.get_clock().now().nanoseconds * 1e-9))
         start_yaw = float(path_headings(path)[0])
         self._teleport(start[0], start[1], start_yaw, sim.world)
+        self.writer.set_start((start[0], start[1], start_yaw))
         self.get_logger().info(f"robot returned to start ({start[0]:.2f}, {start[1]:.2f}, yaw {start_yaw:.2f})")
 
     def _teleport(self, x, y, yaw, world):

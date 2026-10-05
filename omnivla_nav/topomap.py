@@ -81,6 +81,19 @@ class TopomapWriter:
                 if f.lower().endswith(IMAGE_EXTS) or f == "poses.yaml":
                     os.remove(os.path.join(self.out_dir, f))
         self.nodes: List[dict] = []
+        self.start: Optional[dict] = None
+
+    def _write_yaml(self) -> None:
+        data = {"nodes": self.nodes}
+        if self.start is not None:
+            data["start"] = self.start
+        with open(os.path.join(self.out_dir, "poses.yaml"), "w") as f:
+            yaml.safe_dump(data, f, sort_keys=False)
+
+    def set_start(self, pose: Tuple[float, float, float]) -> None:
+        """走行開始姿勢を記録する (teleport --goal_dir で同じ姿勢に戻せる)."""
+        self.start = {"x": float(pose[0]), "y": float(pose[1]), "yaw": float(pose[2])}
+        self._write_yaml()
 
     def add(self, image, pose: Optional[Tuple[float, float, float]] = None) -> str:
         if isinstance(image, np.ndarray):
@@ -91,9 +104,18 @@ class TopomapWriter:
         if pose is not None:
             entry.update({"x": float(pose[0]), "y": float(pose[1]), "yaw": float(pose[2])})
         self.nodes.append(entry)
-        with open(os.path.join(self.out_dir, "poses.yaml"), "w") as f:
-            yaml.safe_dump({"nodes": self.nodes}, f, sort_keys=False)
+        self._write_yaml()
         return os.path.join(self.out_dir, name)
+
+
+def load_start_pose(goal_dir: str) -> Optional[Tuple[float, float, float]]:
+    """topomap の poses.yaml に記録された走行開始姿勢 (route モードで作成した場合のみ)."""
+    path = os.path.join(os.path.abspath(os.path.expanduser(goal_dir)), "poses.yaml")
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+    return _load_pose_entry(data.get("start"))
 
 
 class GoalTracker:
