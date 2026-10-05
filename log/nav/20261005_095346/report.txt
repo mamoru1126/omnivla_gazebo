@@ -1,0 +1,63 @@
+run: /home/claude/omnivla_gazebo/log/nav/20261005_095346
+goal: /data/goals/demo  world: office_0  modality: 6  controller: upstream
+model: {'vla_path': '/checkpoints/omnivla-original', 'finetuned_dir': '/runs/omnivla_gazebo_20261005_080359/checkpoints/step_001000', 'metric_waypoint_spacing': 0.1}
+summary: reason=shutdown, reached=False, steps=219, final_dist_to_goal=7.7699571309913615, min_dist_to_goal=3.677696877778487, path_length_m=20.902294655850103, subgoal_index=10
+
+== サブゴールごとの区間 ==
+subgoal  0: steps 1-6 (6 steps)  goal_bearing -0 -> +4 deg  dist 1.01 -> 0.62 m
+subgoal  1: steps 7-16 (10 steps)  goal_bearing +3 -> +5 deg  dist 0.52 -> 0.61 m
+subgoal  2: steps 17-26 (10 steps)  goal_bearing +2 -> +5 deg  dist 0.51 -> 0.61 m
+subgoal  3: steps 27-36 (10 steps)  goal_bearing +2 -> +10 deg  dist 0.51 -> 0.60 m
+subgoal  4: steps 37-45 (9 steps)  goal_bearing +5 -> +13 deg  dist 0.50 -> 0.70 m
+subgoal  5: steps 46-56 (11 steps)  goal_bearing +7 -> +20 deg  dist 0.60 -> 0.60 m
+subgoal  6: steps 57-66 (10 steps)  goal_bearing +9 -> +21 deg  dist 0.51 -> 0.61 m
+subgoal  7: steps 67-75 (9 steps)  goal_bearing +9 -> +19 deg  dist 0.50 -> 0.68 m
+subgoal  8: steps 76-85 (10 steps)  goal_bearing +8 -> +20 deg  dist 0.59 -> 0.67 m
+subgoal  9: steps 86-95 (10 steps)  goal_bearing +8 -> +32 deg  dist 0.57 -> 0.67 m
+subgoal 10: steps 96-219 (124 steps)  goal_bearing +27 -> -157 deg  dist 0.57 -> 7.05 m
+
+== 予測軌跡がサブゴールと逆側を向いたステップ (56/219) ==
+   (サブゴールが |bearing|>15deg の横にあるのに, 予測の 5 点目が反対側) -> モデル側の問題
+step   99 subgoal 10  goal    +36deg  pred     -4deg  v=0.30 w=-0.13
+step  100 subgoal 10  goal    +41deg  pred     -4deg  v=0.30 w=-0.12
+step  101 subgoal 10  goal    +48deg  pred     -4deg  v=0.30 w=-0.11
+step  102 subgoal 10  goal    +55deg  pred     -5deg  v=0.30 w=-0.15
+step  103 subgoal 10  goal    +64deg  pred     -5deg  v=0.30 w=-0.14
+step  104 subgoal 10  goal    +74deg  pred     -4deg  v=0.30 w=-0.11
+step  106 subgoal 10  goal    +94deg  pred     -4deg  v=0.30 w=-0.11
+step  107 subgoal 10  goal   +104deg  pred     -5deg  v=0.30 w=-0.15
+step  108 subgoal 10  goal   +114deg  pred     -5deg  v=0.30 w=-0.17
+step  109 subgoal 10  goal   +122deg  pred     -5deg  v=0.30 w=-0.17
+step  110 subgoal 10  goal   +131deg  pred     -6deg  v=0.30 w=-0.20
+step  111 subgoal 10  goal   +139deg  pred     -7deg  v=0.30 w=-0.22
+step  112 subgoal 10  goal   +147deg  pred     -6deg  v=0.30 w=-0.20
+step  113 subgoal 10  goal   +155deg  pred     -6deg  v=0.30 w=-0.20
+step  114 subgoal 10  goal   +161deg  pred     -8deg  v=0.30 w=-0.25
+step  115 subgoal 10  goal   +167deg  pred     -8deg  v=0.30 w=-0.26
+step  116 subgoal 10  goal   +172deg  pred     -9deg  v=0.30 w=-0.28
+step  117 subgoal 10  goal   +178deg  pred    -10deg  v=0.29 w=-0.30
+step  179 subgoal 10  goal   -103deg  pred     +5deg  v=0.30 w=+0.15
+step  180 subgoal 10  goal   -105deg  pred     +5deg  v=0.30 w=+0.16
+step  181 subgoal 10  goal   -109deg  pred     +5deg  v=0.30 w=+0.15
+step  182 subgoal 10  goal   -113deg  pred     +5deg  v=0.30 w=+0.14
+step  183 subgoal 10  goal   -117deg  pred     +5deg  v=0.30 w=+0.16
+step  184 subgoal 10  goal   -122deg  pred     +5deg  v=0.30 w=+0.15
+step  185 subgoal 10  goal   -126deg  pred     +4deg  v=0.30 w=+0.12
+step  186 subgoal 10  goal   -129deg  pred     +4deg  v=0.30 w=+0.13
+step  187 subgoal 10  goal   -133deg  pred     +4deg  v=0.30 w=+0.12
+step  188 subgoal 10  goal   -136deg  pred     +4deg  v=0.30 w=+0.13
+step  189 subgoal 10  goal   -140deg  pred     +5deg  v=0.30 w=+0.15
+step  190 subgoal 10  goal   -143deg  pred     +4deg  v=0.30 w=+0.13
+step  191 subgoal 10  goal   -147deg  pred     +3deg  v=0.30 w=+0.11
+step  192 subgoal 10  goal   -150deg  pred     +4deg  v=0.30 w=+0.12
+step  193 subgoal 10  goal   -153deg  pred     +4deg  v=0.30 w=+0.13
+step  194 subgoal 10  goal   -156deg  pred     +4deg  v=0.30 w=+0.12
+step  195 subgoal 10  goal   -159deg  pred     +4deg  v=0.30 w=+0.13
+step  196 subgoal 10  goal   -162deg  pred     +3deg  v=0.30 w=+0.10
+step  199 subgoal 10  goal   -168deg  pred     +5deg  v=0.30 w=+0.16
+step  200 subgoal 10  goal   -171deg  pred     +4deg  v=0.30 w=+0.13
+step  201 subgoal 10  goal   -174deg  pred     +4deg  v=0.30 w=+0.13
+step  203 subgoal 10  goal   -157deg  pred     +3deg  v=0.30 w=+0.10
+
+== 旋回指令が予測軌跡と逆のステップ (0/219) ==
+   -> 制御 (軌跡 -> v, w の変換) 側の問題。0 であるべき
