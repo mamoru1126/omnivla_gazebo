@@ -2,143 +2,1358 @@ Compose can now delegate builds to bake for better performance.
  To do so, set COMPOSE_BAKE=true.
 #0 building with "multi-arch" instance using docker-container driver
 
-#1 [nav internal] load build definition from Dockerfile
-#1 transferring dockerfile: 4.67kB done
+#1 [sim internal] load build definition from Dockerfile
+#1 transferring dockerfile: 4.96kB done
 #1 DONE 0.0s
 
-#2 [explore internal] load build definition from Dockerfile
-#2 transferring dockerfile: 4.67kB done
-#2 DONE 0.0s
+#2 [nav internal] load build definition from Dockerfile
+#2 transferring dockerfile: 4.96kB done
+#2 DONE 0.1s
 
-#3 [sim internal] load build definition from Dockerfile
-#3 transferring dockerfile: 4.67kB done
+#3 [shell internal] load build definition from Dockerfile
+#3 transferring dockerfile: 4.96kB done
 #3 DONE 0.1s
 
 #4 [train internal] load build definition from Dockerfile
-#4 transferring dockerfile: 4.67kB done
+#4 transferring dockerfile: 4.96kB done
 #4 DONE 0.1s
 
-#5 [shell internal] load build definition from Dockerfile
-#5 transferring dockerfile: 4.67kB done
+#5 [explore internal] load build definition from Dockerfile
+#5 transferring dockerfile: 4.96kB done
 #5 DONE 0.1s
 
-#6 [shell] resolve image config for docker-image://docker.io/docker/dockerfile:1
-#6 DONE 0.7s
+#6 [train] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#6 ...
 
-#7 [sim] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
-#7 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
-#7 CACHED
+#7 [sim auth] docker/dockerfile:pull token for registry-1.docker.io
+#7 DONE 0.0s
 
-#8 [explore internal] load metadata for docker.io/library/ros:humble-ros-base-jammy
-#8 DONE 0.3s
+#6 [train] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#6 DONE 1.6s
 
-#9 [shell internal] load .dockerignore
-#9 transferring context: 138B done
-#9 DONE 0.0s
+#8 [explore] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#8 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#8 CACHED
 
-#10 [train internal] load .dockerignore
-#10 transferring context: 138B done
-#10 DONE 0.1s
+#9 [shell internal] load metadata for docker.io/library/ros:humble-ros-base-jammy
+#9 ...
 
-#11 [explore internal] load .dockerignore
+#10 [shell auth] library/ros:pull token for registry-1.docker.io
+#10 DONE 0.0s
+
+#9 [explore internal] load metadata for docker.io/library/ros:humble-ros-base-jammy
+#9 DONE 0.7s
+
+#11 [train internal] load .dockerignore
 #11 transferring context: 138B done
-#11 DONE 0.1s
+#11 DONE 0.0s
 
-#12 [sim internal] load .dockerignore
+#12 [explore internal] load .dockerignore
 #12 transferring context: 138B done
 #12 DONE 0.1s
 
-#13 [nav internal] load .dockerignore
+#13 [shell internal] load .dockerignore
 #13 transferring context: 138B done
 #13 DONE 0.1s
 
-#14 [nav  1/12] FROM docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19
-#14 resolve docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19 0.0s done
+#14 [sim internal] load .dockerignore
+#14 transferring context: 138B done
 #14 DONE 0.1s
 
-#15 [nav internal] load build context
-#15 transferring context: 16.36kB 0.0s done
-#15 DONE 0.0s
+#15 [nav internal] load .dockerignore
+#15 transferring context: 138B done
+#15 DONE 0.1s
 
-#14 [sim  1/12] FROM docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19
-#14 resolve docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19 0.0s done
-#14 DONE 0.1s
-
-#16 [explore internal] load build context
-#16 transferring context: 16.36kB 0.0s done
+#16 [explore  1/13] FROM docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19
+#16 resolve docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19 0.0s done
 #16 DONE 0.1s
 
-#17 [sim internal] load build context
-#17 transferring context: 16.36kB 0.0s done
+#17 [shell internal] load build context
+#17 transferring context: 19.42kB 0.0s done
 #17 DONE 0.1s
 
-#18 [shell internal] load build context
-#18 transferring context: 16.36kB 0.0s done
-#18 DONE 0.1s
+#16 [nav  1/13] FROM docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19
+#16 resolve docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19 0.0s done
+#16 DONE 0.1s
 
-#19 [train internal] load build context
-#19 transferring context: 16.36kB 0.0s done
-#19 DONE 0.1s
+#18 [train internal] load build context
+#18 transferring context: 19.42kB 0.0s done
+#18 DONE 0.0s
 
-#20 [nav  4/12] COPY docker/constraints.txt /tmp/constraints.txt
+#19 [nav  2/13] RUN apt-get update && apt-get install -y --no-install-recommends         git git-lfs curl wget gnupg lsb-release ca-certificates build-essential         python3-pip python3-dev python3-colcon-common-extensions         libgl1 libegl1 libglib2.0-0 libopenexr-dev zlib1g-dev ffmpeg         mesa-utils x11-apps less nano     && rm -rf /var/lib/apt/lists/*
+#19 CACHED
+
+#20 [nav  3/13] RUN curl -fsSL https://packages.osrfoundation.org/gazebo.gpg -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main"         > /etc/apt/sources.list.d/gazebo-stable.list     && apt-get update && apt-get install -y --no-install-recommends         gz-harmonic         ros-humble-ros-gzharmonic         ros-humble-rviz2         ros-humble-rqt-image-view         ros-humble-teleop-twist-keyboard         ros-humble-tf2-ros     && rm -rf /var/lib/apt/lists/*
 #20 CACHED
 
-#21 [nav  2/12] RUN apt-get update && apt-get install -y --no-install-recommends         git git-lfs curl wget gnupg lsb-release ca-certificates build-essential         python3-pip python3-dev python3-colcon-common-extensions         libgl1 libegl1 libglib2.0-0 libopenexr-dev zlib1g-dev ffmpeg         mesa-utils x11-apps less nano     && rm -rf /var/lib/apt/lists/*
-#21 CACHED
+#21 [explore internal] load build context
+#21 transferring context: 19.42kB 0.0s done
+#21 DONE 0.1s
 
-#22 [nav  3/12] RUN curl -fsSL https://packages.osrfoundation.org/gazebo.gpg -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main"         > /etc/apt/sources.list.d/gazebo-stable.list     && apt-get update && apt-get install -y --no-install-recommends         gz-harmonic         ros-humble-ros-gzharmonic         ros-humble-rviz2         ros-humble-rqt-image-view         ros-humble-teleop-twist-keyboard         ros-humble-tf2-ros     && rm -rf /var/lib/apt/lists/*
-#22 CACHED
+#22 [nav internal] load build context
+#22 transferring context: 21.44kB 0.0s done
+#22 DONE 0.1s
 
-#23 [shell  5/12] RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0
-#23 CACHED
+#23 [sim internal] load build context
+#23 transferring context: 19.85kB 0.0s done
+#23 DONE 0.1s
 
-#24 [shell  6/12] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())"     && touch prismatic/vla/datasets/rlds/oxe/utils/__init__.py     && python3 -m pip install -c /tmp/constraints.txt /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest
-#24 1.158 Processing /opt/OmniVLA
-#24 1.291   Installing build dependencies: started
-#24 3.058   Installing build dependencies: finished with status 'done'
-#24 3.060   Getting requirements to build wheel: started
-#24 3.165   Getting requirements to build wheel: finished with status 'done'
-#24 3.228   Installing backend dependencies: started
-#24 4.519   Installing backend dependencies: finished with status 'done'
-#24 4.521   Preparing metadata (pyproject.toml): started
-#24 4.629   Preparing metadata (pyproject.toml): finished with status 'done'
-#24 4.631 Building wheels for collected packages: UNKNOWN
-#24 4.631   Building wheel for UNKNOWN (pyproject.toml): started
-#24 4.744   Building wheel for UNKNOWN (pyproject.toml): finished with status 'done'
-#24 4.744   Created wheel for UNKNOWN: filename=UNKNOWN-0.0.0-py3-none-any.whl size=1867 sha256=671c1e29a252a73d1095f538cac788de934b121e5fbca797094372b679e51874
-#24 4.744   Stored in directory: /tmp/pip-ephem-wheel-cache-dhus2b8n/wheels/dd/ce/27/d18cc42eba70a31cb9385811c5c9ebccbeabda45d1e3b33ee4
-#24 4.745 Successfully built UNKNOWN
-#24 4.888 Installing collected packages: UNKNOWN
-#24 4.911 Successfully installed UNKNOWN-0.0.0
-#24 4.911 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
-#24 5.178 Requirement already satisfied: scipy in /usr/lib/python3/dist-packages (1.8.0)
-#24 5.179 Requirement already satisfied: pyyaml in /usr/lib/python3/dist-packages (5.4.1)
-#24 5.179 Requirement already satisfied: pytest in /usr/lib/python3/dist-packages (6.2.5)
-#24 5.322 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
-#24 DONE 5.4s
+#24 [nav  4/13] COPY docker/constraints.txt /tmp/constraints.txt
+#24 DONE 0.1s
 
-#25 [sim  7/12] COPY . /workspace
-#25 DONE 0.1s
+#25 [sim  5/13] RUN python3 -m pip install -U "pip>=24,<26" "setuptools>=68,<70" wheel
+#25 0.679 Collecting pip<26,>=24
+#25 0.920   Downloading pip-25.3-py3-none-any.whl (1.8 MB)
+#25 1.258      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 5.6 MB/s eta 0:00:00
+#25 1.487 Collecting setuptools<70,>=68
+#25 1.527   Downloading setuptools-69.5.1-py3-none-any.whl (894 kB)
+#25 1.554      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 894.6/894.6 KB 40.2 MB/s eta 0:00:00
+#25 1.561 Requirement already satisfied: wheel in /usr/lib/python3/dist-packages (0.37.1)
+#25 1.620 Collecting wheel
+#25 1.656   Downloading wheel-0.48.0-py3-none-any.whl (33 kB)
+#25 1.697 Collecting packaging>=24.0
+#25 1.733   Downloading packaging-26.3-py3-none-any.whl (129 kB)
+#25 1.736      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 130.0/130.0 KB 398.1 MB/s eta 0:00:00
+#25 1.859 Installing collected packages: setuptools, pip, packaging, wheel
+#25 1.859   Attempting uninstall: setuptools
+#25 1.859     Found existing installation: setuptools 59.6.0
+#25 1.861     Not uninstalling setuptools at /usr/lib/python3/dist-packages, outside environment /usr
+#25 1.861     Can't uninstall 'setuptools'. No files were found to uninstall.
+#25 2.112   Attempting uninstall: pip
+#25 2.112     Found existing installation: pip 22.0.2
+#25 2.112     Not uninstalling pip at /usr/lib/python3/dist-packages, outside environment /usr
+#25 2.113     Can't uninstall 'pip'. No files were found to uninstall.
+#25 2.500   Attempting uninstall: packaging
+#25 2.500     Found existing installation: packaging 21.3
+#25 2.501     Not uninstalling packaging at /usr/lib/python3/dist-packages, outside environment /usr
+#25 2.501     Can't uninstall 'packaging'. No files were found to uninstall.
+#25 2.549   Attempting uninstall: wheel
+#25 2.549     Found existing installation: wheel 0.37.1
+#25 2.549     Not uninstalling wheel at /usr/lib/python3/dist-packages, outside environment /usr
+#25 2.550     Can't uninstall 'wheel'. No files were found to uninstall.
+#25 2.575 Successfully installed packaging-26.3 pip-25.3 setuptools-69.5.1 wheel-0.48.0
+#25 2.575 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#25 DONE 2.7s
 
-#26 [explore  8/12] WORKDIR /workspace
-#26 DONE 0.1s
+#26 [shell  6/13] RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0
+#26 0.573 Collecting torch==2.2.0
+#26 0.823   Downloading torch-2.2.0-cp310-cp310-manylinux1_x86_64.whl.metadata (25 kB)
+#26 0.918 Collecting torchvision==0.17.0
+#26 0.952   Downloading torchvision-0.17.0-cp310-cp310-manylinux1_x86_64.whl.metadata (6.6 kB)
+#26 0.990 Collecting torchaudio==2.2.0
+#26 1.024   Downloading torchaudio-2.2.0-cp310-cp310-manylinux1_x86_64.whl.metadata (6.4 kB)
+#26 1.060 Collecting filelock (from torch==2.2.0)
+#26 1.094   Downloading filelock-4.0.11-py3-none-any.whl.metadata (2.0 kB)
+#26 1.133 Collecting typing-extensions>=4.8.0 (from torch==2.2.0)
+#26 1.169   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#26 1.173 Requirement already satisfied: sympy in /usr/lib/python3/dist-packages (from torch==2.2.0) (1.9)
+#26 1.213 Collecting networkx (from torch==2.2.0)
+#26 1.248   Downloading networkx-3.4.2-py3-none-any.whl.metadata (6.3 kB)
+#26 1.285 Collecting jinja2 (from torch==2.2.0)
+#26 1.318   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+#26 1.344 Collecting fsspec (from torch==2.2.0)
+#26 1.378   Downloading fsspec-2026.9.0-py3-none-any.whl.metadata (10 kB)
+#26 1.429 Collecting nvidia-cuda-nvrtc-cu12==12.1.105 (from torch==2.2.0)
+#26 1.465   Downloading nvidia_cuda_nvrtc_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+#26 1.502 Collecting nvidia-cuda-runtime-cu12==12.1.105 (from torch==2.2.0)
+#26 1.538   Downloading nvidia_cuda_runtime_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+#26 1.573 Collecting nvidia-cuda-cupti-cu12==12.1.105 (from torch==2.2.0)
+#26 1.608   Downloading nvidia_cuda_cupti_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+#26 1.632 Collecting nvidia-cudnn-cu12==8.9.2.26 (from torch==2.2.0)
+#26 1.667   Downloading nvidia_cudnn_cu12-8.9.2.26-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+#26 1.703 Collecting nvidia-cublas-cu12==12.1.3.1 (from torch==2.2.0)
+#26 1.744   Downloading nvidia_cublas_cu12-12.1.3.1-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+#26 1.779 Collecting nvidia-cufft-cu12==11.0.2.54 (from torch==2.2.0)
+#26 1.816   Downloading nvidia_cufft_cu12-11.0.2.54-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+#26 1.852 Collecting nvidia-curand-cu12==10.3.2.106 (from torch==2.2.0)
+#26 1.887   Downloading nvidia_curand_cu12-10.3.2.106-py3-none-manylinux1_x86_64.whl.metadata (1.5 kB)
+#26 1.906 Collecting nvidia-cusolver-cu12==11.4.5.107 (from torch==2.2.0)
+#26 1.941   Downloading nvidia_cusolver_cu12-11.4.5.107-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+#26 1.962 Collecting nvidia-cusparse-cu12==12.1.0.106 (from torch==2.2.0)
+#26 2.010   Downloading nvidia_cusparse_cu12-12.1.0.106-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+#26 2.044 Collecting nvidia-nccl-cu12==2.19.3 (from torch==2.2.0)
+#26 2.081   Downloading nvidia_nccl_cu12-2.19.3-py3-none-manylinux1_x86_64.whl.metadata (1.8 kB)
+#26 2.116 Collecting nvidia-nvtx-cu12==12.1.105 (from torch==2.2.0)
+#26 2.153   Downloading nvidia_nvtx_cu12-12.1.105-py3-none-manylinux1_x86_64.whl.metadata (1.7 kB)
+#26 2.185 Collecting triton==2.2.0 (from torch==2.2.0)
+#26 2.228   Downloading triton-2.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.4 kB)
+#26 2.369 Collecting numpy (from torchvision==0.17.0)
+#26 2.421   Downloading numpy-1.26.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (61 kB)
+#26 2.493 Collecting requests (from torchvision==0.17.0)
+#26 2.528   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+#26 2.529 Requirement already satisfied: pillow!=8.3.*,>=5.3.0 in /usr/lib/python3/dist-packages (from torchvision==0.17.0) (9.0.1)
+#26 2.551 Collecting nvidia-nvjitlink-cu12 (from nvidia-cusolver-cu12==11.4.5.107->torch==2.2.0)
+#26 2.585   Downloading nvidia_nvjitlink_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+#26 2.635 Collecting MarkupSafe>=2.0 (from jinja2->torch==2.2.0)
+#26 2.679   Downloading markupsafe-3.0.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+#26 2.785 Collecting charset_normalizer<4,>=2 (from requests->torchvision==0.17.0)
+#26 2.822   Downloading charset_normalizer-3.5.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (46 kB)
+#26 2.857 Collecting idna<4,>=2.5 (from requests->torchvision==0.17.0)
+#26 2.891   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+#26 2.929 Collecting urllib3<3,>=1.26 (from requests->torchvision==0.17.0)
+#26 2.965   Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+#26 3.010 Collecting certifi>=2023.5.7 (from requests->torchvision==0.17.0)
+#26 3.045   Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+#26 3.091 Downloading torch-2.2.0-cp310-cp310-manylinux1_x86_64.whl (755.5 MB)
+#26 49.28    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 755.5/755.5 MB 28.2 MB/s  0:00:46
+#26 49.30 Downloading torchvision-0.17.0-cp310-cp310-manylinux1_x86_64.whl (6.9 MB)
+#26 50.19    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 7.6 MB/s  0:00:00
+#26 50.21 Downloading torchaudio-2.2.0-cp310-cp310-manylinux1_x86_64.whl (3.3 MB)
+#26 50.56    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 9.7 MB/s  0:00:00
+#26 50.58 Downloading nvidia_cublas_cu12-12.1.3.1-py3-none-manylinux1_x86_64.whl (410.6 MB)
+#26 69.06    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 410.6/410.6 MB 21.6 MB/s  0:00:18
+#26 69.10 Downloading nvidia_cuda_cupti_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (14.1 MB)
+#26 69.57    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 14.1/14.1 MB 29.9 MB/s  0:00:00
+#26 69.61 Downloading nvidia_cuda_nvrtc_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (23.7 MB)
+#26 70.67    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.7/23.7 MB 22.4 MB/s  0:00:01
+#26 70.71 Downloading nvidia_cuda_runtime_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (823 kB)
+#26 70.75    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 823.6/823.6 kB 13.4 MB/s  0:00:00
+#26 70.79 Downloading nvidia_cudnn_cu12-8.9.2.26-py3-none-manylinux1_x86_64.whl (731.7 MB)
+#26 112.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 731.7/731.7 MB 17.4 MB/s  0:00:41
+#26 112.2 Downloading nvidia_cufft_cu12-11.0.2.54-py3-none-manylinux1_x86_64.whl (121.6 MB)
+#26 115.0    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 121.6/121.6 MB 42.1 MB/s  0:00:02
+#26 115.1 Downloading nvidia_curand_cu12-10.3.2.106-py3-none-manylinux1_x86_64.whl (56.5 MB)
+#26 116.6    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 MB 37.6 MB/s  0:00:01
+#26 116.6 Downloading nvidia_cusolver_cu12-11.4.5.107-py3-none-manylinux1_x86_64.whl (124.2 MB)
+#26 127.6    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 124.2/124.2 MB 11.3 MB/s  0:00:10
+#26 127.6 Downloading nvidia_cusparse_cu12-12.1.0.106-py3-none-manylinux1_x86_64.whl (196.0 MB)
+#26 138.5    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 196.0/196.0 MB 18.0 MB/s  0:00:10
+#26 138.5 Downloading nvidia_nccl_cu12-2.19.3-py3-none-manylinux1_x86_64.whl (166.0 MB)
+#26 145.2    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 166.0/166.0 MB 25.0 MB/s  0:00:06
+#26 145.2 Downloading nvidia_nvtx_cu12-12.1.105-py3-none-manylinux1_x86_64.whl (99 kB)
+#26 145.2 Downloading triton-2.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (167.9 MB)
+#26 156.6    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 167.9/167.9 MB 14.8 MB/s  0:00:11
+#26 156.6 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#26 156.6 Downloading filelock-4.0.11-py3-none-any.whl (111 kB)
+#26 156.6 Downloading fsspec-2026.9.0-py3-none-any.whl (221 kB)
+#26 156.6 Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+#26 156.7 Downloading markupsafe-3.0.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (20 kB)
+#26 156.7 Downloading networkx-3.4.2-py3-none-any.whl (1.7 MB)
+#26 156.9    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 6.3 MB/s  0:00:00
+#26 156.9 Downloading numpy-1.26.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.2 MB)
+#26 159.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.2/18.2 MB 9.7 MB/s  0:00:02
+#26 159.1 Downloading nvidia_nvjitlink_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.7 MB)
+#26 160.0    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 39.7/39.7 MB 44.3 MB/s  0:00:00
+#26 160.0 Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+#26 160.1 Downloading charset_normalizer-3.5.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (271 kB)
+#26 160.1 Downloading idna-3.20-py3-none-any.whl (69 kB)
+#26 160.1 Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+#26 160.1 Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+#26 161.7 Installing collected packages: urllib3, typing-extensions, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufft-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, MarkupSafe, idna, fsspec, filelock, charset_normalizer, certifi, triton, requests, nvidia-cusparse-cu12, nvidia-cudnn-cu12, jinja2, nvidia-cusolver-cu12, torch, torchvision, torchaudio
+#26 168.0   Attempting uninstall: numpy
+#26 168.0     Found existing installation: numpy 1.21.5
+#26 168.0     Uninstalling numpy-1.21.5:
+#26 168.4       Successfully uninstalled numpy-1.21.5
+#26 188.2 
+#26 188.2 Successfully installed MarkupSafe-3.0.4 certifi-2026.7.22 charset_normalizer-3.5.2 filelock-4.0.11 fsspec-2026.9.0 idna-3.20 jinja2-3.1.6 networkx-3.4.2 numpy-1.26.4 nvidia-cublas-cu12-12.1.3.1 nvidia-cuda-cupti-cu12-12.1.105 nvidia-cuda-nvrtc-cu12-12.1.105 nvidia-cuda-runtime-cu12-12.1.105 nvidia-cudnn-cu12-8.9.2.26 nvidia-cufft-cu12-11.0.2.54 nvidia-curand-cu12-10.3.2.106 nvidia-cusolver-cu12-11.4.5.107 nvidia-cusparse-cu12-12.1.0.106 nvidia-nccl-cu12-2.19.3 nvidia-nvjitlink-cu12-12.9.86 nvidia-nvtx-cu12-12.1.105 requests-2.34.2 torch-2.2.0 torchaudio-2.2.0 torchvision-0.17.0 triton-2.2.0 typing-extensions-4.16.0 urllib3-2.8.0
+#26 188.2 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#26 DONE 188.6s
 
-#27 [shell  9/12] RUN source /opt/ros/humble/setup.bash     && mkdir -p /opt/omnivla_ws     && colcon --log-base /opt/omnivla_ws/log build --symlink-install         --base-paths /workspace/ros2_ws/src         --build-base /opt/omnivla_ws/build --install-base /opt/omnivla_ws/install
-#27 0.645 Starting >>> omnivla_gazebo
-#27 1.277 Finished <<< omnivla_gazebo [0.63s]
-#27 1.277 
-#27 1.277 Summary: 1 package finished [0.77s]
-#27 DONE 1.3s
+#27 [train  7/13] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())"     && touch prismatic/vla/datasets/rlds/oxe/utils/__init__.py     && python3 -m pip install -c /tmp/constraints.txt /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt "scipy>=1.10,<1.15" pyyaml pytest
+#27 1.389 Processing /opt/OmniVLA
+#27 1.390   Installing build dependencies: started
+#27 2.097   Installing build dependencies: finished with status 'done'
+#27 2.097   Getting requirements to build wheel: started
+#27 2.316   Getting requirements to build wheel: finished with status 'done'
+#27 2.317   Preparing metadata (pyproject.toml): started
+#27 2.417   Preparing metadata (pyproject.toml): finished with status 'done'
+#27 2.578 Collecting accelerate>=0.25.0 (from OmniVLA==0.0.1)
+#27 2.824   Downloading accelerate-0.34.2-py3-none-any.whl.metadata (19 kB)
+#27 2.879 Collecting draccus==0.8.0 (from OmniVLA==0.0.1)
+#27 2.916   Downloading draccus-0.8.0-py3-none-any.whl.metadata (23 kB)
+#27 2.948 Collecting einops (from OmniVLA==0.0.1)
+#27 2.984   Downloading einops-0.8.2-py3-none-any.whl.metadata (13 kB)
+#27 3.032 Collecting huggingface_hub==0.29.1 (from OmniVLA==0.0.1)
+#27 3.274   Downloading huggingface_hub-0.29.1-py3-none-any.whl.metadata (13 kB)
+#27 3.388 Collecting json-numpy (from OmniVLA==0.0.1)
+#27 3.425   Downloading json_numpy-2.1.1-py3-none-any.whl.metadata (5.6 kB)
+#27 3.453 Collecting jsonlines (from OmniVLA==0.0.1)
+#27 3.493   Downloading jsonlines-4.0.0-py3-none-any.whl.metadata (1.6 kB)
+#27 3.496 Requirement already satisfied: matplotlib in /usr/lib/python3/dist-packages (from OmniVLA==0.0.1) (3.5.1)
+#27 3.527 Collecting peft==0.11.1 (from OmniVLA==0.0.1)
+#27 3.564   Downloading peft-0.11.1-py3-none-any.whl.metadata (13 kB)
+#27 3.566 Requirement already satisfied: protobuf in /usr/lib/python3/dist-packages (from OmniVLA==0.0.1) (3.12.4)
+#27 3.601 Collecting rich (from OmniVLA==0.0.1)
+#27 3.637   Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+#27 3.692 Collecting sentencepiece==0.1.99 (from OmniVLA==0.0.1)
+#27 3.729   Downloading sentencepiece-0.1.99-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.7 kB)
+#27 3.768 Collecting timm==0.9.10 (from OmniVLA==0.0.1)
+#27 3.806   Downloading timm-0.9.10-py3-none-any.whl.metadata (59 kB)
+#27 3.918 Collecting tokenizers==0.19.1 (from OmniVLA==0.0.1)
+#27 3.955   Downloading tokenizers-0.19.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.7 kB)
+#27 3.960 Requirement already satisfied: torch==2.2.0 in /usr/local/lib/python3.10/dist-packages (from OmniVLA==0.0.1) (2.2.0)
+#27 3.960 Requirement already satisfied: torchvision==0.17.0 in /usr/local/lib/python3.10/dist-packages (from OmniVLA==0.0.1) (0.17.0)
+#27 3.961 Requirement already satisfied: torchaudio==2.2.0 in /usr/local/lib/python3.10/dist-packages (from OmniVLA==0.0.1) (2.2.0)
+#27 3.962 Collecting transformers@ git+https://github.com/moojink/transformers-openvla-oft.git (from OmniVLA==0.0.1)
+#27 3.962   Cloning https://github.com/moojink/transformers-openvla-oft.git to /tmp/pip-install-jgcl4sad/transformers_8f1b620811174f95b85607199f8d9ab5
+#27 3.965   Running command git clone --filter=blob:none --quiet https://github.com/moojink/transformers-openvla-oft.git /tmp/pip-install-jgcl4sad/transformers_8f1b620811174f95b85607199f8d9ab5
+#27 11.22   Resolved https://github.com/moojink/transformers-openvla-oft.git to commit bc339d9ad707454c0c115970db43c260067c61ab
+#27 11.23   Installing build dependencies: started
+#27 12.36   Installing build dependencies: finished with status 'done'
+#27 12.36   Getting requirements to build wheel: started
+#27 12.68   Getting requirements to build wheel: finished with status 'done'
+#27 12.68   Preparing metadata (pyproject.toml): started
+#27 12.93   Preparing metadata (pyproject.toml): finished with status 'done'
+#27 13.19 Collecting wandb (from OmniVLA==0.0.1)
+#27 13.23   Downloading wandb-0.30.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 13.35 Collecting tensorflow==2.15.0 (from OmniVLA==0.0.1)
+#27 13.39   Downloading tensorflow-2.15.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
+#27 13.45 Collecting tensorflow_datasets==4.9.3 (from OmniVLA==0.0.1)
+#27 13.49   Downloading tensorflow_datasets-4.9.3-py3-none-any.whl.metadata (9.3 kB)
+#27 13.73 Collecting tensorflow_graphics==2021.12.3 (from OmniVLA==0.0.1)
+#27 13.77   Downloading tensorflow_graphics-2021.12.3-py3-none-any.whl.metadata (1.2 kB)
+#27 13.78 Collecting dlimp@ git+https://github.com/moojink/dlimp_openvla (from OmniVLA==0.0.1)
+#27 13.78   Cloning https://github.com/moojink/dlimp_openvla to /tmp/pip-install-jgcl4sad/dlimp_0f6feff556e94ee59ef61fada40ac424
+#27 13.79   Running command git clone --filter=blob:none --quiet https://github.com/moojink/dlimp_openvla /tmp/pip-install-jgcl4sad/dlimp_0f6feff556e94ee59ef61fada40ac424
+#27 14.98   Resolved https://github.com/moojink/dlimp_openvla to commit 040105d256bd28866cc6620621a3d5f7b6b91b46
+#27 14.99   Installing build dependencies: started
+#27 15.74   Installing build dependencies: finished with status 'done'
+#27 15.74   Getting requirements to build wheel: started
+#27 15.91   Getting requirements to build wheel: finished with status 'done'
+#27 15.91   Preparing metadata (pyproject.toml): started
+#27 16.00   Preparing metadata (pyproject.toml): finished with status 'done'
+#27 16.03 Collecting diffusers==0.11.1 (from OmniVLA==0.0.1)
+#27 16.07   Downloading diffusers-0.11.1-py3-none-any.whl.metadata (29 kB)
+#27 16.14 Collecting imageio (from OmniVLA==0.0.1)
+#27 16.17   Downloading imageio-2.38.0-py3-none-any.whl.metadata (9.7 kB)
+#27 16.23 Collecting uvicorn (from OmniVLA==0.0.1)
+#27 16.27   Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+#27 16.32 Collecting fastapi (from OmniVLA==0.0.1)
+#27 16.36   Downloading fastapi-0.142.2-py3-none-any.whl.metadata (27 kB)
+#27 16.39 Collecting utm (from OmniVLA==0.0.1)
+#27 16.43   Downloading utm-0.9.0-py3-none-any.whl.metadata (5.2 kB)
+#27 16.49 Collecting lmdb (from OmniVLA==0.0.1)
+#27 16.53   Downloading lmdb-3.0.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (1.2 kB)
+#27 16.57 Collecting zarr (from OmniVLA==0.0.1)
+#27 16.61   Downloading zarr-2.18.3-py3-none-any.whl.metadata (5.7 kB)
+#27 16.65 Collecting datasets (from OmniVLA==0.0.1)
+#27 16.69   Downloading datasets-5.0.1-py3-none-any.whl.metadata (23 kB)
+#27 16.74 Collecting efficientnet_pytorch (from OmniVLA==0.0.1)
+#27 16.78   Downloading efficientnet_pytorch-0.7.1.tar.gz (21 kB)
+#27 16.79   Installing build dependencies: started
+#27 18.13   Installing build dependencies: finished with status 'done'
+#27 18.13   Getting requirements to build wheel: started
+#27 18.30   Getting requirements to build wheel: finished with status 'done'
+#27 18.30   Preparing metadata (pyproject.toml): started
+#27 18.40   Preparing metadata (pyproject.toml): finished with status 'done'
+#27 18.45 Collecting av (from OmniVLA==0.0.1)
+#27 18.48   Downloading av-17.1.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (4.6 kB)
+#27 18.50 Collecting openai-clip (from OmniVLA==0.0.1)
+#27 18.54   Downloading openai-clip-1.0.1.tar.gz (1.4 MB)
+#27 18.70      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 16.1 MB/s  0:00:00
+#27 18.71   Installing build dependencies: started
+#27 20.25   Installing build dependencies: finished with status 'done'
+#27 20.25   Getting requirements to build wheel: started
+#27 20.42   Getting requirements to build wheel: finished with status 'done'
+#27 20.42   Preparing metadata (pyproject.toml): started
+#27 20.51   Preparing metadata (pyproject.toml): finished with status 'done'
+#27 20.51 Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (4.0.11)
+#27 20.52 Requirement already satisfied: numpy>=1.17 in /usr/local/lib/python3.10/dist-packages (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (1.26.4)
+#27 20.52 Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.10/dist-packages (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (26.3)
+#27 20.52 Requirement already satisfied: pyyaml>=5.1 in /usr/lib/python3/dist-packages (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (5.4.1)
+#27 20.80 Collecting regex!=2019.12.17 (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1)
+#27 20.84   Downloading regex-2026.9.29-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+#27 20.89 Requirement already satisfied: requests in /usr/local/lib/python3.10/dist-packages (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (2.34.2)
+#27 20.99 Collecting safetensors>=0.4.1 (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1)
+#27 21.02   Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+#27 21.06 Collecting tqdm>=4.27 (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1)
+#27 21.12   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+#27 21.16 Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.10/dist-packages (from huggingface_hub==0.29.1->OmniVLA==0.0.1) (2026.9.0)
+#27 21.17 Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.10/dist-packages (from huggingface_hub==0.29.1->OmniVLA==0.0.1) (4.16.0)
+#27 21.18 Requirement already satisfied: importlib-metadata in /usr/lib/python3/dist-packages (from diffusers==0.11.1->OmniVLA==0.0.1) (4.6.4)
+#27 21.20 Requirement already satisfied: Pillow in /usr/lib/python3/dist-packages (from diffusers==0.11.1->OmniVLA==0.0.1) (9.0.1)
+#27 21.22 Collecting mergedeep~=1.3 (from draccus==0.8.0->OmniVLA==0.0.1)
+#27 21.25   Downloading mergedeep-1.3.4-py3-none-any.whl.metadata (4.3 kB)
+#27 21.30 Collecting pyyaml>=5.1 (from transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1)
+#27 21.34   Downloading pyyaml-6.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+#27 21.37 Collecting pyyaml-include~=1.4 (from draccus==0.8.0->OmniVLA==0.0.1)
+#27 21.41   Downloading pyyaml_include-1.4.1-py3-none-any.whl.metadata (1.3 kB)
+#27 21.41 Requirement already satisfied: toml~=0.10 in /usr/lib/python3/dist-packages (from draccus==0.8.0->OmniVLA==0.0.1) (0.10.2)
+#27 21.44 Collecting typing-inspect~=0.9.0 (from draccus==0.8.0->OmniVLA==0.0.1)
+#27 21.48   Downloading typing_inspect-0.9.0-py3-none-any.whl.metadata (1.5 kB)
+#27 21.49 Requirement already satisfied: psutil in /usr/lib/python3/dist-packages (from peft==0.11.1->OmniVLA==0.0.1) (5.9.0)
+#27 21.55 Collecting absl-py>=1.0.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 21.58   Downloading absl_py-2.5.0-py3-none-any.whl.metadata (3.3 kB)
+#27 21.78 Collecting astunparse>=1.6.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 21.82   Downloading astunparse-1.6.3-py2.py3-none-any.whl.metadata (4.4 kB)
+#27 21.86 Collecting flatbuffers>=23.5.26 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 21.90   Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+#27 21.93 Collecting gast!=0.5.0,!=0.5.1,!=0.5.2,>=0.2.1 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 21.97   Downloading gast-0.7.0-py3-none-any.whl.metadata (1.5 kB)
+#27 21.99 Collecting google-pasta>=0.1.1 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.03   Downloading google_pasta-0.2.0-py3-none-any.whl.metadata (814 bytes)
+#27 22.06 Collecting h5py>=2.9.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.10   Downloading h5py-3.16.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+#27 22.14 Collecting libclang>=13.0.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.18   Downloading libclang-18.1.1-py2.py3-none-manylinux2010_x86_64.whl.metadata (5.2 kB)
+#27 22.22 Collecting ml-dtypes~=0.2.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.26   Downloading ml_dtypes-0.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+#27 22.31 Collecting opt-einsum>=2.3.2 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.35   Downloading opt_einsum-3.4.0-py3-none-any.whl.metadata (6.3 kB)
+#27 22.47 Collecting protobuf (from OmniVLA==0.0.1)
+#27 22.51   Downloading protobuf-4.25.9-cp37-abi3-manylinux2014_x86_64.whl.metadata (541 bytes)
+#27 22.51 Requirement already satisfied: setuptools in /usr/local/lib/python3.10/dist-packages (from tensorflow==2.15.0->OmniVLA==0.0.1) (69.5.1)
+#27 22.51 Requirement already satisfied: six>=1.12.0 in /usr/lib/python3/dist-packages (from tensorflow==2.15.0->OmniVLA==0.0.1) (1.16.0)
+#27 22.54 Collecting termcolor>=1.1.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.58   Downloading termcolor-3.3.0-py3-none-any.whl.metadata (6.5 kB)
+#27 22.82 Collecting wrapt<1.15,>=1.11.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.86   Downloading wrapt-1.14.2-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.5 kB)
+#27 22.89 Collecting tensorflow-io-gcs-filesystem>=0.23.1 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 22.93   Downloading tensorflow_io_gcs_filesystem-0.37.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (14 kB)
+#27 23.28 Collecting grpcio<2.0,>=1.24.3 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 23.32   Downloading grpcio-1.84.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)
+#27 23.36 Collecting tensorboard<2.16,>=2.15 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 23.40   Downloading tensorboard-2.15.2-py3-none-any.whl.metadata (1.7 kB)
+#27 23.41 Collecting tensorflow-estimator<2.16,>=2.15.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 23.45   Downloading tensorflow_estimator-2.15.0-py2.py3-none-any.whl.metadata (1.3 kB)
+#27 23.47 Collecting keras<2.16,>=2.15.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 23.51   Downloading keras-2.15.0-py3-none-any.whl.metadata (2.4 kB)
+#27 23.56 Collecting array-record (from tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 23.60   Downloading array_record-0.8.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.1 kB)
+#27 23.78 Collecting click (from tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 23.81   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+#27 23.83 Collecting dm-tree (from tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 23.87   Downloading dm_tree-0.1.10-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (2.6 kB)
+#27 23.91 Collecting etils>=0.9.0 (from etils[enp,epath,etree]>=0.9.0->tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 23.96   Downloading etils-1.13.0-py3-none-any.whl.metadata (6.5 kB)
+#27 24.01 Collecting promise (from tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 24.05   Downloading promise-2.3.tar.gz (19 kB)
+#27 24.09   Installing build dependencies: started
+#27 25.47   Installing build dependencies: finished with status 'done'
+#27 25.47   Getting requirements to build wheel: started
+#27 25.63   Getting requirements to build wheel: finished with status 'done'
+#27 25.63   Preparing metadata (pyproject.toml): started
+#27 25.73   Preparing metadata (pyproject.toml): finished with status 'done'
+#27 25.78 Collecting tensorflow-metadata (from tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 25.82   Downloading tensorflow_metadata-1.14.0-py3-none-any.whl.metadata (2.1 kB)
+#27 25.84 Collecting tensorflow-addons>=0.10.0 (from tensorflow_graphics==2021.12.3->OmniVLA==0.0.1)
+#27 25.88   Downloading tensorflow_addons-0.23.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.8 kB)
+#27 25.90 Requirement already satisfied: scipy>=1.1.0 in /usr/lib/python3/dist-packages (from tensorflow_graphics==2021.12.3->OmniVLA==0.0.1) (1.8.0)
+#27 25.98 Collecting OpenEXR>=1.3.2 (from tensorflow_graphics==2021.12.3->OmniVLA==0.0.1)
+#27 26.02   Downloading openexr-3.5.2-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (10 kB)
+#27 26.10 Collecting trimesh>=2.37.22 (from tensorflow_graphics==2021.12.3->OmniVLA==0.0.1)
+#27 26.13   Downloading trimesh-5.1.1-py3-none-any.whl.metadata (13 kB)
+#27 26.14 Requirement already satisfied: networkx in /usr/local/lib/python3.10/dist-packages (from tensorflow_graphics==2021.12.3->OmniVLA==0.0.1) (3.4.2)
+#27 26.14 Requirement already satisfied: sympy in /usr/lib/python3/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (1.9)
+#27 26.14 Requirement already satisfied: jinja2 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (3.1.6)
+#27 26.14 Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.1.105 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (12.1.105)
+#27 26.14 Requirement already satisfied: nvidia-cuda-runtime-cu12==12.1.105 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (12.1.105)
+#27 26.14 Requirement already satisfied: nvidia-cuda-cupti-cu12==12.1.105 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (12.1.105)
+#27 26.14 Requirement already satisfied: nvidia-cudnn-cu12==8.9.2.26 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (8.9.2.26)
+#27 26.14 Requirement already satisfied: nvidia-cublas-cu12==12.1.3.1 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (12.1.3.1)
+#27 26.14 Requirement already satisfied: nvidia-cufft-cu12==11.0.2.54 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (11.0.2.54)
+#27 26.14 Requirement already satisfied: nvidia-curand-cu12==10.3.2.106 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (10.3.2.106)
+#27 26.14 Requirement already satisfied: nvidia-cusolver-cu12==11.4.5.107 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (11.4.5.107)
+#27 26.14 Requirement already satisfied: nvidia-cusparse-cu12==12.1.0.106 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (12.1.0.106)
+#27 26.14 Requirement already satisfied: nvidia-nccl-cu12==2.19.3 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (2.19.3)
+#27 26.14 Requirement already satisfied: nvidia-nvtx-cu12==12.1.105 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (12.1.105)
+#27 26.14 Requirement already satisfied: triton==2.2.0 in /usr/local/lib/python3.10/dist-packages (from torch==2.2.0->OmniVLA==0.0.1) (2.2.0)
+#27 26.15 Requirement already satisfied: nvidia-nvjitlink-cu12 in /usr/local/lib/python3.10/dist-packages (from nvidia-cusolver-cu12==11.4.5.107->torch==2.2.0->OmniVLA==0.0.1) (12.9.86)
+#27 26.21 Collecting google-auth<3,>=1.6.3 (from tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.25   Downloading google_auth-2.59.1-py3-none-any.whl.metadata (6.0 kB)
+#27 26.29 Collecting google-auth-oauthlib<2,>=0.5 (from tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.33   Downloading google_auth_oauthlib-1.5.0-py3-none-any.whl.metadata (2.6 kB)
+#27 26.37 Collecting markdown>=2.6.8 (from tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.40   Downloading markdown-3.10.3-py3-none-any.whl.metadata (5.1 kB)
+#27 26.47 Collecting tensorboard-data-server<0.8.0,>=0.7.0 (from tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.51   Downloading tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl.metadata (1.1 kB)
+#27 26.53 Collecting werkzeug>=1.0.1 (from tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.56   Downloading werkzeug-3.1.9-py3-none-any.whl.metadata (4.1 kB)
+#27 26.59 Collecting pyasn1-modules>=0.2.1 (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.63   Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+#27 26.77 Collecting cryptography>=38.0.3 (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.81   Downloading cryptography-50.0.2-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+#27 26.87 Collecting requests-oauthlib>=0.7.0 (from google-auth-oauthlib<2,>=0.5->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 26.90   Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+#27 26.90 Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (3.5.2)
+#27 26.90 Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests->transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (3.20)
+#27 26.90 Requirement already satisfied: urllib3<3,>=1.26 in /usr/local/lib/python3.10/dist-packages (from requests->transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (2.8.0)
+#27 26.90 Requirement already satisfied: certifi>=2023.5.7 in /usr/local/lib/python3.10/dist-packages (from requests->transformers@ git+https://github.com/moojink/transformers-openvla-oft.git->OmniVLA==0.0.1) (2026.7.22)
+#27 26.94 Collecting mypy-extensions>=0.3.0 (from typing-inspect~=0.9.0->draccus==0.8.0->OmniVLA==0.0.1)
+#27 26.98   Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+#27 27.02 Requirement already satisfied: wheel<1.0,>=0.23.0 in /usr/local/lib/python3.10/dist-packages (from astunparse>=1.6.0->tensorflow==2.15.0->OmniVLA==0.0.1) (0.48.0)
+#27 27.14 Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 27.17   Downloading cffi-2.1.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+#27 27.19 Collecting pycparser (from cffi>=2.0.0->cryptography>=38.0.3->google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 27.23   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+#27 27.25 Collecting importlib_resources (from etils[enp,epath,etree]>=0.9.0->tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 27.29   Downloading importlib_resources-7.1.0-py3-none-any.whl.metadata (4.0 kB)
+#27 27.30 Requirement already satisfied: zipp in /usr/lib/python3/dist-packages (from etils[enp,epath,etree]>=0.9.0->tensorflow_datasets==4.9.3->OmniVLA==0.0.1) (1.0.0)
+#27 27.35 Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 27.39   Downloading pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
+#27 27.43 Collecting oauthlib>=3.0.0 (from requests-oauthlib>=0.7.0->google-auth-oauthlib<2,>=0.5->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 27.47   Downloading oauthlib-4.0.0-py3-none-any.whl.metadata (8.6 kB)
+#27 27.72 Collecting typeguard<3.0.0,>=2.7 (from tensorflow-addons>=0.10.0->tensorflow_graphics==2021.12.3->OmniVLA==0.0.1)
+#27 27.76   Downloading typeguard-2.13.3-py3-none-any.whl.metadata (3.6 kB)
+#27 27.77 Requirement already satisfied: markupsafe>=2.1.1 in /usr/local/lib/python3.10/dist-packages (from werkzeug>=1.0.1->tensorboard<2.16,>=2.15->tensorflow==2.15.0->OmniVLA==0.0.1) (3.0.4)
+#27 27.91 Collecting pyarrow>=21.0.0 (from datasets->OmniVLA==0.0.1)
+#27 27.94   Downloading pyarrow-25.0.1-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+#27 27.96 Collecting dill<0.4.2,>=0.3.0 (from datasets->OmniVLA==0.0.1)
+#27 28.00   Downloading dill-0.4.1-py3-none-any.whl.metadata (10 kB)
+#27 28.14 Collecting pandas (from datasets->OmniVLA==0.0.1)
+#27 28.18   Downloading pandas-2.3.3-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (91 kB)
+#27 28.28 Collecting httpx<1.0.0 (from datasets->OmniVLA==0.0.1)
+#27 28.31   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+#27 28.42 Collecting xxhash (from datasets->OmniVLA==0.0.1)
+#27 28.45   Downloading xxhash-4.0.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (17 kB)
+#27 28.49 Collecting multiprocess<0.70.20 (from datasets->OmniVLA==0.0.1)
+#27 28.54   Downloading multiprocess-0.70.19-py310-none-any.whl.metadata (7.5 kB)
+#27 28.58 Collecting fsspec>=2023.5.0 (from huggingface_hub==0.29.1->OmniVLA==0.0.1)
+#27 28.62   Downloading fsspec-2026.6.0-py3-none-any.whl.metadata (10 kB)
+#27 29.03 Collecting aiohttp!=4.0.0a0,!=4.0.0a1 (from fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 29.07   Downloading aiohttp-3.14.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+#27 29.13 Collecting anyio (from httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#27 29.17   Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+#27 29.20 Collecting httpcore==1.* (from httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#27 29.24   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+#27 29.28 Collecting h11>=0.16 (from httpcore==1.*->httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#27 29.32   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+#27 29.36 Collecting aiohappyeyeballs>=2.5.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 29.39   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+#27 29.41 Collecting aiosignal>=1.4.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 29.44   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+#27 29.47 Collecting async-timeout<6.0,>=4.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 29.51   Downloading async_timeout-5.0.1-py3-none-any.whl.metadata (5.1 kB)
+#27 29.51 Requirement already satisfied: attrs>=17.3.0 in /usr/lib/python3/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1) (21.2.0)
+#27 29.57 Collecting frozenlist>=1.1.1 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 29.61   Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+#27 29.77 Collecting multidict<7.0,>=4.5 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 29.81   Downloading multidict-6.9.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+#27 29.87 Collecting propcache>=0.2.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 29.91   Downloading propcache-0.5.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
+#27 30.16 Collecting yarl<2.0,>=1.17.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#27 30.19   Downloading yarl-1.25.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
+#27 30.30 Collecting exceptiongroup>=1.0.2 (from anyio->httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#27 30.34   Downloading exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)
+#27 30.39 Collecting starlette>=0.46.0 (from fastapi->OmniVLA==0.0.1)
+#27 30.43   Downloading starlette-1.7.0-py3-none-any.whl.metadata (6.6 kB)
+#27 30.50 Collecting pydantic>=2.9.0 (from fastapi->OmniVLA==0.0.1)
+#27 30.54   Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+#27 30.57 Collecting typing-inspection>=0.4.2 (from fastapi->OmniVLA==0.0.1)
+#27 30.61   Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+#27 30.63 Collecting annotated-doc>=0.0.2 (from fastapi->OmniVLA==0.0.1)
+#27 30.67   Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+#27 30.71 Collecting opentelemetry-api>=1.44.0 (from fastapi->OmniVLA==0.0.1)
+#27 30.75   Downloading opentelemetry_api-1.45.0-py3-none-any.whl.metadata (1.4 kB)
+#27 30.77 Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi->OmniVLA==0.0.1)
+#27 30.81   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+#27 31.18 Collecting pydantic-core==2.46.5 (from pydantic>=2.9.0->fastapi->OmniVLA==0.0.1)
+#27 31.22   Downloading pydantic_core-2.46.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+#27 31.27 Collecting ftfy (from openai-clip->OmniVLA==0.0.1)
+#27 31.30   Downloading ftfy-6.3.1-py3-none-any.whl.metadata (7.3 kB)
+#27 31.34 Collecting wcwidth (from ftfy->openai-clip->OmniVLA==0.0.1)
+#27 31.38   Downloading wcwidth-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (23 kB)
+#27 31.42 Collecting python-dateutil>=2.8.2 (from pandas->datasets->OmniVLA==0.0.1)
+#27 31.46   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+#27 31.47 Requirement already satisfied: pytz>=2020.1 in /usr/lib/python3/dist-packages (from pandas->datasets->OmniVLA==0.0.1) (2022.1)
+#27 31.50 Collecting tzdata>=2022.7 (from pandas->datasets->OmniVLA==0.0.1)
+#27 31.54   Downloading tzdata-2026.5-py2.py3-none-any.whl.metadata (1.4 kB)
+#27 31.56 Collecting markdown-it-py>=2.2.0 (from rich->OmniVLA==0.0.1)
+#27 31.60   Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+#27 31.65 Collecting pygments<3.0.0,>=2.13.0 (from rich->OmniVLA==0.0.1)
+#27 31.69   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+#27 31.72 Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich->OmniVLA==0.0.1)
+#27 31.76   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+#27 31.79 Collecting absl-py>=1.0.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#27 31.82   Downloading absl_py-1.4.0-py3-none-any.whl.metadata (2.3 kB)
+#27 31.84 Collecting googleapis-common-protos<2,>=1.52.0 (from tensorflow-metadata->tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 31.88   Downloading googleapis_common_protos-1.75.5-py3-none-any.whl.metadata (8.5 kB)
+#27 31.91 Collecting protobuf (from OmniVLA==0.0.1)
+#27 31.95   Downloading protobuf-3.20.3-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl.metadata (679 bytes)
+#27 31.99 INFO: pip is looking at multiple versions of googleapis-common-protos to determine which version is compatible with other requirements. This could take a while.
+#27 31.99 Collecting googleapis-common-protos<2,>=1.52.0 (from tensorflow-metadata->tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#27 32.03   Downloading googleapis_common_protos-1.75.4-py3-none-any.whl.metadata (8.5 kB)
+#27 32.08   Downloading googleapis_common_protos-1.75.3-py3-none-any.whl.metadata (8.5 kB)
+#27 32.13   Downloading googleapis_common_protos-1.75.2-py3-none-any.whl.metadata (8.5 kB)
+#27 32.18   Downloading googleapis_common_protos-1.75.1-py3-none-any.whl.metadata (8.5 kB)
+#27 32.22   Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)
+#27 32.29   Downloading googleapis_common_protos-1.74.0-py3-none-any.whl.metadata (9.2 kB)
+#27 32.33   Downloading googleapis_common_protos-1.73.1-py3-none-any.whl.metadata (9.2 kB)
+#27 32.34 INFO: pip is still looking at multiple versions of googleapis-common-protos to determine which version is compatible with other requirements. This could take a while.
+#27 32.39   Downloading googleapis_common_protos-1.73.0-py3-none-any.whl.metadata (9.4 kB)
+#27 32.46 Collecting opentelemetry-exporter-otlp-proto-http>=1.43.0 (from wandb->OmniVLA==0.0.1)
+#27 32.50   Downloading opentelemetry_exporter_otlp_proto_http-1.45.0-py3-none-any.whl.metadata (3.1 kB)
+#27 32.52 Collecting opentelemetry-sdk>=1.43.0 (from wandb->OmniVLA==0.0.1)
+#27 32.56   Downloading opentelemetry_sdk-1.45.0-py3-none-any.whl.metadata (1.6 kB)
+#27 32.58 Collecting platformdirs (from wandb->OmniVLA==0.0.1)
+#27 32.62   Downloading platformdirs-4.12.3-py3-none-any.whl.metadata (5.5 kB)
+#27 32.65 INFO: pip is looking at multiple versions of wandb to determine which version is compatible with other requirements. This could take a while.
+#27 32.65 Collecting wandb (from OmniVLA==0.0.1)
+#27 32.69   Downloading wandb-0.29.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 32.74   Downloading wandb-0.28.2-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 32.80   Downloading wandb-0.28.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 32.86   Downloading wandb-0.28.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 32.90 Collecting gitpython!=3.1.29,>=1.0.0 (from wandb->OmniVLA==0.0.1)
+#27 32.94   Downloading gitpython-3.2.0-py3-none-any.whl.metadata (13 kB)
+#27 32.97 Collecting wandb (from OmniVLA==0.0.1)
+#27 33.01   Downloading wandb-0.27.2-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 33.05   Downloading wandb-0.27.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 33.11   Downloading wandb-0.27.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 33.13 INFO: pip is still looking at multiple versions of wandb to determine which version is compatible with other requirements. This could take a while.
+#27 33.17   Downloading wandb-0.26.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 33.23   Downloading wandb-0.26.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 33.28   Downloading wandb-0.25.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#27 33.35   Downloading wandb-0.25.0-py3-none-manylinux_2_28_x86_64.whl.metadata (12 kB)
+#27 33.45 Collecting sentry-sdk>=2.0.0 (from wandb->OmniVLA==0.0.1)
+#27 33.49   Downloading sentry_sdk-2.71.0-py3-none-any.whl.metadata (11 kB)
+#27 33.53 Collecting gitdb<5,>=4.0.1 (from gitpython!=3.1.29,>=1.0.0->wandb->OmniVLA==0.0.1)
+#27 33.57   Downloading gitdb-4.0.12-py3-none-any.whl.metadata (1.2 kB)
+#27 33.60 Collecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython!=3.1.29,>=1.0.0->wandb->OmniVLA==0.0.1)
+#27 33.63   Downloading smmap-5.0.3-py3-none-any.whl.metadata (4.6 kB)
+#27 33.66 Collecting asciitree (from zarr->OmniVLA==0.0.1)
+#27 33.70   Downloading asciitree-0.3.3.tar.gz (4.0 kB)
+#27 33.71   Installing build dependencies: started
+#27 34.49   Installing build dependencies: finished with status 'done'
+#27 34.49   Getting requirements to build wheel: started
+#27 34.65   Getting requirements to build wheel: finished with status 'done'
+#27 34.65   Preparing metadata (pyproject.toml): started
+#27 34.74   Preparing metadata (pyproject.toml): finished with status 'done'
+#27 34.88 Collecting numcodecs>=0.10.0 (from zarr->OmniVLA==0.0.1)
+#27 34.92   Downloading numcodecs-0.13.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.9 kB)
+#27 34.95 Collecting fasteners (from zarr->OmniVLA==0.0.1)
+#27 34.99   Downloading fasteners-0.20-py3-none-any.whl.metadata (4.8 kB)
+#27 35.04 Downloading huggingface_hub-0.29.1-py3-none-any.whl (468 kB)
+#27 35.19 Downloading tokenizers-0.19.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.6 MB)
+#27 35.42    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 20.3 MB/s  0:00:00
+#27 35.46 Downloading diffusers-0.11.1-py3-none-any.whl (524 kB)
+#27 35.49    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 524.9/524.9 kB 12.1 MB/s  0:00:00
+#27 35.53 Downloading draccus-0.8.0-py3-none-any.whl (66 kB)
+#27 35.57 Downloading peft-0.11.1-py3-none-any.whl (251 kB)
+#27 35.61 Downloading sentencepiece-0.1.99-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.3 MB)
+#27 35.68    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 15.6 MB/s  0:00:00
+#27 35.72 Downloading tensorflow-2.15.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (475.2 MB)
+#27 61.69    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 475.2/475.2 MB 17.8 MB/s  0:00:25
+#27 61.72 Downloading tensorflow_datasets-4.9.3-py3-none-any.whl (5.0 MB)
+#27 61.92    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 23.5 MB/s  0:00:00
+#27 61.94 Downloading tensorflow_graphics-2021.12.3-py3-none-any.whl (4.3 MB)
+#27 62.15    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 20.0 MB/s  0:00:00
+#27 62.18 Downloading timm-0.9.10-py3-none-any.whl (2.2 MB)
+#27 62.26    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 28.2 MB/s  0:00:00
+#27 62.28 Downloading grpcio-1.84.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.2 MB)
+#27 63.19    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.2/7.2 MB 7.7 MB/s  0:00:00
+#27 63.22 Downloading keras-2.15.0-py3-none-any.whl (1.7 MB)
+#27 63.32    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 16.9 MB/s  0:00:00
+#27 63.36 Downloading mergedeep-1.3.4-py3-none-any.whl (6.4 kB)
+#27 63.40 Downloading ml_dtypes-0.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.0 MB)
+#27 63.45    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 16.6 MB/s  0:00:00
+#27 63.50 Downloading pyyaml-6.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (770 kB)
+#27 63.57    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 770.3/770.3 kB 7.8 MB/s  0:00:00
+#27 63.60 Downloading pyyaml_include-1.4.1-py3-none-any.whl (19 kB)
+#27 63.64 Downloading tensorboard-2.15.2-py3-none-any.whl (5.5 MB)
+#27 64.87    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.5/5.5 MB 4.9 MB/s  0:00:01
+#27 64.90 Downloading google_auth-2.59.1-py3-none-any.whl (263 kB)
+#27 64.96 Downloading google_auth_oauthlib-1.5.0-py3-none-any.whl (20 kB)
+#27 64.99 Downloading tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl (6.6 MB)
+#27 65.74    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 8.9 MB/s  0:00:00
+#27 65.78 Downloading tensorflow_estimator-2.15.0-py2.py3-none-any.whl (441 kB)
+#27 65.85 Downloading typing_inspect-0.9.0-py3-none-any.whl (8.8 kB)
+#27 65.89 Downloading wrapt-1.14.2-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (76 kB)
+#27 65.93 Downloading accelerate-0.34.2-py3-none-any.whl (324 kB)
+#27 65.99 Downloading astunparse-1.6.3-py2.py3-none-any.whl (12 kB)
+#27 66.03 Downloading cryptography-50.0.2-cp39-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+#27 66.59    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 8.5 MB/s  0:00:00
+#27 66.63 Downloading cffi-2.1.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (218 kB)
+#27 66.72 Downloading etils-1.13.0-py3-none-any.whl (170 kB)
+#27 66.78 Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+#27 66.82 Downloading gast-0.7.0-py3-none-any.whl (22 kB)
+#27 67.07 Downloading google_pasta-0.2.0-py3-none-any.whl (57 kB)
+#27 67.15 Downloading h5py-3.16.0-cp310-cp310-manylinux_2_28_x86_64.whl (5.1 MB)
+#27 68.26    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 5.1 MB/s  0:00:01
+#27 68.30 Downloading libclang-18.1.1-py2.py3-none-manylinux2010_x86_64.whl (24.5 MB)
+#27 70.87    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.5/24.5 MB 9.6 MB/s  0:00:02
+#27 70.90 Downloading markdown-3.10.3-py3-none-any.whl (110 kB)
+#27 70.96 Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+#27 71.00 Downloading openexr-3.5.2-cp310-cp310-manylinux_2_28_x86_64.whl (1.7 MB)
+#27 71.17    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 10.8 MB/s  0:00:00
+#27 71.20 Downloading opt_einsum-3.4.0-py3-none-any.whl (71 kB)
+#27 71.24 Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+#27 71.28 Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
+#27 71.33 Downloading regex-2026.9.29-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (797 kB)
+#27 71.62    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 797.6/797.6 kB 12.1 MB/s  0:00:00
+#27 71.67 Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+#27 71.71 Downloading oauthlib-4.0.0-py3-none-any.whl (159 kB)
+#27 71.75 Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+#27 71.83 Downloading tensorflow_addons-0.23.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (611 kB)
+#27 71.88    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 611.8/611.8 kB 13.9 MB/s  0:00:00
+#27 71.92 Downloading typeguard-2.13.3-py3-none-any.whl (17 kB)
+#27 71.96 Downloading tensorflow_io_gcs_filesystem-0.37.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.1 MB)
+#27 72.35    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 12.9 MB/s  0:00:00
+#27 72.39 Downloading termcolor-3.3.0-py3-none-any.whl (7.7 kB)
+#27 72.43 Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+#27 72.47 Downloading trimesh-5.1.1-py3-none-any.whl (750 kB)
+#27 72.53    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 750.4/750.4 kB 13.5 MB/s  0:00:00
+#27 72.57 Downloading werkzeug-3.1.9-py3-none-any.whl (228 kB)
+#27 72.67 Downloading array_record-0.8.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.5 MB)
+#27 72.87    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.5/2.5 MB 12.7 MB/s  0:00:00
+#27 72.92 Downloading av-17.1.0-cp310-cp310-manylinux_2_28_x86_64.whl (36.6 MB)
+#27 74.82    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.6/36.6 MB 19.3 MB/s  0:00:01
+#27 74.84 Downloading click-8.5.0-py3-none-any.whl (125 kB)
+#27 74.86 Downloading datasets-5.0.1-py3-none-any.whl (559 kB)
+#27 74.87    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 559.1/559.1 kB 47.1 MB/s  0:00:00
+#27 74.89 Downloading dill-0.4.1-py3-none-any.whl (120 kB)
+#27 74.92 Downloading fsspec-2026.6.0-py3-none-any.whl (203 kB)
+#27 74.94 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+#27 74.96 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+#27 75.27 Downloading multiprocess-0.70.19-py310-none-any.whl (134 kB)
+#27 75.45 Downloading aiohttp-3.14.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+#27 75.77    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 7.2 MB/s  0:00:00
+#27 75.79 Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+#27 75.81 Downloading multidict-6.9.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (303 kB)
+#27 75.84 Downloading yarl-1.25.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (118 kB)
+#27 75.86 Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+#27 75.88 Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+#27 75.90 Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (219 kB)
+#27 75.93 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+#27 75.95 Downloading propcache-0.5.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (224 kB)
+#27 75.97 Downloading pyarrow-25.0.1-cp310-cp310-manylinux_2_28_x86_64.whl (50.1 MB)
+#27 80.52    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.1/50.1 MB 11.0 MB/s  0:00:04
+#27 80.54 Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+#27 80.57 Downloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+#27 80.59 Downloading dm_tree-0.1.10-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (183 kB)
+#27 80.62 Downloading einops-0.8.2-py3-none-any.whl (65 kB)
+#27 80.64 Downloading fastapi-0.142.2-py3-none-any.whl (144 kB)
+#27 80.87 Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+#27 80.89 Downloading opentelemetry_api-1.45.0-py3-none-any.whl (60 kB)
+#27 80.94 Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+#27 81.39 Downloading pydantic_core-2.46.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+#27 81.86    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 4.5 MB/s  0:00:00
+#27 81.88 Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+#27 81.90 Downloading starlette-1.7.0-py3-none-any.whl (78 kB)
+#27 81.93 Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+#27 81.95 Downloading imageio-2.38.0-py3-none-any.whl (328 kB)
+#27 82.01 Downloading importlib_resources-7.1.0-py3-none-any.whl (37 kB)
+#27 82.03 Downloading json_numpy-2.1.1-py3-none-any.whl (5.5 kB)
+#27 82.05 Downloading jsonlines-4.0.0-py3-none-any.whl (8.7 kB)
+#27 82.08 Downloading lmdb-3.0.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (560 kB)
+#27 82.15    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 560.9/560.9 kB 7.0 MB/s  0:00:00
+#27 82.17 Downloading ftfy-6.3.1-py3-none-any.whl (44 kB)
+#27 82.19 Downloading pandas-2.3.3-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.8 MB)
+#27 83.65    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 8.8 MB/s  0:00:01
+#27 83.67 Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+#27 83.71 Downloading tzdata-2026.5-py2.py3-none-any.whl (347 kB)
+#27 83.81 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+#27 83.83 Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+#27 83.87 Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+#27 84.07    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 6.1 MB/s  0:00:00
+#27 84.09 Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+#27 84.11 Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+#27 84.13 Downloading tensorflow_metadata-1.14.0-py3-none-any.whl (28 kB)
+#27 84.15 Downloading absl_py-1.4.0-py3-none-any.whl (126 kB)
+#27 84.18 Downloading googleapis_common_protos-1.73.0-py3-none-any.whl (297 kB)
+#27 84.23 Downloading protobuf-3.20.3-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (1.1 MB)
+#27 84.35    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 9.2 MB/s  0:00:00
+#27 84.37 Downloading utm-0.9.0-py3-none-any.whl (8.6 kB)
+#27 84.39 Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+#27 84.44 Downloading wandb-0.25.0-py3-none-manylinux_2_28_x86_64.whl (25.3 MB)
+#27 86.93    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 25.3/25.3 MB 10.3 MB/s  0:00:02
+#27 86.97 Downloading gitpython-3.2.0-py3-none-any.whl (228 kB)
+#27 87.02 Downloading gitdb-4.0.12-py3-none-any.whl (62 kB)
+#27 87.05 Downloading smmap-5.0.3-py3-none-any.whl (24 kB)
+#27 87.09 Downloading sentry_sdk-2.71.0-py3-none-any.whl (534 kB)
+#27 87.14    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 534.3/534.3 kB 12.6 MB/s  0:00:00
+#27 87.18 Downloading platformdirs-4.12.3-py3-none-any.whl (32 kB)
+#27 87.22 Downloading wcwidth-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (769 kB)
+#27 87.29    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 769.8/769.8 kB 22.2 MB/s  0:00:00
+#27 87.33 Downloading xxhash-4.0.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (249 kB)
+#27 87.39 Downloading zarr-2.18.3-py3-none-any.whl (210 kB)
+#27 87.45 Downloading numcodecs-0.13.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.6 MB)
+#27 88.38    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.6/8.6 MB 9.2 MB/s  0:00:00
+#27 88.42 Downloading fasteners-0.20-py3-none-any.whl (18 kB)
+#27 88.89 Building wheels for collected packages: OmniVLA, dlimp, transformers, efficientnet_pytorch, openai-clip, promise, asciitree
+#27 88.89   Building wheel for OmniVLA (pyproject.toml): started
+#27 89.05   Building wheel for OmniVLA (pyproject.toml): finished with status 'done'
+#27 89.05   Created wheel for OmniVLA: filename=omnivla-0.0.1-py3-none-any.whl size=239229 sha256=ee8ce5430b95f06a823e504b8a065fe2fe63224612067301b230772609fb7178
+#27 89.05   Stored in directory: /tmp/pip-ephem-wheel-cache-cekym2ni/wheels/dd/ce/27/d18cc42eba70a31cb9385811c5c9ebccbeabda45d1e3b33ee4
+#27 89.05   Building wheel for dlimp (pyproject.toml): started
+#27 89.16   Building wheel for dlimp (pyproject.toml): finished with status 'done'
+#27 89.16   Created wheel for dlimp: filename=dlimp-0.0.1-py3-none-any.whl size=13525 sha256=87e4e51a615f10e615180581bdac67c8f8b6082fd60f3f208f0a6350a679be9a
+#27 89.16   Stored in directory: /tmp/pip-ephem-wheel-cache-cekym2ni/wheels/50/74/75/6b593b968c85c58e4b79e09f749df8d461cb7b6011b73b257d
+#27 89.16   Building wheel for transformers (pyproject.toml): started
+#27 90.60   Building wheel for transformers (pyproject.toml): finished with status 'done'
+#27 90.61   Created wheel for transformers: filename=transformers-4.40.1-py3-none-any.whl size=8999460 sha256=73261b83f1f8f223acc36fcff0064df59fdc9e181c288a634a04a568663c5927
+#27 90.61   Stored in directory: /tmp/pip-ephem-wheel-cache-cekym2ni/wheels/74/23/d5/b13d14504d0146f89a7c48664217002b71ba931355bd11bbf9
+#27 90.62   Building wheel for efficientnet_pytorch (pyproject.toml): started
+#27 90.72   Building wheel for efficientnet_pytorch (pyproject.toml): finished with status 'done'
+#27 90.72   Created wheel for efficientnet_pytorch: filename=efficientnet_pytorch-0.7.1-py3-none-any.whl size=16478 sha256=c6092524548cce70b411b87b5022dc24e8d1d28a545089f49d5bf3049910b8f9
+#27 90.72   Stored in directory: /tmp/pip-ephem-wheel-cache-cekym2ni/wheels/03/3f/e9/911b1bc46869644912bda90a56bcf7b960f20b5187feea3baf
+#27 90.73   Building wheel for openai-clip (pyproject.toml): started
+#27 90.86   Building wheel for openai-clip (pyproject.toml): finished with status 'done'
+#27 90.86   Created wheel for openai-clip: filename=openai_clip-1.0.1-py3-none-any.whl size=1368631 sha256=8ccae5f832ede8105ee4891dab3a48a0b2c0347274797232a285fd1375a2f221
+#27 90.86   Stored in directory: /tmp/pip-ephem-wheel-cache-cekym2ni/wheels/08/77/8e/8d2f862df6bf7fb4e2007062d2cbaeae49862ec7b56d041229
+#27 90.86   Building wheel for promise (pyproject.toml): started
+#27 90.98   Building wheel for promise (pyproject.toml): finished with status 'done'
+#27 90.98   Created wheel for promise: filename=promise-2.3-py3-none-any.whl size=21582 sha256=fba43c92bc0adf60aa37b8936db593b4c73cb433fcd0f2bb124a1b1d6fbc3106
+#27 90.98   Stored in directory: /tmp/pip-ephem-wheel-cache-cekym2ni/wheels/54/4e/28/3ed0e1c8a752867445bab994d2340724928aa3ab059c57c8db
+#27 90.98   Building wheel for asciitree (pyproject.toml): started
+#27 91.09   Building wheel for asciitree (pyproject.toml): finished with status 'done'
+#27 91.09   Created wheel for asciitree: filename=asciitree-0.3.3-py3-none-any.whl size=5097 sha256=b9911d9adf1054f101a40f7ea4087b6dafc7ce616ebc3ce1514f10712b649d1a
+#27 91.09   Stored in directory: /tmp/pip-ephem-wheel-cache-cekym2ni/wheels/7f/4e/be/1171b40f43b918087657ec57cf3b81fa1a2e027d8755baa184
+#27 91.09 Successfully built OmniVLA dlimp transformers efficientnet_pytorch openai-clip promise asciitree
+#27 91.51 Installing collected packages: sentencepiece, libclang, flatbuffers, asciitree, xxhash, wrapt, werkzeug, wcwidth, utm, tzdata, typing-inspection, typeguard, trimesh, tqdm, termcolor, tensorflow-io-gcs-filesystem, tensorflow-estimator, tensorboard-data-server, smmap, sentry-sdk, safetensors, regex, pyyaml, python-dateutil, pygments, pydantic-core, pycparser, pyasn1, pyarrow, protobuf, propcache, promise, platformdirs, opt-einsum, opentelemetry-api, OpenEXR, oauthlib, numcodecs, mypy-extensions, multidict, ml-dtypes, mergedeep, mdurl, markdown, lmdb, keras, jsonlines, json-numpy, importlib_resources, imageio, h5py, h11, grpcio, google-pasta, gast, fsspec, frozenlist, fasteners, exceptiongroup, etils, einops, dill, click, av, async-timeout, annotated-types, annotated-doc, aiohappyeyeballs, absl-py, zarr, yarl, uvicorn, typing-inspect, tensorflow-addons, requests-oauthlib, pyyaml-include, pydantic, pyasn1-modules, pandas, multiprocess, markdown-it-py, huggingface_hub, httpcore, googleapis-common-protos, gitdb, ftfy, dm-tree, cffi, astunparse, anyio, aiosignal, tokenizers, tensorflow-metadata, starlette, rich, openai-clip, httpx, gitpython, draccus, diffusers, cryptography, aiohttp, wandb, transformers, google-auth, fastapi, efficientnet_pytorch, array-record, accelerate, timm, peft, google-auth-oauthlib, datasets, tensorflow_datasets, tensorboard, tensorflow, tensorflow_graphics, dlimp, OmniVLA
+#27 92.99   Attempting uninstall: pyyaml
+#27 92.99     Found existing installation: PyYAML 5.4.1
+#27 92.99     Uninstalling PyYAML-5.4.1:
+#27 93.04       Successfully uninstalled PyYAML-5.4.1
+#27 93.08   Attempting uninstall: python-dateutil
+#27 93.08     Found existing installation: python-dateutil 2.8.1
+#27 93.08     Uninstalling python-dateutil-2.8.1:
+#27 93.12       Successfully uninstalled python-dateutil-2.8.1
+#27 93.15   Attempting uninstall: pygments
+#27 93.15     Found existing installation: Pygments 2.11.2
+#27 93.15     Uninstalling Pygments-2.11.2:
+#27 93.29       Successfully uninstalled Pygments-2.11.2
+#27 94.51   Attempting uninstall: protobuf
+#27 94.51     Found existing installation: protobuf 3.12.4
+#27 94.51     Uninstalling protobuf-3.12.4:
+#27 94.54       Successfully uninstalled protobuf-3.12.4
+#27 96.06   Attempting uninstall: gast
+#27 96.06     Found existing installation: gast 0.5.2
+#27 96.07     Uninstalling gast-0.5.2:
+#27 96.10       Successfully uninstalled gast-0.5.2
+#27 96.12   Attempting uninstall: fsspec
+#27 96.12     Found existing installation: fsspec 2026.9.0
+#27 96.13     Uninstalling fsspec-2026.9.0:
+#27 96.14       Successfully uninstalled fsspec-2026.9.0
+#27 100.6   Attempting uninstall: cryptography
+#27 100.6     Found existing installation: cryptography 3.4.8
+#27 100.6     Uninstalling cryptography-3.4.8:
+#27 100.6       Successfully uninstalled cryptography-3.4.8
+#27 113.1 
+#27 113.1 Successfully installed OmniVLA-0.0.1 OpenEXR-3.5.2 absl-py-1.4.0 accelerate-0.34.2 aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 array-record-0.8.1 asciitree-0.3.3 astunparse-1.6.3 async-timeout-5.0.1 av-17.1.0 cffi-2.1.1 click-8.5.0 cryptography-50.0.2 datasets-5.0.1 diffusers-0.11.1 dill-0.4.1 dlimp-0.0.1 dm-tree-0.1.10 draccus-0.8.0 efficientnet_pytorch-0.7.1 einops-0.8.2 etils-1.13.0 exceptiongroup-1.3.1 fastapi-0.142.2 fasteners-0.20 flatbuffers-25.12.19 frozenlist-1.8.0 fsspec-2026.6.0 ftfy-6.3.1 gast-0.7.0 gitdb-4.0.12 gitpython-3.2.0 google-auth-2.59.1 google-auth-oauthlib-1.5.0 google-pasta-0.2.0 googleapis-common-protos-1.73.0 grpcio-1.84.0 h11-0.16.0 h5py-3.16.0 httpcore-1.0.9 httpx-0.28.1 huggingface_hub-0.29.1 imageio-2.38.0 importlib_resources-7.1.0 json-numpy-2.1.1 jsonlines-4.0.0 keras-2.15.0 libclang-18.1.1 lmdb-3.0.0 markdown-3.10.3 markdown-it-py-4.2.0 mdurl-0.1.2 mergedeep-1.3.4 ml-dtypes-0.2.0 multidict-6.9.1 multiprocess-0.70.19 mypy-extensions-1.1.0 numcodecs-0.13.1 oauthlib-4.0.0 openai-clip-1.0.1 opentelemetry-api-1.45.0 opt-einsum-3.4.0 pandas-2.3.3 peft-0.11.1 platformdirs-4.12.3 promise-2.3 propcache-0.5.4 protobuf-3.20.3 pyarrow-25.0.1 pyasn1-0.6.4 pyasn1-modules-0.4.2 pycparser-3.0 pydantic-2.13.5 pydantic-core-2.46.5 pygments-2.21.0 python-dateutil-2.9.0.post0 pyyaml-6.0.3 pyyaml-include-1.4.1 regex-2026.9.29 requests-oauthlib-2.0.0 rich-15.0.0 safetensors-0.8.0 sentencepiece-0.1.99 sentry-sdk-2.71.0 smmap-5.0.3 starlette-1.7.0 tensorboard-2.15.2 tensorboard-data-server-0.7.2 tensorflow-2.15.0 tensorflow-addons-0.23.0 tensorflow-estimator-2.15.0 tensorflow-io-gcs-filesystem-0.37.1 tensorflow-metadata-1.14.0 tensorflow_datasets-4.9.3 tensorflow_graphics-2021.12.3 termcolor-3.3.0 timm-0.9.10 tokenizers-0.19.1 tqdm-4.70.1 transformers-4.40.1 trimesh-5.1.1 typeguard-2.13.3 typing-inspect-0.9.0 typing-inspection-0.4.4 tzdata-2026.5 utm-0.9.0 uvicorn-0.54.0 wandb-0.25.0 wcwidth-0.9.2 werkzeug-3.1.9 wrapt-1.14.2 xxhash-4.0.1 yarl-1.25.1 zarr-2.18.3
+#27 113.1 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#27 114.6 Collecting scipy<1.15,>=1.10
+#27 115.0   Downloading scipy-1.14.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+#27 115.1 Requirement already satisfied: pyyaml in /usr/local/lib/python3.10/dist-packages (6.0.3)
+#27 115.1 Requirement already satisfied: pytest in /usr/lib/python3/dist-packages (6.2.5)
+#27 115.1 Requirement already satisfied: numpy<2.3,>=1.23.5 in /usr/local/lib/python3.10/dist-packages (from scipy<1.15,>=1.10) (1.26.4)
+#27 115.1 Downloading scipy-1.14.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (41.2 MB)
+#27 117.8    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 41.2/41.2 MB 15.9 MB/s  0:00:02
+#27 118.2 Installing collected packages: scipy
+#27 118.2   Attempting uninstall: scipy
+#27 118.2     Found existing installation: scipy 1.8.0
+#27 118.2     Uninstalling scipy-1.8.0:
+#27 118.7       Successfully uninstalled scipy-1.8.0
+#27 120.4 Successfully installed scipy-1.14.1
+#27 120.4 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#27 DONE 121.0s
 
-#28 [nav 10/12] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
-#28 1.082 Traceback (most recent call last):
-#28 1.082   File "<string>", line 1, in <module>
-#28 1.082 ModuleNotFoundError: No module named 'transformers'
-#28 ERROR: process "/bin/bash -o pipefail -c source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c \"import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)\"     && python3 tests/test_core.py" did not complete successfully: exit code: 1
-------
- > [shell 10/12] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py:
-1.082 Traceback (most recent call last):
-1.082   File "<string>", line 1, in <module>
-1.082 ModuleNotFoundError: No module named 'transformers'
-------
-failed to solve: process "/bin/bash -o pipefail -c source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c \"import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)\"     && python3 tests/test_core.py" did not complete successfully: exit code: 1
+#28 [sim  4/13] COPY docker/constraints.txt /tmp/constraints.txt
+#28 CACHED
+
+#29 [sim  5/13] RUN python3 -m pip install -U "pip>=24,<26" "setuptools>=68,<70" wheel
+#29 CACHED
+
+#30 [sim  7/13] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())"     && touch prismatic/vla/datasets/rlds/oxe/utils/__init__.py     && python3 -m pip install -c /tmp/constraints.txt /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt "scipy>=1.10,<1.15" pyyaml pytest
+#30 CACHED
+
+#31 [sim  6/13] RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0
+#31 CACHED
+
+#32 [nav  6/13] RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0
+#32 CACHED
+
+#33 [nav  7/13] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())"     && touch prismatic/vla/datasets/rlds/oxe/utils/__init__.py     && python3 -m pip install -c /tmp/constraints.txt /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt "scipy>=1.10,<1.15" pyyaml pytest
+#33 CACHED
+
+#34 [nav  5/13] RUN python3 -m pip install -U "pip>=24,<26" "setuptools>=68,<70" wheel
+#34 CACHED
+
+#35 [nav  4/13] COPY docker/constraints.txt /tmp/constraints.txt
+#35 CACHED
+
+#36 [train  8/13] COPY . /workspace
+#36 DONE 0.3s
+
+#37 [nav  8/13] COPY . /workspace
+#37 DONE 0.3s
+
+#38 [sim  8/13] COPY . /workspace
+#38 DONE 0.4s
+
+#39 [shell  9/13] WORKDIR /workspace
+#39 DONE 0.2s
+
+#40 [nav  9/13] WORKDIR /workspace
+#40 DONE 0.2s
+
+#41 [sim  9/13] WORKDIR /workspace
+#41 DONE 0.2s
+
+#42 [sim 10/13] RUN source /opt/ros/humble/setup.bash     && mkdir -p /opt/omnivla_ws     && colcon --log-base /opt/omnivla_ws/log build --symlink-install         --base-paths /workspace/ros2_ws/src         --build-base /opt/omnivla_ws/build --install-base /opt/omnivla_ws/install
+#42 0.471 Starting >>> omnivla_gazebo
+#42 1.428 Finished <<< omnivla_gazebo [0.96s]
+#42 1.428 
+#42 1.428 Summary: 1 package finished [1.03s]
+#42 DONE 1.6s
+
+#43 [train 10/13] RUN source /opt/ros/humble/setup.bash     && mkdir -p /opt/omnivla_ws     && colcon --log-base /opt/omnivla_ws/log build --symlink-install         --base-paths /workspace/ros2_ws/src         --build-base /opt/omnivla_ws/build --install-base /opt/omnivla_ws/install
+#43 0.571 Starting >>> omnivla_gazebo
+#43 1.531 Finished <<< omnivla_gazebo [0.96s]
+#43 1.531 
+#43 1.531 Summary: 1 package finished [1.04s]
+#43 DONE 1.7s
+
+#44 [nav 10/13] RUN source /opt/ros/humble/setup.bash     && mkdir -p /opt/omnivla_ws     && colcon --log-base /opt/omnivla_ws/log build --symlink-install         --base-paths /workspace/ros2_ws/src         --build-base /opt/omnivla_ws/build --install-base /opt/omnivla_ws/install
+#44 0.510 Starting >>> omnivla_gazebo
+#44 1.469 Finished <<< omnivla_gazebo [0.96s]
+#44 1.469 
+#44 1.469 Summary: 1 package finished [1.04s]
+#44 DONE 1.6s
+
+#45 [explore 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#45 2.776 Using OmniVLA constants:
+#45 2.776   NUM_ACTIONS_CHUNK = 8
+#45 2.776   ACTION_DIM = 4
+#45 2.776   POSE_DIM = 4
+#45 2.776   ACTION_PROPRIO_NORMALIZATION_TYPE = bounds_q99
+#45 2.776 If needed, manually set the correct constants in `prismatic/vla/constants.py`!
+#45 2.875 2026-10-05 03:57:04.388435: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+#45 2.898 2026-10-05 03:57:04.411369: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+#45 2.898 2026-10-05 03:57:04.411394: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+#45 2.898 2026-10-05 03:57:04.412171: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+#45 2.902 2026-10-05 03:57:04.415993: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+#45 2.902 To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+#45 3.350 2026-10-05 03:57:04.863906: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+#45 ...
+
+#46 [sim 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#46 2.767 Using OmniVLA constants:
+#46 2.767   NUM_ACTIONS_CHUNK = 8
+#46 2.767   ACTION_DIM = 4
+#46 2.767   POSE_DIM = 4
+#46 2.767   ACTION_PROPRIO_NORMALIZATION_TYPE = bounds_q99
+#46 2.767 If needed, manually set the correct constants in `prismatic/vla/constants.py`!
+#46 2.864 2026-10-05 03:57:04.379170: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+#46 2.888 2026-10-05 03:57:04.402858: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+#46 2.888 2026-10-05 03:57:04.402897: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+#46 2.889 2026-10-05 03:57:04.403948: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+#46 2.893 2026-10-05 03:57:04.408453: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+#46 2.893 To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+#46 3.349 2026-10-05 03:57:04.864046: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+#46 ...
+
+#47 [nav 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#47 2.747 Using OmniVLA constants:
+#47 2.747   NUM_ACTIONS_CHUNK = 8
+#47 2.747   ACTION_DIM = 4
+#47 2.747   POSE_DIM = 4
+#47 2.747   ACTION_PROPRIO_NORMALIZATION_TYPE = bounds_q99
+#47 2.747 If needed, manually set the correct constants in `prismatic/vla/constants.py`!
+#47 2.849 2026-10-05 03:57:04.379170: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+#47 2.872 2026-10-05 03:57:04.402859: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+#47 2.872 2026-10-05 03:57:04.402897: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+#47 2.873 2026-10-05 03:57:04.403948: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+#47 2.878 2026-10-05 03:57:04.408453: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+#47 2.878 To enable the following instructions: AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+#47 3.332 2026-10-05 03:57:04.862243: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+#47 10.38 torch 2.2.0+cu121 transformers 4.40.1 peft 0.11.1
+#47 ...
+
+#46 [sim 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#46 10.62 torch 2.2.0+cu121 transformers 4.40.1 peft 0.11.1
+#46 11.55 PASS test_action_targets_straight_and_turn
+#46 12.12 PASS test_expert_follower_kinematic_sim
+#46 12.15 PASS test_flip_and_sampling
+#46 ...
+
+#47 [nav 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#47 11.36 PASS test_action_targets_straight_and_turn
+#47 11.98 PASS test_expert_follower_kinematic_sim
+#47 12.01 PASS test_flip_and_sampling
+#47 12.44 PASS test_generated_worlds_are_navigable
+#47 12.44 PASS test_goal_pose_matches_upstream_convention
+#47 12.44 PASS test_local_axes
+#47 12.44 PASS test_local_world_roundtrip
+#47 12.45 PASS test_make_targets_and_augment
+#47 12.45 PASS test_modality_ids
+#47 12.46 PASS test_sdf_map_and_planner
+#47 12.48 PASS test_topomap_and_tracker
+#47 12.48 PASS test_trajectory_io_roundtrip
+#47 12.48 PASS test_upstream_controller
+#47 12.49 PASS test_viz
+#47 DONE 12.6s
+
+#48 [nav 12/13] COPY docker/entrypoint.sh /entrypoint.sh
+#48 DONE 0.1s
+
+#46 [sim 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#46 12.68 PASS test_generated_worlds_are_navigable
+#46 ...
+
+#49 [nav 13/13] RUN chmod +x /entrypoint.sh
+#49 DONE 0.1s
+
+#46 [sim 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#46 12.69 PASS test_goal_pose_matches_upstream_convention
+#46 12.69 PASS test_local_axes
+#46 12.69 PASS test_local_world_roundtrip
+#46 12.70 PASS test_make_targets_and_augment
+#46 12.70 PASS test_modality_ids
+#46 12.72 PASS test_sdf_map_and_planner
+#46 12.73 PASS test_topomap_and_tracker
+#46 12.73 PASS test_trajectory_io_roundtrip
+#46 12.73 PASS test_upstream_controller
+#46 12.74 PASS test_viz
+#46 DONE 12.8s
+
+#50 [nav] exporting to docker image format
+#50 exporting layers
+#50 ...
+
+#51 [sim 12/13] COPY docker/entrypoint.sh /entrypoint.sh
+#51 DONE 0.6s
+
+#52 [sim 13/13] RUN chmod +x /entrypoint.sh
+#52 DONE 0.3s
+
+#45 [explore 11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#45 11.91 torch 2.2.0+cu121 transformers 4.40.1 peft 0.11.1
+#45 12.84 PASS test_action_targets_straight_and_turn
+#45 13.40 PASS test_expert_follower_kinematic_sim
+#45 13.43 PASS test_flip_and_sampling
+#45 13.78 PASS test_generated_worlds_are_navigable
+#45 13.79 PASS test_goal_pose_matches_upstream_convention
+#45 13.79 PASS test_local_axes
+#45 13.79 PASS test_local_world_roundtrip
+#45 13.80 PASS test_make_targets_and_augment
+#45 13.80 PASS test_modality_ids
+#45 13.81 PASS test_sdf_map_and_planner
+#45 13.82 PASS test_topomap_and_tracker
+#45 13.82 PASS test_trajectory_io_roundtrip
+#45 13.82 PASS test_upstream_controller
+#45 13.82 PASS test_viz
+#45 DONE 14.0s
+
+#53 [train 12/13] COPY docker/entrypoint.sh /entrypoint.sh
+#53 DONE 0.4s
+
+#54 [train 13/13] RUN chmod +x /entrypoint.sh
+#54 DONE 0.1s
+
+#55 [train] exporting to docker image format
+#55 ...
+
+#56 [sim] exporting to docker image format
+#56 ...
+
+#57 [shell] exporting to docker image format
+#57 ...
+
+#58 [explore] exporting to docker image format
+#58 exporting layers 84.2s done
+#58 exporting manifest sha256:0a4b695ec56893209ccef1a6e409aeb96f4fdeaf972ff625a95c5c021635de61 0.1s done
+#58 exporting config sha256:41e1a175a92e2252042ef4b18fb0069f33f224000e4c9f9ac698f014a2fc18af
+#58 ...
+
+#55 [train] exporting to docker image format
+#55 exporting layers 84.2s done
+#55 exporting manifest sha256:d9d0b85cc64667d5d5bc869b1b7853a4cadcb34810ef37e8a8aa76d8ae1afc53 0.1s done
+#55 exporting config sha256:750245eef1cbef073c0d5acad4bfdc5bbb6fee756ad29bfb61e7dc8413d34c41
+#55 exporting config sha256:750245eef1cbef073c0d5acad4bfdc5bbb6fee756ad29bfb61e7dc8413d34c41 0.2s done
+#55 sending tarball
+#55 ...
+
+#50 [nav] exporting to docker image format
+#50 exporting layers 86.0s done
+#50 exporting manifest sha256:f53523bdb6fb494abc4a36f7598b22cf355ae431cc3c513fed3054c729df1275 0.2s done
+#50 exporting config sha256:9672ffc3ab7d08b9737ab8d5570194d318a55601615e28c50d10a0d0560fe5f6 0.1s done
+#50 ...
+
+#57 [shell] exporting to docker image format
+#57 exporting layers 84.2s done
+#57 exporting manifest sha256:7ea151f34d462e5b8c1572c958e1ef08bdbb9a6798e095289086c4720cd4737e 0.1s done
+#57 exporting config sha256:163406bd767313dd9a42924f5a445b7e876830953a994daee8073cca9ccd0606 0.2s done
+#57 ...
+
+#56 [sim] exporting to docker image format
+#56 exporting layers 85.0s done
+#56 exporting manifest sha256:82ccd5bef7780e8f701194a8a280a683198bd5a13cae9c93e8a91d1fe58d9260 0.2s done
+#56 exporting config sha256:44cdba4fd2b5f3321c42bbc28626f5b7e6d0bdcc1ba6df978a1089b00d763b89 0.1s done
+#56 ...
+
+#58 [explore] exporting to docker image format
+#58 exporting config sha256:41e1a175a92e2252042ef4b18fb0069f33f224000e4c9f9ac698f014a2fc18af 0.2s done
+#58 ...
+
+#59 [explore] importing to docker
+#59 loading layer cbaf391e6709 327.68kB / 29.75MB
+#59 loading layer d13d3cd1e348 32.77kB / 1.21MB
+#59 loading layer 45342197e6a8 65.54kB / 5.95MB
+#59 loading layer 9337bc5f5441 32.77kB / 97.96kB
+#59 loading layer 4f536fb18e4b 557.06kB / 107.92MB
+#59 loading layer 4f536fb18e4b 46.24MB / 107.92MB 2.1s
+#59 loading layer 4305e81ff3fd 197B / 197B
+#59 loading layer 5fda6f1e8a50 557.06kB / 98.20MB
+#59 loading layer db004991c933 32.77kB / 389.42kB
+#59 loading layer 26a462ab1ac3 2.68kB / 2.68kB
+#59 loading layer 8b2f0a6205e6 262.14kB / 23.35MB
+#59 loading layer 35e4d97b0cd5 557.06kB / 129.67MB
+#59 loading layer f6ea67637f89 557.06kB / 528.47MB
+#59 ...
+
+#60 [nav] importing to docker
+#60 ...
+
+#61 [shell] importing to docker
+#61 ...
+
+#62 [train] importing to docker
+#62 ...
+
+#63 [sim] importing to docker
+#63 ...
+
+#59 [explore] importing to docker
+#59 loading layer f6ea67637f89 36.77MB / 528.47MB 2.2s
+#59 loading layer f6ea67637f89 86.34MB / 528.47MB 4.3s
+#59 loading layer f6ea67637f89 167.12MB / 528.47MB 6.4s
+#59 ...
+
+#60 [nav] importing to docker
+#60 ...
+
+#59 [explore] importing to docker
+#59 loading layer f6ea67637f89 387.15MB / 528.47MB 8.4s
+#59 loading layer f6ea67637f89 489.65MB / 528.47MB 10.5s
+#59 ...
+
+#61 [shell] importing to docker
+#61 ...
+
+#59 [explore] importing to docker
+#59 loading layer 0bec020b9425 605B / 605B
+#59 loading layer 99f6acd26b1f 65.54kB / 5.06MB
+#59 ...
+
+#62 [train] importing to docker
+#62 ...
+
+#63 [sim] importing to docker
+#63 ...
+
+#59 [explore] importing to docker
+#59 loading layer 93dab4821310 557.06kB / 2.87GB
+#59 loading layer 93dab4821310 271.29MB / 2.87GB 2.1s
+#59 loading layer 93dab4821310 601.06MB / 2.87GB 4.1s
+#59 ...
+
+#60 [nav] importing to docker
+#60 ...
+
+#61 [shell] importing to docker
+#61 ...
+
+#60 [nav] importing to docker
+#60 loading layer 93dab4821310 907.44MB / 2.87GB 6.2s
+#60 loading layer 93dab4821310 1.25GB / 2.87GB 8.2s
+#60 ...
+
+#62 [train] importing to docker
+#62 loading layer 93dab4821310 1.62GB / 2.87GB 10.2s
+#62 ...
+
+#63 [sim] importing to docker
+#63 ...
+
+#61 [shell] importing to docker
+#61 loading layer 93dab4821310 1.93GB / 2.87GB 12.3s
+#61 ...
+
+#62 [train] importing to docker
+#62 ...
+
+#59 [explore] importing to docker
+#59 ...
+
+#62 [train] importing to docker
+#62 loading layer 93dab4821310 2.36GB / 2.87GB 16.3s
+#62 loading layer 93dab4821310 2.69GB / 2.87GB 18.4s
+#62 ...
+
+#59 [explore] importing to docker
+#59 loading layer 27953e8639bd 130.91MB / 808.73MB 2.1s
+#59 ...
+
+#62 [train] importing to docker
+#62 ...
+
+#60 [nav] importing to docker
+#60 ...
+
+#61 [shell] importing to docker
+#61 ...
+
+#60 [nav] importing to docker
+#60 ...
+
+#63 [sim] importing to docker
+#63 ...
+
+#61 [shell] importing to docker
+#61 loading layer 27953e8639bd 255.69MB / 808.73MB 4.1s
+#61 loading layer 27953e8639bd 311.95MB / 808.73MB 6.2s
+#61 loading layer 27953e8639bd 626.13MB / 808.73MB 8.2s
+#61 ...
+
+#62 [train] importing to docker
+#62 ...
+
+#63 [sim] importing to docker
+#63 ...
+
+#59 [explore] importing to docker
+#59 loading layer 27953e8639bd 744.78MB / 808.73MB 10.3s
+#59 loading layer 0e9914a40704 32.77kB / 1.24MB
+#59 loading layer 5f70bf18a086 32B / 32B
+#59 loading layer 856d534cb33e 23.73kB / 23.73kB
+#59 loading layer 393e4f5ffb90 32.77kB / 41.41kB
+#59 loading layer 8dcb3fc9f372 687B / 687B
+#59 ...
+
+#61 [shell] importing to docker
+#61 ...
+
+#58 [explore] exporting to docker image format
+#58 sending tarball 144.6s done
+#58 DONE 229.2s
+
+#59 [explore] importing to docker
+#59 loading layer cbaf391e6709 29.75MB / 29.75MB 55.1s done
+#59 loading layer d13d3cd1e348 1.21MB / 1.21MB 54.4s done
+#59 loading layer 45342197e6a8 5.95MB / 5.95MB 54.1s done
+#59 loading layer 9337bc5f5441 97.96kB / 97.96kB 53.8s done
+#59 loading layer 4f536fb18e4b 107.92MB / 107.92MB 53.7s done
+#59 loading layer 4305e81ff3fd 197B / 197B 50.3s done
+#59 loading layer 5fda6f1e8a50 98.20MB / 98.20MB 50.2s done
+#59 loading layer db004991c933 389.42kB / 389.42kB 48.8s done
+#59 loading layer 26a462ab1ac3 2.68kB / 2.68kB 48.7s done
+#59 loading layer 8b2f0a6205e6 23.35MB / 23.35MB 48.6s done
+#59 loading layer 35e4d97b0cd5 129.67MB / 129.67MB 47.8s done
+#59 loading layer f6ea67637f89 528.47MB / 528.47MB 46.2s done
+#59 loading layer 0bec020b9425 605B / 605B 33.4s done
+#59 loading layer 99f6acd26b1f 5.06MB / 5.06MB 33.3s done
+#59 loading layer 93dab4821310 2.87GB / 2.87GB 32.9s done
+#59 loading layer 27953e8639bd 808.73MB / 808.73MB 12.8s done
+#59 loading layer 0e9914a40704 1.24MB / 1.24MB 0.7s done
+#59 loading layer 5f70bf18a086 32B / 32B 0.6s done
+#59 loading layer 856d534cb33e 23.73kB / 23.73kB 0.5s done
+#59 loading layer 393e4f5ffb90 41.41kB / 41.41kB 0.4s done
+#59 loading layer 8dcb3fc9f372 687B / 687B 0.3s done
+#59 DONE 55.1s
+
+#64 [explore] resolving provenance for metadata file
+#64 DONE 0.0s
+
+#62 [train] importing to docker
+#62 ...
+
+#60 [nav] importing to docker
+#60 ...
+
+#61 [shell] importing to docker
+#61 loading layer d13d3cd1e348 1.21MB / 1.21MB 57.1s done
+#61 loading layer 27953e8639bd 808.73MB / 808.73MB 13.1s
+#61 loading layer cbaf391e6709 29.75MB / 29.75MB 58.0s done
+#61 loading layer 45342197e6a8 5.95MB / 5.95MB 56.8s done
+#61 loading layer 4f536fb18e4b 107.92MB / 107.92MB 56.6s done
+#61 loading layer 5fda6f1e8a50 98.20MB / 98.20MB 52.6s done
+#61 loading layer 8b2f0a6205e6 23.35MB / 23.35MB 51.1s done
+#61 loading layer 35e4d97b0cd5 129.67MB / 129.67MB 50.3s done
+#61 loading layer f6ea67637f89 528.47MB / 528.47MB 48.6s done
+#61 loading layer 93dab4821310 2.87GB / 2.87GB 34.3s done
+#61 loading layer 27953e8639bd 808.73MB / 808.73MB 13.4s done
+#61 DONE 58.0s
+
+#57 [shell] exporting to docker image format
+#57 sending tarball 147.6s done
+#57 DONE 232.1s
+
+#65 [shell] resolving provenance for metadata file
+#65 DONE 0.0s
+
+#55 [train] exporting to docker image format
+#55 sending tarball 147.9s done
+#55 DONE 232.4s
+
+#62 [train] importing to docker
+#62 loading layer cbaf391e6709 29.75MB / 29.75MB 58.2s done
+#62 loading layer d13d3cd1e348 1.21MB / 1.21MB 57.4s done
+#62 loading layer 45342197e6a8 5.95MB / 5.95MB 57.0s done
+#62 loading layer 4f536fb18e4b 107.92MB / 107.92MB 56.7s done
+#62 loading layer 5fda6f1e8a50 98.20MB / 98.20MB 52.7s done
+#62 loading layer 8b2f0a6205e6 23.35MB / 23.35MB 51.2s done
+#62 loading layer 35e4d97b0cd5 129.67MB / 129.67MB 50.3s done
+#62 loading layer f6ea67637f89 528.47MB / 528.47MB 48.4s done
+#62 loading layer 93dab4821310 2.87GB / 2.87GB 34.1s done
+#62 loading layer 27953e8639bd 808.73MB / 808.73MB 13.4s done
+#62 DONE 58.2s
+
+#63 [sim] importing to docker
+#63 ...
+
+#66 [train] resolving provenance for metadata file
+#66 DONE 0.0s
+
+#63 [sim] importing to docker
+#63 loading layer 2c321720b123 32.77kB / 1.24MB
+#63 loading layer bbdc3c890c77 23.68kB / 23.68kB
+#63 loading layer 43f96b54e023 32.77kB / 41.41kB
+#63 loading layer 45342197e6a8 5.95MB / 5.95MB 57.8s done
+#63 loading layer cbaf391e6709 29.75MB / 29.75MB 58.9s done
+#63 loading layer d13d3cd1e348 1.21MB / 1.21MB 58.1s done
+#63 loading layer 4f536fb18e4b 107.92MB / 107.92MB 57.5s done
+#63 loading layer 5fda6f1e8a50 98.20MB / 98.20MB 53.3s done
+#63 loading layer 8b2f0a6205e6 23.35MB / 23.35MB 51.8s done
+#63 loading layer 35e4d97b0cd5 129.67MB / 129.67MB 51.0s done
+#63 loading layer f6ea67637f89 528.47MB / 528.47MB 49.2s done
+#63 loading layer 93dab4821310 2.87GB / 2.87GB 34.7s done
+#63 loading layer 27953e8639bd 808.73MB / 808.73MB 13.7s done
+#63 loading layer 2c321720b123 1.24MB / 1.24MB 0.6s done
+#63 loading layer 5f70bf18a086 32B / 32B 0.5s done
+#63 loading layer bbdc3c890c77 23.68kB / 23.68kB 0.5s done
+#63 loading layer 43f96b54e023 41.41kB / 41.41kB 0.4s done
+#63 loading layer 8dcb3fc9f372 687B / 687B 0.3s done
+#63 DONE 58.9s
+
+#56 [sim] exporting to docker image format
+#56 sending tarball 148.6s done
+#56 DONE 233.9s
+
+#60 [nav] importing to docker
+#60 loading layer 57aee2927720 32.77kB / 1.24MB
+#60 loading layer efb8e4a46938 23.72kB / 23.72kB
+#60 loading layer 3990c6063d6a 32.77kB / 41.41kB
+#60 ...
+
+#67 [sim] resolving provenance for metadata file
+#67 DONE 0.0s
+
+#60 [nav] importing to docker
+#60 loading layer d13d3cd1e348 1.21MB / 1.21MB 58.5s done
+#60 loading layer cbaf391e6709 29.75MB / 29.75MB 59.3s done
+#60 loading layer 9337bc5f5441 97.96kB / 97.96kB 58.1s done
+#60 loading layer 4f536fb18e4b 107.92MB / 107.92MB 58.0s done
+#60 loading layer 5fda6f1e8a50 98.20MB / 98.20MB 53.8s done
+#60 loading layer 8b2f0a6205e6 23.35MB / 23.35MB 52.3s done
+#60 loading layer 35e4d97b0cd5 129.67MB / 129.67MB 51.5s done
+#60 loading layer f6ea67637f89 528.47MB / 528.47MB 49.7s done
+#60 loading layer 93dab4821310 2.87GB / 2.87GB 34.8s done
+#60 loading layer 27953e8639bd 808.73MB / 808.73MB 13.7s done
+#60 loading layer 57aee2927720 1.24MB / 1.24MB 0.6s done
+#60 loading layer 5f70bf18a086 32B / 32B 0.5s done
+#60 loading layer efb8e4a46938 23.72kB / 23.72kB 0.4s done
+#60 loading layer 3990c6063d6a 41.41kB / 41.41kB 0.3s done
+#60 loading layer 8dcb3fc9f372 687B / 687B 0.3s done
+#60 DONE 59.3s
+
+#50 [nav] exporting to docker image format
+#50 sending tarball 148.9s done
+#50 DONE 235.2s
+
+#68 [nav] resolving provenance for metadata file
+#68 DONE 0.0s
+ explore  Built
+ nav  Built
+ shell  Built
+ sim  Built
+ train  Built
