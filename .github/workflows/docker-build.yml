@@ -12,6 +12,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,3 +37,14 @@ jobs:
         with:
           name: docker-build-log
           path: log/ci-docker-build.log
+      - name: Publish log to ci-logs branch
+        if: always()
+        run: |
+          cp log/ci-docker-build.log /tmp/build.log || echo "no log" > /tmp/build.log
+          grep -n -i -E "error|failed|conflict|cannot|not found" /tmp/build.log | tail -200 > /tmp/errors.txt || true
+          tail -n 400 /tmp/build.log > /tmp/tail.log
+          cd /tmp && rm -rf cilog && mkdir cilog && cd cilog && git init -q
+          cp /tmp/tail.log /tmp/errors.txt .
+          echo "run=${{ github.run_id }} sha=${{ github.sha }} status=${{ job.status }}" > info.txt
+          git -c user.name=ci -c user.email=ci@example.com add . && git -c user.name=ci -c user.email=ci@example.com commit -qm "log ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/ci-logs
