@@ -50,12 +50,16 @@ RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.1
 
 # ---- OmniVLA (コミット固定) ---------------------------------------------------
 # 公式 pyproject.toml は "av" の後ろのカンマ抜けで TOML として不正 (pip install -e . が失敗する) ため修正してから入れる
+# Ubuntu 22.04 の pip 22 は pyproject のみのプロジェクトを editable で入れられないので通常インストール
+# (使うのは prismatic パッケージだけ。/opt/OmniVLA のサンプル画像などはそのまま残る)
+# 通常インストールでは __init__.py の無い rlds/oxe/utils が抜けて import が壊れるので追加する
 RUN git init -q ${OMNIVLA_ROOT} && cd ${OMNIVLA_ROOT} \
     && git remote add origin ${OMNIVLA_REPO} \
     && git fetch -q --depth 1 origin ${OMNIVLA_COMMIT} && git checkout -q FETCH_HEAD \
     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml \
     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())" \
-    && python3 -m pip install -c /tmp/constraints.txt -e ${OMNIVLA_ROOT} \
+    && touch prismatic/vla/datasets/rlds/oxe/utils/__init__.py \
+    && python3 -m pip install -c /tmp/constraints.txt ${OMNIVLA_ROOT} \
     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest
 
 # ---- 本リポジトリ ------------------------------------------------------------
