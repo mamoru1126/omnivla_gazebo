@@ -17,7 +17,7 @@ from PIL import Image
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
-from omnivla_nav import controller, data_utils, expert, geometry, sim_map, topomap, trajectory_io, viz  # noqa: E402
+from omnivla_nav import controller, data_utils, expert, geometry, navlog, sim_map, topomap, trajectory_io, viz  # noqa: E402
 
 WORLDS = os.path.join(REPO, "ros2_ws", "src", "omnivla_gazebo", "worlds")
 
@@ -295,6 +295,42 @@ def test_topomap_and_tracker():
         img = Image.new("RGB", (32, 32))
         img.save(os.path.join(tmp, "single.png"))
         assert len(topomap.load_goal_sequence(os.path.join(tmp, "single.png"))) == 1
+    finally:
+        shutil.rmtree(tmp)
+
+
+def test_navlog_and_analyzer():
+    import csv
+    import json
+    import subprocess
+
+    tmp = tempfile.mkdtemp()
+    try:
+        meta = {"goal_source": "x", "world": "office_0", "modality": 6, "controller": "upstream",
+                "final_goal_pose": (2.0, 1.0, 0.0), "nodes": [{"index": 0, "path": "a", "pose": (2.0, 1.0, 0.0)}]}
+        lg = navlog.NavRunLogger(tmp, meta, [Image.new("RGB", (16, 16))])
+        wps = np.zeros((8, 4))
+        wps[:, 0] = np.linspace(0.1, 0.8, 8)
+        wps[:, 1] = -np.linspace(0.0, 0.3, 8)   # 右へ曲がる予測
+        wps[:, 2] = 1.0
+        for k in range(5):
+            lg.step(k + 1, k / 3, (0.1 * k, 0.0, 0.0), 0, 1, (2.0, 1.0, 0.0), (2.0 - 0.1 * k, 1.0, 0.0), 6,
+                    "upstream", 0.2, -0.3, 0.25, wps, 1.5, None, "running",
+                    Image.new("RGB", (64, 48)), np.zeros((48, 64, 3), np.uint8))
+        lg.event(1.0, "test")
+        s = lg.close("test")
+        assert s["steps"] == 5 and abs(s["path_length_m"] - 0.4) < 1e-6 and not s["reached"]
+        run = lg.dir
+        rows = list(csv.DictReader(open(os.path.join(run, "steps.csv"))))
+        assert len(rows) == 5 and float(rows[0]["wp7_x"]) == 0.8 and float(rows[0]["goal_bearing_deg"]) > 0
+        assert len(os.listdir(os.path.join(run, "debug"))) == 5 and len(os.listdir(os.path.join(run, "raw"))) == 5
+        out = subprocess.run([sys.executable, os.path.join(REPO, "tools", "plot_nav_log.py"), run],
+                             capture_output=True, text=True)
+        assert out.returncode == 0, out.stderr
+        rep = open(os.path.join(run, "report.txt")).read()
+        assert "(5/5)" in rep  # サブゴールは左 (+27deg) なのに予測は右 -> 全ステップ検出
+        assert os.path.exists(os.path.join(run, "overview.png")) and os.path.exists(os.path.join(run, "timeline.png"))
+        assert json.load(open(os.path.join(run, "meta.json")))["world"] == "office_0"
     finally:
         shutil.rmtree(tmp)
 

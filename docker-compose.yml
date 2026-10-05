@@ -24,6 +24,7 @@ x-omnivla: &omnivla
     FINETUNED_DIR: ${FINETUNED_DIR:-}
     MODALITY: ${MODALITY:-image}
     CONTROLLER: ${CONTROLLER:-upstream}
+    WORLD: ${WORLD:-office_0}
   volumes:
     - ./:/workspace
     - ${CHECKPOINT_DIR:-./checkpoints}:/checkpoints
@@ -56,7 +57,7 @@ services:
       - -c
       - >-
         exec ros2 launch omnivla_gazebo navigate.launch.py
-        modality:=$${MODALITY} controller:=$${CONTROLLER}
+        modality:=$${MODALITY} controller:=$${CONTROLLER} world:=$${WORLD}
         $${GOAL_PATH:+goal_path:=$$GOAL_PATH}
         $${FINETUNED_DIR:+finetuned_dir:=$$FINETUNED_DIR}
 

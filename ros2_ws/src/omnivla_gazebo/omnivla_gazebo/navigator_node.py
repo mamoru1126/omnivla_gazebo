@@ -19,7 +19,6 @@
 """
 from __future__ import annotations
 
-import csv
 import json
 import math
 import os
@@ -42,6 +41,7 @@ from .ros_utils import Latest, image_msg_to_rgb, make_twist, odom_to_pose2d, rgb
 
 from omnivla_nav.controller import ControllerConfig, compute_command  # noqa: E402
 from omnivla_nav.data_utils import IMAGE_MODALITIES, POSE_MODALITIES, modality_id  # noqa: E402
+from omnivla_nav.navlog import NavRunLogger  # noqa: E402
 from omnivla_nav.geometry import quaternion_from_yaw, relative_pose, to_world, yaw_from_quaternion  # noqa: E402
 from omnivla_nav.topomap import GoalNode, GoalTracker, load_goal_sequence  # noqa: E402
 from omnivla_nav.viz import CameraModel, render_debug  # noqa: E402
@@ -51,7 +51,11 @@ from PIL import Image  # noqa: E402
 class NavigatorNode(Node):
     def __init__(self):
         super().__init__("omnivla_navigator")
-        p = self.declare_parameter
+        self._param_names = []
+
+        def p(name, default):
+            self._param_names.append(name)
+            return self.declare_parameter(name, default)
         # model
         p("vla_path", "/checkpoints/omnivla-original")
         p("checkpoint_step", -1)
@@ -85,8 +89,11 @@ class NavigatorNode(Node):
         p("odom_topic", "/odom")
         p("cmd_vel_topic", "/cmd_vel")
         p("publish_debug_image", True)
-        p("save_debug_dir", "")
-        p("log_csv", "")
+        # 走行ログ: 1 走行ごとに <log_dir>/<時刻>/ を作る (空文字で無効)
+        p("log_dir", "/workspace/log/nav")
+        p("log_debug_images", True)
+        p("log_raw_images", True)
+        p("world", "")                    # ログの解析用 (地図の描画に使う)
         p("camera_hfov", 1.75)
         p("camera_height", 0.35)
         p("camera_x", 0.17)
@@ -104,9 +111,11 @@ class NavigatorNode(Node):
         self.cmd_timeout = float(g("cmd_timeout"))
         self.stop_at_goal = bool(g("stop_at_goal"))
         self.publish_debug = bool(g("publish_debug_image"))
-        self.save_debug_dir = g("save_debug_dir")
-        if self.save_debug_dir:
-            os.makedirs(self.save_debug_dir, exist_ok=True)
+        self.log_dir = g("log_dir")
+        self.log_debug = bool(g("log_debug_images"))
+        self.log_raw = bool(g("log_raw_images"))
+        self.runlog: Optional[NavRunLogger] = None
+        self.params_snapshot = {n: g(n) for n in self._param_names}
         self._tracker_kwargs = dict(reach_check=g("reach_check"), subgoal_radius=float(g("subgoal_radius")),
                                     goal_radius=float(g("goal_radius")),
                                     image_threshold=float(g("image_reach_threshold")),
@@ -138,14 +147,6 @@ class NavigatorNode(Node):
         self.create_subscription(String, "/omnivla/instruction", self._on_instruction, 2)
         self.create_timer(0.2, self._watchdog)
 
-        self.csv = None
-        if g("log_csv"):
-            os.makedirs(os.path.dirname(os.path.abspath(g("log_csv"))), exist_ok=True)
-            self.csv_file = open(g("log_csv"), "w", newline="")
-            self.csv = csv.writer(self.csv_file)
-            self.csv.writerow(["sim_time", "x", "y", "yaw", "subgoal", "num_nodes", "v", "w", "latency",
-                               "dist", "similarity", "state"])
-
         # --- model (重い: 数十秒) ---
         from omnivla_nav.policy import OmniVLAPolicy, PolicyConfig
 
@@ -158,6 +159,8 @@ class NavigatorNode(Node):
             metric_waypoint_spacing=spacing if spacing > 0 else None,
             merge_lora=bool(g("merge_lora")),
         ))
+        self.model_info = {"vla_path": g("vla_path"), "finetuned_dir": g("finetuned_dir"),
+                           "metric_waypoint_spacing": self.policy.metric_spacing}
         if g("goal_path"):
             self._set_goals(load_goal_sequence(g("goal_path")), source=g("goal_path"))
         self.state = "idle" if self.tracker is None else ("running" if self.enabled else "paused")
@@ -197,6 +200,7 @@ class NavigatorNode(Node):
     def _on_enable(self, msg: Bool):
         self.enabled = bool(msg.data)
         self.get_logger().info(f"enabled={self.enabled}")
+        self._event(f"enabled={self.enabled}")
         if not self.enabled:
             self._publish_cmd(0.0, 0.0)
 
@@ -207,10 +211,49 @@ class NavigatorNode(Node):
     def _set_goals(self, nodes, source: str):
         with self.lock:
             self.tracker = GoalTracker(nodes, **self._tracker_kwargs)
+        self._open_runlog(nodes, source)
         if self.modality in POSE_MODALITIES and any(n.pose is None for n in nodes):
             self.get_logger().warn("pose modality selected but some goal nodes have no pose")
         self.get_logger().info(f"new goal: {len(nodes)} node(s) from {source}")
         self.state = "running" if self.enabled else "paused"
+
+    # ------------------------------------------------------------------ run log
+    def _open_runlog(self, nodes, source: str):
+        self._close_runlog("goal_changed")
+        if not self.log_dir:
+            return
+        pose, _ = self.latest_odom.get()
+        final = nodes[-1].pose if nodes and nodes[-1].pose is not None else None
+        meta = {
+            "goal_source": source,
+            "world": self.params_snapshot.get("world", ""),
+            "modality": self.modality,
+            "instruction": self.instruction,
+            "controller": self.ctrl.mode,
+            "model": getattr(self, "model_info", {}),
+            "start_pose": pose,
+            "final_goal_pose": final,
+            "nodes": [{"index": i, "path": n.path, "pose": n.pose} for i, n in enumerate(nodes)],
+            "params": self.params_snapshot,
+        }
+        try:
+            self.runlog = NavRunLogger(self.log_dir, meta, [n.image for n in nodes], self.log_debug, self.log_raw,
+                                       self.ctrl.waypoint_index)
+            self.get_logger().info(f"run log: {self.runlog.dir}")
+        except OSError as e:
+            self.runlog = None
+            self.get_logger().error(f"cannot create run log in {self.log_dir}: {e}")
+
+    def _close_runlog(self, reason: str, reached: bool = False):
+        if self.runlog is not None:
+            s = self.runlog.close(reason, reached, {"subgoal_index": self.tracker.index if self.tracker else None})
+            self.get_logger().info(f"run log closed ({reason}): {self.runlog.dir} "
+                                   f"final_dist={s.get('final_dist_to_goal')}")
+            self.runlog = None
+
+    def _event(self, text: str):
+        if self.runlog is not None:
+            self.runlog.event(self._sim_now(), text)
 
     def _watchdog(self):
         if self.moving and time.time() - self.last_cmd_wall > self.cmd_timeout:
@@ -259,7 +302,12 @@ class NavigatorNode(Node):
                 if self.tracker is None:
                     dummy = Image.new("RGB", (224, 224))
                     self.tracker = GoalTracker([GoalNode(dummy, None, "language_only")], reach_check="none")
+                    created = True
+                else:
+                    created = False
                 tracker = self.tracker
+            if created:
+                self._open_runlog(tracker.nodes, f"language: {self.instruction}")
         if not self.enabled or tracker is None:
             if self.moving:
                 self._publish_cmd(0.0, 0.0)
@@ -274,9 +322,12 @@ class NavigatorNode(Node):
             return
         if now - t_img > self.max_image_age:
             self.get_logger().warn(f"camera image is old ({now - t_img:.2f}s)", throttle_duration_sec=5.0)
+            self._event(f"camera image is old ({now - t_img:.2f}s) -> stop")
             self._publish_cmd(0.0, 0.0)
             return
         pose, _ = self.latest_odom.get()
+        if self.runlog is not None:
+            self.runlog.track_pose(now, pose)
 
         cache = {}
 
@@ -287,13 +338,17 @@ class NavigatorNode(Node):
             return self.policy.similarity(cache["cur"], self.policy.embed(node.image, cache_key=key))
 
         if tracker.update(pose, similarity):
-            self.get_logger().info(f"subgoal -> {tracker.index}/{len(tracker.nodes) - 1}"
-                                   + (" (final goal reached)" if tracker.done else ""))
+            msg = f"subgoal -> {tracker.index}/{len(tracker.nodes) - 1}" + \
+                (" (final goal reached)" if tracker.done else "")
+            self.get_logger().info(msg)
+            self._event(msg + (f" at ({pose[0]:.2f}, {pose[1]:.2f}, {math.degrees(pose[2]):.0f}deg)"
+                               if pose is not None else ""))
         if tracker.done:
             self._publish_cmd(0.0, 0.0)
             self.state = "reached"
             if self.stop_at_goal:
                 self.enabled = False
+            self._close_runlog("reached", reached=True)
             self._publish_status()
             return
 
@@ -303,6 +358,7 @@ class NavigatorNode(Node):
             goal_local = relative_pose(pose, node.pose)
         if self.modality in POSE_MODALITIES and goal_local is None:
             self.get_logger().error("pose modality needs goal node pose and /odom", throttle_duration_sec=5.0)
+            self._event("pose modality needs goal node pose and /odom -> stop")
             self._publish_cmd(0.0, 0.0)
             return
         out = self.policy.predict(img, goal_image=node.image if self.modality in IMAGE_MODALITIES else None,
@@ -315,7 +371,8 @@ class NavigatorNode(Node):
         stamp = self.get_clock().now().to_msg()
         if pose is not None:
             self._publish_path(out.waypoints, pose, stamp)
-        if self.publish_debug or self.save_debug_dir:
+        dbg = None
+        if self.publish_debug or (self.runlog is not None and self.log_debug):
             lines = [f"step {self.step_count}  modality {self.modality}",
                      f"subgoal {tracker.index}/{len(tracker.nodes) - 1}",
                      f"v={v:.2f} m/s  w={w:.2f} rad/s",
@@ -328,13 +385,10 @@ class NavigatorNode(Node):
                                goal_local[:2] if goal_local is not None else None, lines)
             if self.publish_debug:
                 self.debug_pub.publish(rgb_to_image_msg(np.asarray(dbg), stamp))
-            if self.save_debug_dir:
-                dbg.save(os.path.join(self.save_debug_dir, f"{self.step_count:06d}.jpg"), quality=85)
-        if self.csv is not None:
-            x, y, yaw = pose if pose is not None else (math.nan,) * 3
-            self.csv.writerow([f"{now:.3f}", x, y, yaw, tracker.index, len(tracker.nodes), v, w,
-                               f"{out.latency:.3f}", tracker.last_distance, tracker.last_similarity, self.state])
-            self.csv_file.flush()
+        if self.runlog is not None:
+            self.runlog.step(self.step_count, now, pose, tracker.index, len(tracker.nodes), node.pose, goal_local,
+                             self.modality, self.ctrl.mode, v, w, out.latency, out.waypoints,
+                             tracker.last_distance, tracker.last_similarity, self.state, dbg, img)
         self._publish_status(v=v, w=w, latency=out.latency)
 
     def _publish_path(self, waypoints: np.ndarray, pose, stamp):
@@ -355,6 +409,10 @@ class NavigatorNode(Node):
 
     def destroy_node(self):
         self._stop = True
+        try:
+            self._close_runlog("shutdown")
+        except Exception:  # noqa: BLE001
+            pass
         try:
             self._publish_cmd(0.0, 0.0)
         except Exception:  # noqa: BLE001
