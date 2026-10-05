@@ -2,119 +2,143 @@ Compose can now delegate builds to bake for better performance.
  To do so, set COMPOSE_BAKE=true.
 #0 building with "multi-arch" instance using docker-container driver
 
-#1 [explore internal] load build definition from Dockerfile
-#1 transferring dockerfile: 4.24kB done
+#1 [nav internal] load build definition from Dockerfile
+#1 transferring dockerfile: 4.67kB done
 #1 DONE 0.0s
 
-#2 [train internal] load build definition from Dockerfile
-#2 transferring dockerfile: 4.24kB done
-#2 DONE 0.1s
+#2 [explore internal] load build definition from Dockerfile
+#2 transferring dockerfile: 4.67kB done
+#2 DONE 0.0s
 
-#3 [nav internal] load build definition from Dockerfile
-#3 transferring dockerfile: 4.24kB done
+#3 [sim internal] load build definition from Dockerfile
+#3 transferring dockerfile: 4.67kB done
 #3 DONE 0.1s
 
-#4 [sim internal] load build definition from Dockerfile
-#4 transferring dockerfile: 4.24kB done
+#4 [train internal] load build definition from Dockerfile
+#4 transferring dockerfile: 4.67kB done
 #4 DONE 0.1s
 
 #5 [shell internal] load build definition from Dockerfile
-#5 transferring dockerfile: 4.24kB done
+#5 transferring dockerfile: 4.67kB done
 #5 DONE 0.1s
 
 #6 [shell] resolve image config for docker-image://docker.io/docker/dockerfile:1
-#6 ...
+#6 DONE 0.7s
 
-#7 [explore auth] docker/dockerfile:pull token for registry-1.docker.io
-#7 DONE 0.0s
+#7 [sim] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#7 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#7 CACHED
 
-#6 [shell] resolve image config for docker-image://docker.io/docker/dockerfile:1
-#6 DONE 1.7s
+#8 [explore internal] load metadata for docker.io/library/ros:humble-ros-base-jammy
+#8 DONE 0.3s
 
-#8 [shell] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
-#8 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
-#8 CACHED
+#9 [shell internal] load .dockerignore
+#9 transferring context: 138B done
+#9 DONE 0.0s
 
-#9 [explore internal] load metadata for docker.io/library/ros:humble-ros-base-jammy
-#9 ...
-
-#10 [nav auth] library/ros:pull token for registry-1.docker.io
-#10 DONE 0.0s
-
-#9 [train internal] load metadata for docker.io/library/ros:humble-ros-base-jammy
-#9 DONE 0.8s
+#10 [train internal] load .dockerignore
+#10 transferring context: 138B done
+#10 DONE 0.1s
 
 #11 [explore internal] load .dockerignore
 #11 transferring context: 138B done
-#11 DONE 0.0s
+#11 DONE 0.1s
 
-#12 [nav internal] load .dockerignore
+#12 [sim internal] load .dockerignore
 #12 transferring context: 138B done
 #12 DONE 0.1s
 
-#13 [shell internal] load .dockerignore
+#13 [nav internal] load .dockerignore
 #13 transferring context: 138B done
 #13 DONE 0.1s
 
-#14 [train internal] load .dockerignore
-#14 transferring context: 138B done
+#14 [nav  1/12] FROM docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19
+#14 resolve docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19 0.0s done
 #14 DONE 0.1s
 
-#15 [sim internal] load .dockerignore
-#15 transferring context: 138B done
-#15 DONE 0.1s
+#15 [nav internal] load build context
+#15 transferring context: 16.36kB 0.0s done
+#15 DONE 0.0s
 
-#16 [explore  1/12] FROM docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19
-#16 resolve docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19 0.0s done
+#14 [sim  1/12] FROM docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19
+#14 resolve docker.io/library/ros:humble-ros-base-jammy@sha256:860e53793ccf575e5369b5e9a19939de2bfcfb46a299954d06f54f2af54fed19 0.0s done
+#14 DONE 0.1s
+
+#16 [explore internal] load build context
+#16 transferring context: 16.36kB 0.0s done
 #16 DONE 0.1s
 
-#17 [train internal] load build context
-#17 transferring context: 16.32kB 0.0s done
+#17 [sim internal] load build context
+#17 transferring context: 16.36kB 0.0s done
 #17 DONE 0.1s
 
-#18 [explore internal] load build context
-#18 transferring context: 15.99kB 0.0s done
-#18 DONE 0.0s
+#18 [shell internal] load build context
+#18 transferring context: 16.36kB 0.0s done
+#18 DONE 0.1s
 
-#19 [shell internal] load build context
-#19 transferring context: 16.32kB 0.0s done
+#19 [train internal] load build context
+#19 transferring context: 16.36kB 0.0s done
 #19 DONE 0.1s
 
-#20 [sim internal] load build context
-#20 transferring context: 16.32kB 0.0s done
-#20 DONE 0.1s
+#20 [nav  4/12] COPY docker/constraints.txt /tmp/constraints.txt
+#20 CACHED
 
-#21 [nav internal] load build context
-#21 transferring context: 16.32kB 0.0s done
-#21 DONE 0.1s
+#21 [nav  2/12] RUN apt-get update && apt-get install -y --no-install-recommends         git git-lfs curl wget gnupg lsb-release ca-certificates build-essential         python3-pip python3-dev python3-colcon-common-extensions         libgl1 libegl1 libglib2.0-0 libopenexr-dev zlib1g-dev ffmpeg         mesa-utils x11-apps less nano     && rm -rf /var/lib/apt/lists/*
+#21 CACHED
 
-#22 [explore  4/12] COPY docker/constraints.txt /tmp/constraints.txt
+#22 [nav  3/12] RUN curl -fsSL https://packages.osrfoundation.org/gazebo.gpg -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main"         > /etc/apt/sources.list.d/gazebo-stable.list     && apt-get update && apt-get install -y --no-install-recommends         gz-harmonic         ros-humble-ros-gzharmonic         ros-humble-rviz2         ros-humble-rqt-image-view         ros-humble-teleop-twist-keyboard         ros-humble-tf2-ros     && rm -rf /var/lib/apt/lists/*
 #22 CACHED
 
-#23 [explore  2/12] RUN apt-get update && apt-get install -y --no-install-recommends         git git-lfs curl wget gnupg lsb-release ca-certificates build-essential         python3-pip python3-dev python3-colcon-common-extensions         libgl1 libegl1 libglib2.0-0 libopenexr-dev zlib1g-dev ffmpeg         mesa-utils x11-apps less nano     && rm -rf /var/lib/apt/lists/*
+#23 [shell  5/12] RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0
 #23 CACHED
 
-#24 [explore  3/12] RUN curl -fsSL https://packages.osrfoundation.org/gazebo.gpg -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main"         > /etc/apt/sources.list.d/gazebo-stable.list     && apt-get update && apt-get install -y --no-install-recommends         gz-harmonic         ros-humble-ros-gzharmonic         ros-humble-rviz2         ros-humble-rqt-image-view         ros-humble-teleop-twist-keyboard         ros-humble-tf2-ros     && rm -rf /var/lib/apt/lists/*
-#24 CACHED
+#24 [shell  6/12] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())"     && touch prismatic/vla/datasets/rlds/oxe/utils/__init__.py     && python3 -m pip install -c /tmp/constraints.txt /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest
+#24 1.158 Processing /opt/OmniVLA
+#24 1.291   Installing build dependencies: started
+#24 3.058   Installing build dependencies: finished with status 'done'
+#24 3.060   Getting requirements to build wheel: started
+#24 3.165   Getting requirements to build wheel: finished with status 'done'
+#24 3.228   Installing backend dependencies: started
+#24 4.519   Installing backend dependencies: finished with status 'done'
+#24 4.521   Preparing metadata (pyproject.toml): started
+#24 4.629   Preparing metadata (pyproject.toml): finished with status 'done'
+#24 4.631 Building wheels for collected packages: UNKNOWN
+#24 4.631   Building wheel for UNKNOWN (pyproject.toml): started
+#24 4.744   Building wheel for UNKNOWN (pyproject.toml): finished with status 'done'
+#24 4.744   Created wheel for UNKNOWN: filename=UNKNOWN-0.0.0-py3-none-any.whl size=1867 sha256=671c1e29a252a73d1095f538cac788de934b121e5fbca797094372b679e51874
+#24 4.744   Stored in directory: /tmp/pip-ephem-wheel-cache-dhus2b8n/wheels/dd/ce/27/d18cc42eba70a31cb9385811c5c9ebccbeabda45d1e3b33ee4
+#24 4.745 Successfully built UNKNOWN
+#24 4.888 Installing collected packages: UNKNOWN
+#24 4.911 Successfully installed UNKNOWN-0.0.0
+#24 4.911 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#24 5.178 Requirement already satisfied: scipy in /usr/lib/python3/dist-packages (1.8.0)
+#24 5.179 Requirement already satisfied: pyyaml in /usr/lib/python3/dist-packages (5.4.1)
+#24 5.179 Requirement already satisfied: pytest in /usr/lib/python3/dist-packages (6.2.5)
+#24 5.322 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#24 DONE 5.4s
 
-#25 [shell  5/12] RUN python3 -m pip install -c /tmp/constraints.txt torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0
-#25 CACHED
+#25 [sim  7/12] COPY . /workspace
+#25 DONE 0.1s
 
-#26 [shell  6/12] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())"     && python3 -m pip install -c /tmp/constraints.txt -e /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest
-#26 1.353 Obtaining file:///opt/OmniVLA
-#26 1.490   Installing build dependencies: started
-#26 3.525   Installing build dependencies: finished with status 'done'
-#26 3.528   Checking if build backend supports build_editable: started
-#26 3.634   Checking if build backend supports build_editable: finished with status 'done'
-#26 3.635 ERROR: Project file:///opt/OmniVLA has a 'pyproject.toml' and its build backend is missing the 'build_editable' hook. Since it does not have a 'setup.py' nor a 'setup.cfg', it cannot be installed in editable mode. Consider using a build backend that supports PEP 660.
-#26 ERROR: process "/bin/bash -o pipefail -c git init -q ${OMNIVLA_ROOT} && cd ${OMNIVLA_ROOT}     && git remote add origin ${OMNIVLA_REPO}     && git fetch -q --depth 1 origin ${OMNIVLA_COMMIT} && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)\"av\"[[:space:]]*$/\\1\"av\",/' pyproject.toml     && python3 -c \"from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())\"     && python3 -m pip install -c /tmp/constraints.txt -e ${OMNIVLA_ROOT}     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest" did not complete successfully: exit code: 1
+#26 [explore  8/12] WORKDIR /workspace
+#26 DONE 0.1s
+
+#27 [shell  9/12] RUN source /opt/ros/humble/setup.bash     && mkdir -p /opt/omnivla_ws     && colcon --log-base /opt/omnivla_ws/log build --symlink-install         --base-paths /workspace/ros2_ws/src         --build-base /opt/omnivla_ws/build --install-base /opt/omnivla_ws/install
+#27 0.645 Starting >>> omnivla_gazebo
+#27 1.277 Finished <<< omnivla_gazebo [0.63s]
+#27 1.277 
+#27 1.277 Summary: 1 package finished [0.77s]
+#27 DONE 1.3s
+
+#28 [nav 10/12] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#28 1.082 Traceback (most recent call last):
+#28 1.082   File "<string>", line 1, in <module>
+#28 1.082 ModuleNotFoundError: No module named 'transformers'
+#28 ERROR: process "/bin/bash -o pipefail -c source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c \"import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)\"     && python3 tests/test_core.py" did not complete successfully: exit code: 1
 ------
- > [sim  6/12] RUN git init -q /opt/OmniVLA && cd /opt/OmniVLA     && git remote add origin https://github.com/NHirose/OmniVLA.git     && git fetch -q --depth 1 origin 5182600cb4a9ee07684e17cdd2a6cbafc56b8a68 && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)"av"[[:space:]]*$/\1"av",/' pyproject.toml     && python3 -c "from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())"     && python3 -m pip install -c /tmp/constraints.txt -e /opt/OmniVLA     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest:
-1.353 Obtaining file:///opt/OmniVLA
-1.490   Installing build dependencies: started
-3.525   Installing build dependencies: finished with status 'done'
-3.528   Checking if build backend supports build_editable: started
-3.634   Checking if build backend supports build_editable: finished with status 'done'
-3.635 ERROR: Project file:///opt/OmniVLA has a 'pyproject.toml' and its build backend is missing the 'build_editable' hook. Since it does not have a 'setup.py' nor a 'setup.cfg', it cannot be installed in editable mode. Consider using a build backend that supports PEP 660.
+ > [shell 10/12] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py:
+1.082 Traceback (most recent call last):
+1.082   File "<string>", line 1, in <module>
+1.082 ModuleNotFoundError: No module named 'transformers'
 ------
-failed to solve: process "/bin/bash -o pipefail -c git init -q ${OMNIVLA_ROOT} && cd ${OMNIVLA_ROOT}     && git remote add origin ${OMNIVLA_REPO}     && git fetch -q --depth 1 origin ${OMNIVLA_COMMIT} && git checkout -q FETCH_HEAD     && sed -i -E 's/^([[:space:]]*)\"av\"[[:space:]]*$/\\1\"av\",/' pyproject.toml     && python3 -c \"from pip._vendor import tomli; tomli.loads(open('pyproject.toml').read())\"     && python3 -m pip install -c /tmp/constraints.txt -e ${OMNIVLA_ROOT}     && python3 -m pip install -c /tmp/constraints.txt scipy pyyaml pytest" did not complete successfully: exit code: 1
+failed to solve: process "/bin/bash -o pipefail -c source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c \"import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)\"     && python3 tests/test_core.py" did not complete successfully: exit code: 1
