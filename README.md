@@ -188,6 +188,11 @@ docker compose run --rm shell python3 training/finetune_omnivla.py --config trai
 - 公式と同じ: 全 Linear 層への LoRA (r=32), action head / pose projector も学習, 損失 = MSE + 0.1×平滑化項, lr 1e-4。
 - 出力: `/runs/<run>/checkpoints/step_XXXXXX/` (LoRA アダプタ + ヘッド, 数百 MB), `metrics.csv` (JSON lines),
   `viz/step_XXXXXX/*.jpg` (検証サンプルの予測 (青) と正解 (緑))。`val_at_start: true` で学習前 = ゼロショットの誤差も記録。
+- 曲がるサンプルの重み付け: 自動収集の走行はほとんど直進なので、そのままだとモデルは「とりあえず直進」を覚えます。
+  既定では「この先 1m 以内に 45° 以上曲がる」サンプル (自然には約 1 割) を学習の 5 割で引きます
+  (`turn_sample_ratio`, `turn_threshold_deg`, `turn_horizon`。0 で一様)。
+  検証も半分を曲がるサンプルにして、`turn: ADE / FDE / heading_err` を別に表示します。曲がり角で失敗するならここを見ます。
+- 途中から再開: `--resume_from /runs/<run>/checkpoints/step_XXXXXX --max_steps 2000` (指定 step 数だけ追加で学習)。
 - VRAM が足りない場合: `batch_size: 1` + `grad_accumulation_steps` を増やす、`lora_target: llm` (視覚エンコーダに LoRA を入れない)。
 - 重要: `metric_waypoint_spacing` (既定 0.1m) は推論側と一致させる (navigator は `finetune_meta.json` から自動で読む)。
 

@@ -46,6 +46,8 @@ def main():
     ap.add_argument("--image_goal_offset", nargs=2, type=int, default=[2, 30])
     ap.add_argument("--pose_goal_offset", nargs=2, type=int, default=[2, 300])
     ap.add_argument("--max_samples", type=int, default=400)
+    ap.add_argument("--turn_ratio", type=float, default=0.5,
+                    help="評価サンプルに含める「この先曲がる」サンプルの割合 (turn/* で別集計)")
     ap.add_argument("--batch_size", type=int, default=4)
     ap.add_argument("--num_workers", type=int, default=4)
     ap.add_argument("--num_viz", type=int, default=8)
@@ -78,14 +80,16 @@ def main():
             goal=GoalSamplingConfig(tuple(args.image_goal_offset), tuple(args.pose_goal_offset), {mid: 1.0}),
             aug=AugmentConfig(enabled=False))
         ds = GazeboNavDataset(dirs, c.processor, c.action_tokenizer, ds_cfg, train=False, force_modality=mid,
-                              max_samples=args.max_samples, seed=args.seed)
+                              max_samples=args.max_samples, seed=args.seed, turn_ratio=args.turn_ratio)
         loader = DataLoader(ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers,
                             collate_fn=lambda b: collate(b, tok.pad_token_id, tok.model_max_length))
         m = evaluate(c.vla, c.action_head.predict_action, c.pose_projector, loader, c.num_patches, c.device,
                      spacing, viz_dir=os.path.join(out_dir, mod_name), num_viz=args.num_viz)
         results[mod_name] = m
         print(f"[{mod_name}] n={m['num_samples']} ADE={m['ade']:.3f}m FDE={m['fde']:.3f}m "
-              f"yaw_err={m['yaw_err']:.3f}rad")
+              f"yaw_err={m['yaw_err']:.3f}rad | turn: ADE={m.get('turn/ade', float('nan')):.3f}m "
+              f"FDE={m.get('turn/fde', float('nan')):.3f}m heading_err={m.get('turn/yaw_err_deg', float('nan')):.1f}deg "
+              f"| straight: ADE={m.get('straight/ade', float('nan')):.3f}m")
     with open(os.path.join(out_dir, "metrics.json"), "w") as f:
         json.dump(results, f, indent=2)
     print(f"saved to {out_dir}")

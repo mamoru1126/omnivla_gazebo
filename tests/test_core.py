@@ -127,6 +127,23 @@ def test_make_targets_and_augment():
     assert 0 <= box[0] <= 64 and 0 <= box[1] <= 96 and box[2] - box[0] >= 512 and box[3] - box[1] >= 288
 
 
+def test_turn_flags_and_balanced_weights():
+    n = 60
+    # 30 フレーム直進 -> 左へ 90 度旋回 (10 フレーム) -> 直進
+    yaw = np.concatenate([np.zeros(30), np.linspace(0, math.pi / 2, 10), np.full(20, math.pi / 2)])
+    pos = np.zeros((n, 2))
+    for t in range(1, n):
+        pos[t] = pos[t - 1] + 0.1 * np.array([math.cos(yaw[t - 1]), math.sin(yaw[t - 1])])
+    f = data_utils.turn_flags(pos, yaw, horizon=10, threshold_deg=20)
+    assert not f[:15].any()                # 曲がり角のずっと手前は直進
+    assert f[25:38].all()                  # 曲がり角の直前〜旋回中は「曲がる」
+    assert not f[45:].any()                # 曲がり終わった後は直進
+    w = data_utils.balanced_weights(f, 0.5)
+    assert abs(w.sum() - 1) < 1e-9 and abs(w[f].sum() - 0.5) < 1e-9
+    assert np.allclose(data_utils.balanced_weights(f, 0.0), 1 / n)
+    assert np.allclose(data_utils.balanced_weights(np.zeros(5, bool), 0.5), 0.2)
+
+
 def test_modality_ids():
     assert data_utils.modality_id("image") == 6 and data_utils.modality_id("pose") == 4
     assert data_utils.modality_id("language") == 7 and data_utils.modality_id(5) == 5

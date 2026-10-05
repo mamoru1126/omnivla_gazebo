@@ -23,8 +23,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
 
-from omnivla_nav.data_utils import (AugmentConfig, GoalSamplingConfig, augment_pair, build_sample_index,  # noqa: E402
-                                    make_targets, modality_id)
+from omnivla_nav.data_utils import (AugmentConfig, GoalSamplingConfig, augment_pair, balanced_weights,  # noqa: E402
+                                    build_sample_index, make_targets, modality_id, turn_flags)
 from omnivla_nav.omnivla_model import build_prompt, make_sample  # noqa: E402
 from omnivla_nav.trajectory_io import image_path, load_trajectory  # noqa: E402
 
@@ -36,6 +36,8 @@ class GazeboDatasetConfig:
     max_goal_dist: float = 30.0
     goal: GoalSamplingConfig = field(default_factory=GoalSamplingConfig)
     aug: AugmentConfig = field(default_factory=AugmentConfig)
+    turn_horizon: int = 10                 # 「曲がるサンプル」の判定: この先何フレーム以内に
+    turn_threshold_deg: float = 45.0       #   何度以上曲がるか
 
 
 def parse_modality_weights(weights: Dict) -> Dict[int, float]:
@@ -45,7 +47,8 @@ def parse_modality_weights(weights: Dict) -> Dict[int, float]:
 class GazeboNavDataset(Dataset):
     def __init__(self, traj_dirs: Sequence[str], processor, action_tokenizer, cfg: GazeboDatasetConfig,
                  train: bool = True, force_modality: Optional[int] = None, max_samples: Optional[int] = None,
-                 seed: int = 0):
+                 seed: int = 0, turn_ratio: float = 0.0):
+        """turn_ratio: max_samples で間引くとき、曲がるサンプルをこの割合で含める (検証セット用)."""
         self.cfg = cfg
         self.train = train
         self.force_modality = force_modality
@@ -61,17 +64,28 @@ class GazeboNavDataset(Dataset):
                 print(f"[dataset] skip {d} (frames={n})")
                 continue
             self.trajs.append({"dir": d, "name": os.path.basename(d), "position": data["position"],
-                               "yaw": data["yaw"], "n": n})
+                               "yaw": data["yaw"], "n": n,
+                               "turn": turn_flags(data["position"], data["yaw"], cfg.turn_horizon,
+                                                  cfg.turn_threshold_deg)})
         self.index = build_sample_index([t["n"] for t in self.trajs])
+        self.turn = np.array([bool(self.trajs[ti]["turn"][t]) for ti, t in self.index], dtype=bool)
         if max_samples is not None and len(self.index) > max_samples:
             rng = np.random.default_rng(seed)
-            keep = np.sort(rng.choice(len(self.index), size=max_samples, replace=False))
+            p = balanced_weights(self.turn, turn_ratio) if turn_ratio > 0 else None
+            keep = np.sort(rng.choice(len(self.index), size=max_samples, replace=False, p=p))
             self.index = [self.index[i] for i in keep]
+            self.turn = self.turn[keep]
         if not self.index:
             raise ValueError("dataset is empty")
 
     def __len__(self) -> int:
         return len(self.index)
+
+    def turn_fraction(self) -> float:
+        return float(self.turn.mean()) if len(self.turn) else 0.0
+
+    def sample_weights(self, turn_ratio: float) -> np.ndarray:
+        return balanced_weights(self.turn, turn_ratio)
 
     def num_frames(self) -> int:
         return int(sum(t["n"] for t in self.trajs))
@@ -99,8 +113,29 @@ class GazeboNavDataset(Dataset):
         cur, goal, actions, goal_pose = augment_pair(rng, cur, goal, actions, goal_pose, self.cfg.aug, self.train)
         input_ids, labels = build_prompt(self.tokenizer, self.action_tokenizer, None, actions)
         sample = make_sample(self.image_transform, cur, goal, input_ids, labels, goal_pose, mod, actions)
-        sample["meta"] = {"traj_dir": tr["dir"], "t": int(t), "goal_t": int(goal_t), "modality": mod}
+        sample["meta"] = {"traj_dir": tr["dir"], "t": int(t), "goal_t": int(goal_t), "modality": mod,
+                          "turn": bool(self.turn[i])}
         return sample
+
+
+class WeightedEpochSampler(torch.utils.data.Sampler):
+    """重み付き復元抽出のサンプラ (epoch ごとに変わる, DDP では rank ごとに別の乱数)."""
+
+    def __init__(self, weights, num_samples: int, seed: int = 0, rank: int = 0):
+        self.weights = torch.as_tensor(np.asarray(weights), dtype=torch.double)
+        self.num_samples = int(num_samples)
+        self.seed, self.rank, self.epoch = int(seed), int(rank), 0
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = int(epoch)
+
+    def __iter__(self):
+        g = torch.Generator()
+        g.manual_seed(self.seed * 100003 + self.epoch * 1009 + self.rank)
+        return iter(torch.multinomial(self.weights, self.num_samples, replacement=True, generator=g).tolist())
+
+    def __len__(self) -> int:
+        return self.num_samples
 
 
 def split_trajectories(traj_dirs: Sequence[str], val_ratio: float, seed: int):
