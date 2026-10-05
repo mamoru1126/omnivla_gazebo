@@ -174,6 +174,41 @@ def test_upstream_controller():
     assert v2 > 0 and abs(w2) < 1e-9
 
 
+def test_respect_predicted_speed_and_stuck():
+    cfg = controller.ControllerConfig()
+    wps = np.zeros((8, 4))
+    wps[:, 2] = 1.0
+    wps[:, 0] = 0.1 * np.arange(1, 9)            # 0.1m/step = 0.3m/s (学習データの通常速度)
+    v, w = controller.compute_command(wps, cfg)
+    assert math.isclose(v, 0.3, rel_tol=1e-6)
+    wps[:, 0] = 0.025 * np.arange(1, 9)          # 予測が短い = 減速の予測
+    wps[:, 1] = 0.002 * np.arange(1, 9)
+    v, w = controller.compute_command(wps, cfg)
+    v0, w0 = controller.compute_command(wps, controller.ControllerConfig(respect_predicted_speed=False))
+    assert v0 >= 0.29 and v < 0.1 and math.isclose(v / w, v0 / w0, rel_tol=1e-6)  # 公式は全速, 曲率は同じ
+    st = controller.StuckDetector(timeout=4.0)
+    assert not st.update(0.0, (0, 0, 0), 0.3)
+    assert not st.update(3.0, (0.01, 0, 0), 0.3)
+    assert st.update(4.5, (0.02, 0, 0.01), 0.3)   # 4 秒以上ほぼ動かない -> stuck
+    st.reset()
+    for k in range(20):                            # 動いていれば stuck にならない
+        assert not st.update(k * 0.5, (0.1 * k, 0, 0), 0.3)
+    st.reset()
+    for k in range(20):                            # 止まる指令中は判定しない
+        assert not st.update(k * 0.5, (0, 0, 0), 0.0)
+
+
+def test_goal_tracker_pass_detection():
+    img = Image.new("RGB", (8, 8))
+    nodes = [topomap.GoalNode(img, (1.0, 1.0, 0.0)), topomap.GoalNode(img, (3.0, 1.0, 0.0))]
+    tr = topomap.GoalTracker(nodes, subgoal_radius=0.6, lookahead_nodes=0)
+    assert not tr.update((0.3, 1.0, 0.0))          # 前方 0.7m: まだ
+    assert not tr.update((1.0, 0.25, math.pi / 2))  # 0.75m 離れて真横: まだ
+    assert tr.update((1.6, 0.5, 0.0)) and tr.index == 1 and "passed" in tr.last_reason  # 0.78m, 左後ろ 140deg
+    fin = topomap.GoalTracker(nodes[1:], goal_radius=0.4)
+    assert not fin.update((3.5, 1.5, 0.0))          # 最終ゴールは通過扱いにしない
+
+
 # ---------------------------------------------------------------- sim_map
 SDF = """<?xml version="1.0"?>
 <sdf version="1.9"><world name="test_world">

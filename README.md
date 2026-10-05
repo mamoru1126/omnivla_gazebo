@@ -132,6 +132,14 @@ git add log/nav/<日時> && git commit -m "nav log" && git push
 | `reach_check` | `auto` | サブゴール到達判定。`auto`=ノードに姿勢があれば真値距離、無ければ画像類似度 (DINOv2 特徴) |
 
 その他 (到達半径, 速度上限, 推論周期など) は `ros2_ws/src/omnivla_gazebo/config/navigator.yaml`。
+公式の制御則・到達判定から変えている点 (いずれも `navigator.yaml` で無効化できる):
+
+| 項目 | 内容 | パラメータ |
+|---|---|---|
+| 予測速度の尊重 | 予測軌跡が短い (モデルが減速を予測) ときは速度を落とす。公式は 0.1m 先でも上限速度で進み、壁の手前でも減速しない | `respect_predicted_speed` |
+| サブゴールの通過判定 | 半径 (`subgoal_radius`) に入らなくても、`pass_radius` 以内で真横より後ろに来たら通過扱い。サブゴールの周りを回り続けるのを防ぐ (最終ゴールには使わない) | `pass_radius`, `pass_angle_deg` |
+| 動けない時の停止 | 前進指令中に `stuck_timeout` 秒動かなければ (障害物に押し付け) 停止して走行を終了 (`summary.json` の reason=stuck) | `stuck_timeout` |
+
 実行中に `/omnivla/goal_dir` (String), `/omnivla/goal_image` (+ `/omnivla/goal_pose`), `/omnivla/enable` (Bool) で
 ゴール変更・開始/停止ができます。
 

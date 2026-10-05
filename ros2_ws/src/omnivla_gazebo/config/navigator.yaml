@@ -17,6 +17,8 @@ omnivla_navigator:
     goal_radius: 0.4
     image_reach_threshold: 0.92
     lookahead_nodes: 1
+    pass_radius: 1.0                          # この距離以内でサブゴールが真横より後ろに来たら通過扱い (周回防止)
+    pass_angle_deg: 90.0
     stop_at_goal: true
     autostart: true
     # ---- control (公式 run_omnivla.py と同じ既定値) ----
@@ -29,6 +31,8 @@ omnivla_navigator:
     lookahead: 0.5
     max_image_age: 1.0
     cmd_timeout: 1.5
+    respect_predicted_speed: true             # 予測軌跡が短い (= モデルが減速を予測) ときは速度を落とす
+    stuck_timeout: 4.0                        # 前進指令中に 4 秒動かなければ停止して走行を終了 (0 で無効)
     # ---- io ----
     image_topic: /camera/image_raw
     odom_topic: /odom
