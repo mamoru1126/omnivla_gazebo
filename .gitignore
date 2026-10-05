@@ -2,7 +2,6 @@ __pycache__/
 *.pyc
 .env
 checkpoints/
-data/
 runs/
 ros2_ws/build/
 ros2_ws/install/
