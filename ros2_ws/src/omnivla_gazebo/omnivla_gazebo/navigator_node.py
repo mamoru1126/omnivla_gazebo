@@ -40,7 +40,7 @@ from std_msgs.msg import Bool, String
 
 from .ros_utils import Latest, image_msg_to_rgb, make_twist, odom_to_pose2d, rgb_to_image_msg, stamp_to_sec
 
-from omnivla_nav.controller import ControllerConfig, compute_command  # noqa: E402
+from omnivla_nav.controller import AlignConfig, ControllerConfig, HeadingAligner, compute_command  # noqa: E402
 from omnivla_nav.data_utils import IMAGE_MODALITIES, POSE_MODALITIES, modality_id  # noqa: E402
 from omnivla_nav.geometry import quaternion_from_yaw, relative_pose, to_world, yaw_from_quaternion  # noqa: E402
 from omnivla_nav.topomap import GoalNode, GoalTracker, load_goal_sequence  # noqa: E402
@@ -80,6 +80,10 @@ class NavigatorNode(Node):
         p("lookahead", 0.5)
         p("max_image_age", 1.0)
         p("cmd_timeout", 1.5)
+        p("align_to_subgoal", True)       # サブゴールが大きく横/後ろならその場旋回で向きを合わせる
+        p("align_enter_angle", 1.57)
+        p("align_exit_angle", 0.35)
+        p("align_angular_speed", 0.5)
         # io
         p("image_topic", "/camera/image_raw")
         p("odom_topic", "/odom")
@@ -99,6 +103,10 @@ class NavigatorNode(Node):
                                      lookahead=float(g("lookahead")), pp_speed=float(g("max_v")))
         self.cam = CameraModel(hfov=float(g("camera_hfov")), height=float(g("camera_height")),
                                x_offset=float(g("camera_x")))
+        self.aligner = HeadingAligner(AlignConfig(enabled=bool(g("align_to_subgoal")),
+                                                  enter_angle=float(g("align_enter_angle")),
+                                                  exit_angle=float(g("align_exit_angle")),
+                                                  angular_speed=float(g("align_angular_speed"))))
         self.rate = float(g("control_rate"))
         self.max_image_age = float(g("max_image_age"))
         self.cmd_timeout = float(g("cmd_timeout"))
@@ -207,6 +215,7 @@ class NavigatorNode(Node):
     def _set_goals(self, nodes, source: str):
         with self.lock:
             self.tracker = GoalTracker(nodes, **self._tracker_kwargs)
+            self.aligner.reset()
         if self.modality in POSE_MODALITIES and any(n.pose is None for n in nodes):
             self.get_logger().warn("pose modality selected but some goal nodes have no pose")
         self.get_logger().info(f"new goal: {len(nodes)} node(s) from {source}")
@@ -304,6 +313,17 @@ class NavigatorNode(Node):
         if self.modality in POSE_MODALITIES and goal_local is None:
             self.get_logger().error("pose modality needs goal node pose and /odom", throttle_duration_sec=5.0)
             self._publish_cmd(0.0, 0.0)
+            return
+        align_cmd = self.aligner.update(goal_local)
+        if align_cmd is not None:
+            # ゴールが視野外: OmniVLA は使わずその場旋回 (真値のサブゴール姿勢が分かる場合のみ)
+            self._publish_cmd(*align_cmd)
+            if self.state != "aligning":
+                self.get_logger().info(f"subgoal is {abs(math.degrees(math.atan2(goal_local[1], goal_local[0]))):.0f} deg "
+                                       "off -> rotating in place before using OmniVLA")
+            self.state = "aligning"
+            self.step_count += 1
+            self._publish_status(v=align_cmd[0], w=align_cmd[1])
             return
         out = self.policy.predict(img, goal_image=node.image if self.modality in IMAGE_MODALITIES else None,
                                   goal_pose=goal_local, instruction=self.instruction, modality=self.modality)

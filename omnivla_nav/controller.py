@@ -107,3 +107,44 @@ def compute_command(waypoints: np.ndarray, cfg: ControllerConfig) -> Tuple[float
     if cfg.mode == "pure_pursuit":
         return pure_pursuit_command(waypoints, cfg)
     raise ValueError(f"unknown controller mode: {cfg.mode}")
+
+
+@dataclass
+class AlignConfig:
+    """サブゴールが大きく横/後ろにあるとき、OmniVLA を使わずその場旋回で向きを合わせる.
+
+    OmniVLA は「今見えている画像」とゴール画像の対応で動くので、ゴールが視野外 (例: 真後ろ) だと
+    手がかりが無い。サブゴールの姿勢 (Gazebo の真値など) が分かる場合だけ働く。
+    """
+    enabled: bool = True
+    enter_angle: float = 1.57     # [rad] これ以上ずれたら旋回を開始 (既定 90 度)
+    exit_angle: float = 0.35      # [rad] ここまで合ったら OmniVLA に戻す (約 20 度)
+    angular_speed: float = 0.5    # [rad/s]
+    min_dist: float = 0.3         # [m] サブゴールがこれより近いときは向き合わせしない
+
+
+class HeadingAligner:
+    def __init__(self, cfg: AlignConfig):
+        self.cfg = cfg
+        self.active = False
+
+    def reset(self) -> None:
+        self.active = False
+
+    def update(self, goal_local) -> "Tuple[float, float] | None":
+        """goal_local = (x前, y左, ...) [m]. 旋回すべきなら (0, w) を返し、そうでなければ None."""
+        if not self.cfg.enabled or goal_local is None:
+            self.active = False
+            return None
+        x, y = float(goal_local[0]), float(goal_local[1])
+        if math.hypot(x, y) < self.cfg.min_dist:
+            self.active = False
+            return None
+        bearing = math.atan2(y, x)
+        if not self.active and abs(bearing) > self.cfg.enter_angle:
+            self.active = True
+        elif self.active and abs(bearing) < self.cfg.exit_angle:
+            self.active = False
+        if not self.active:
+            return None
+        return 0.0, math.copysign(self.cfg.angular_speed, bearing)
