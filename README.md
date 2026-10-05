@@ -183,10 +183,7 @@ docker compose run --rm train                 # = python3 training/finetune_omni
 docker compose run --rm shell python3 training/finetune_omnivla.py --config training/configs/finetune_gazebo.yaml --dry_run true
 
 # 途中のチェックポイントから学習を再開する (例: step 1000 から 2000 step 追加 ≒ 2.5 時間)
-docker compose run --rm shell python3 training/finetune_omnivla.py \
-    --config training/configs/finetune_gazebo.yaml \
-    --resume_from /runs/<run>/checkpoints/step_001000 \
-    --max_steps 2000
+docker compose run --rm shell python3 training/finetune_omnivla.py  --config training/configs/finetune_gazebo.yaml --resume_from /runs/<run>/checkpoints/step_001000 --max_steps 2000
 
 # 学習したモデルで走らせる (走行ログは log/nav/<日時>/ に自動保存)
 docker compose up sim                                                                   # 端末 1
