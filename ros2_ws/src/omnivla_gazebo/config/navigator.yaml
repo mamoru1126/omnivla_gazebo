@@ -29,12 +29,6 @@ omnivla_navigator:
     lookahead: 0.5
     max_image_age: 1.0
     cmd_timeout: 1.5
-    # サブゴールが視野外 (90 度以上ずれ) のときは OmniVLA を使わずその場旋回で向きを合わせる
-    # (サブゴールの姿勢が分かる場合のみ有効。実機で姿勢が無い場合は自動的に無効)
-    align_to_subgoal: true
-    align_enter_angle: 1.57
-    align_exit_angle: 0.35
-    align_angular_speed: 0.5
     # ---- io ----
     image_topic: /camera/image_raw
     odom_topic: /odom
