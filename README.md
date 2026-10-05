@@ -52,8 +52,7 @@ xhost +local:root
 docker compose up sim
 
 # 4) ゴール画像列 (topomap) を作る: スポーン位置から (7.5, 4.0) まで経路計画し、1m ごとにテレポートして撮影
-docker compose run --rm shell ros2 launch omnivla_gazebo topomap.launch.py \
-    world:=office_0 out_dir:=/data/goals/demo goal_x:=7.5 goal_y:=4.0
+docker compose run --rm shell ros2 launch omnivla_gazebo topomap.launch.py world:=office_0 out_dir:=/data/goals/demo goal_x:=7.5 goal_y:=4.0
 
 # 5) OmniVLA で自律移動 (サブゴール画像を順にたどる)
 GOAL_PATH=/data/goals/demo docker compose run --rm nav
