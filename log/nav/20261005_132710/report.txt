@@ -1,0 +1,27 @@
+run: /home/claude/omnivla_gazebo/log/nav/20261005_132710
+goal: /data/goals/demo  world: office_0  modality: 6  controller: upstream
+model: {'vla_path': '/checkpoints/omnivla-original', 'finetuned_dir': '/runs/omnivla_gazebo_20261005_102132/checkpoints/step_003000', 'metric_waypoint_spacing': 0.1}
+summary: reason=shutdown, reached=False, steps=249, final_dist_to_goal=2.0456959667768033, min_dist_to_goal=2.0456441829944887, path_length_m=13.033723302664889, subgoal_index=11
+
+== サブゴールごとの区間 ==
+subgoal  0: steps 1-6 (6 steps)  goal_bearing -0 -> +3 deg  dist 1.01 -> 0.62 m
+subgoal  1: steps 7-16 (10 steps)  goal_bearing +3 -> +8 deg  dist 0.52 -> 0.61 m
+subgoal  2: steps 17-26 (10 steps)  goal_bearing +5 -> +9 deg  dist 0.51 -> 0.61 m
+subgoal  3: steps 27-36 (10 steps)  goal_bearing +4 -> +10 deg  dist 0.51 -> 0.62 m
+subgoal  4: steps 37-46 (10 steps)  goal_bearing +4 -> +13 deg  dist 0.52 -> 0.62 m
+subgoal  5: steps 47-56 (10 steps)  goal_bearing +6 -> +15 deg  dist 0.52 -> 0.63 m
+subgoal  6: steps 57-66 (10 steps)  goal_bearing +7 -> +19 deg  dist 0.53 -> 0.63 m
+subgoal  7: steps 67-76 (10 steps)  goal_bearing +9 -> +19 deg  dist 0.53 -> 0.64 m
+subgoal  8: steps 77-86 (10 steps)  goal_bearing +8 -> +13 deg  dist 0.54 -> 0.63 m
+subgoal  9: steps 87-96 (10 steps)  goal_bearing +3 -> +12 deg  dist 0.52 -> 0.60 m
+subgoal 10: steps 97-104 (8 steps)  goal_bearing +15 -> +17 deg  dist 0.51 -> 0.63 m
+subgoal 11: steps 105-249 (145 steps)  goal_bearing +65 -> +155 deg  dist 0.53 -> 0.65 m
+
+== 予測軌跡がサブゴールと逆側を向いたステップ (3/249) ==
+   (サブゴールが |bearing|>15deg の横にあるのに, 予測の 5 点目が反対側) -> モデル側の問題
+step  131 subgoal 11  goal   +116deg  pred     -8deg  v=0.30 w=-0.25
+step  132 subgoal 11  goal   +120deg  pred    -10deg  v=0.30 w=-0.30
+step  133 subgoal 11  goal   +140deg  pred    -10deg  v=0.28 w=-0.30
+
+== 旋回指令が予測軌跡と逆のステップ (0/249) ==
+   -> 制御 (軌跡 -> v, w の変換) 側の問題。0 であるべき
