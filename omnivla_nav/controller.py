@@ -4,6 +4,7 @@ mode="upstream":
     OmniVLA 公式 inference/run_omnivla.py の制御則を忠実に再現したもの。
     (waypoint[4] を DT=1/3 で追従 -> 0.5 / 1.0 でクリップ -> v<=0.3, w<=0.3 に曲率を保って制限)
     公式コードで未定義だった clip_angle もここで実装している。
+    ただし目標点が後方 (dx<0) のとき公式の atan(dy/dx) は旋回方向が逆になるため atan2 に直している。
 mode="pure_pursuit":
     予測軌跡上の前方注視点に向かう pure pursuit。上流より滑らかだが、学習時の想定とは異なる。
 """
@@ -71,7 +72,9 @@ def upstream_command(waypoint: np.ndarray, cfg: ControllerConfig) -> Tuple[float
         w = float(np.sign(dy)) * math.pi / (2.0 * dt)
     else:
         v = dx / dt
-        w = math.atan(dy / dx) / dt
+        # 公式は atan(dy/dx) だが、目標点が後方 (dx<0) だと左右が逆になる
+        # (例: 左後ろの点で右旋回)。dx>0 では atan2 と同じ値なので、後方のときだけ挙動が変わる。
+        w = math.atan2(dy, dx) / dt
     v = float(np.clip(v, 0.0, cfg.max_linear_raw))
     w = float(np.clip(w, -cfg.max_angular_raw, cfg.max_angular_raw))
     v, w = limit_velocity(v, w, cfg.max_v, cfg.max_w)
