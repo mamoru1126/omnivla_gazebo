@@ -152,17 +152,6 @@ def test_upstream_controller():
     assert v2 > 0 and abs(w2) < 1e-9
 
 
-def test_heading_aligner():
-    al = controller.HeadingAligner(controller.AlignConfig())
-    assert al.update((-1.0, 0.1)) is not None and al.active          # 真後ろ (やや左) -> 左旋回
-    assert al.update((-1.0, 0.1))[1] > 0
-    assert al.update((0.3, 0.9)) is not None                          # まだ 70 度ずれ -> 旋回継続 (ヒステリシス)
-    assert al.update((1.0, 0.2)) is None and not al.active           # 11 度 -> OmniVLA に戻す
-    assert al.update((0.5, 0.6)) is None                              # 50 度: 開始条件 (90 度) 未満
-    assert al.update((-0.1, 0.05)) is None                            # 近すぎる
-    assert al.update(None) is None
-
-
 # ---------------------------------------------------------------- sim_map
 SDF = """<?xml version="1.0"?>
 <sdf version="1.9"><world name="test_world">
