@@ -22,6 +22,7 @@ def generate_launch_description():
         "min_goal_dist": ("3.0", float),
         "max_goal_dist": ("12.0", float),
         "path_noise": ("0.6", float),
+        "perturb": ("true", bool),
     }
     decls = [DeclareLaunchArgument(k, default_value=v[0]) for k, v in args.items()]
     params = {k: ParameterValue(LaunchConfiguration(k), value_type=v[1]) for k, v in args.items()}

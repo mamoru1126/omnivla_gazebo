@@ -23,7 +23,7 @@ def generate_launch_description():
         "goal_path": "",
         "modality": "image",
         "instruction": "",
-        "controller": "upstream",
+        "controller": "trajectory",
         "reach_check": "auto",
         "log_dir": "/workspace/log/nav",
         "world": "",

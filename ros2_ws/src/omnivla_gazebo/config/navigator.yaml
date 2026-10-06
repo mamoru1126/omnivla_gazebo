@@ -21,9 +21,16 @@ omnivla_navigator:
     pass_angle_deg: 90.0
     stop_at_goal: true
     autostart: true
-    # ---- control (公式 run_omnivla.py と同じ既定値) ----
+    # ---- control ----
     control_rate: 3.0
-    controller: upstream                      # upstream | pure_pursuit
+    # trajectory: 予測軌跡 (wp0..wp4) の旋回・速度をそのまま実行 (既定)
+    # upstream  : 公式 run_omnivla.py の式 (曲率が予測の約半分 -> 曲がり角で外に膨らむ)
+    # pure_pursuit
+    controller: trajectory
+    track_horizon: 4                          # trajectory: wp0..wp4 (約 1.7 秒先まで) に合わせる
+    track_max_v: 0.4                          # trajectory: 速度上限 [m/s] (お手本は 0.3)
+    track_max_w: 1.0                          # trajectory: 角速度上限 [rad/s] (お手本は最大 0.8)
+    # 以下は upstream / pure_pursuit 用 (公式 run_omnivla.py と同じ既定値)
     waypoint_index: 4
     dt: 0.3333333
     max_v: 0.3

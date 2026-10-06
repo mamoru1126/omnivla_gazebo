@@ -78,7 +78,10 @@ class NavigatorNode(Node):
         p("autostart", True)
         # control
         p("control_rate", 3.0)
-        p("controller", "upstream")       # upstream | pure_pursuit
+        p("controller", "trajectory")     # trajectory | upstream | pure_pursuit
+        p("track_horizon", 4)
+        p("track_max_v", 0.4)
+        p("track_max_w", 1.0)
         p("waypoint_index", 4)
         p("dt", 1.0 / 3.0)
         p("max_v", 0.3)
@@ -108,7 +111,9 @@ class NavigatorNode(Node):
         self.ctrl = ControllerConfig(mode=g("controller"), waypoint_index=int(g("waypoint_index")), dt=float(g("dt")),
                                      max_v=float(g("max_v")), max_w=float(g("max_w")),
                                      lookahead=float(g("lookahead")), pp_speed=float(g("max_v")),
-                                     respect_predicted_speed=bool(g("respect_predicted_speed")))
+                                     respect_predicted_speed=bool(g("respect_predicted_speed")),
+                                     track_horizon=int(g("track_horizon")), track_max_v=float(g("track_max_v")),
+                                     track_max_w=float(g("track_max_w")))
         self.stuck = StuckDetector(timeout=float(g("stuck_timeout")))
         self.cam = CameraModel(hfov=float(g("camera_hfov")), height=float(g("camera_height")),
                                x_offset=float(g("camera_x")))

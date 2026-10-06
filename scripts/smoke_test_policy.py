@@ -61,7 +61,7 @@ def main():
         np.set_printoptions(precision=3, suppress=True)
         print(f"\n=== modality: {name} (latency {np.median(lat) * 1000:.0f} ms) ===")
         print("waypoints [x, y, cos, sin] (m, robot frame):\n", out.waypoints)
-        print(f"command: v={v:.3f} m/s, w={w:.3f} rad/s  (upstream controller)")
+        print(f"command: v={v:.3f} m/s, w={w:.3f} rad/s  (controller={ctrl.mode})")
         gl = tuple(args.goal_pose[:2]) if "pose" in name else None
         render_debug(cur, goal if "image" in name else None, out.waypoints, goal_local=gl,
                      lines=[f"modality {name}", f"v={v:.2f} w={w:.2f}"]).save(os.path.join(args.out, f"{name}.jpg"))

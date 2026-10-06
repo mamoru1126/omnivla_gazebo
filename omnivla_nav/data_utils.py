@@ -140,6 +140,22 @@ def build_sample_index(traj_lengths: Sequence[int], min_len: int = 2) -> List[Tu
     return index
 
 
+def label_valid_mask(perturbed: Sequence[bool], len_pred: int = NUM_ACTIONS_CHUNK, spacing: int = 1) -> np.ndarray:
+    """時刻 t を学習サンプルの「現在」に使ってよいか.
+
+    正解ラベル (t+1 .. t+len_pred の姿勢) の区間に外乱フレームが含まれると、ラベルがお手本の動きではなくなるので除外する。
+    t 自身が外乱中でも、その先がお手本の動き (= 外乱からの立て直し) なら有効。これが「外れた状態から戻る」学習データになる。
+    """
+    p = np.asarray(perturbed, dtype=bool)
+    n = len(p)
+    valid = np.ones(n, dtype=bool)
+    for t in range(n):
+        fut = p[t + 1:min(n, t + spacing * len_pred + 1)]
+        if fut.any():
+            valid[t] = False
+    return valid
+
+
 def choose_modality(rng: np.random.Generator, weights: Dict[int, float]) -> int:
     ids = np.array(sorted(weights.keys()), dtype=np.int64)
     p = np.array([float(weights[int(i)]) for i in ids], dtype=np.float64)
@@ -276,6 +292,22 @@ def balanced_weights(flags: Sequence[bool], ratio: float) -> np.ndarray:
         return np.full(len(flags), 1.0 / max(1, len(flags)))
     ratio = min(max(float(ratio), 0.0), 1.0)
     w = np.where(flags, ratio / n_pos, (1.0 - ratio) / n_neg)
+    return w / w.sum()
+
+
+def reweight(weights: Sequence[float], flags: Sequence[bool], ratio: float) -> np.ndarray:
+    """既存のサンプリング重みを、flags=True のサンプルの合計が ratio になるように掛け直す (和 = 1).
+
+    flags=True の合計が既に ratio 以上なら何もしない (少ないときだけ増やす)。
+    """
+    w = np.asarray(weights, dtype=np.float64).copy()
+    flags = np.asarray(flags, dtype=bool)
+    w = w / max(w.sum(), 1e-12)
+    m_pos = float(w[flags].sum())
+    if ratio <= 0 or m_pos <= 0 or m_pos >= 1 or m_pos >= ratio:
+        return w
+    ratio = min(float(ratio), 1.0)
+    w = np.where(flags, w * ratio / m_pos, w * (1.0 - ratio) / (1.0 - m_pos))
     return w / w.sum()
 
 
