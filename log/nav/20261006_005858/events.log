@@ -1,0 +1,14 @@
+[69.05] subgoal -> 1/14 [within radius] at (-1.55, 0.02, 1deg)
+[72.75] subgoal -> 2/14 [within radius] at (-0.55, 0.03, 1deg)
+[76.44] subgoal -> 3/14 [within radius] at (0.48, 0.05, 2deg)
+[80.15] subgoal -> 4/14 [within radius] at (1.54, 0.09, 2deg)
+[83.52] subgoal -> 5/14 [within radius] at (2.49, 0.14, 5deg)
+[87.21] subgoal -> 6/14 [within radius] at (3.56, 0.21, 2deg)
+[90.58] subgoal -> 7/14 [within radius] at (4.53, 0.24, 2deg)
+[93.95] subgoal -> 8/14 [within radius] at (5.52, 0.30, 5deg)
+[97.64] subgoal -> 9/14 [within radius] at (6.60, 0.41, 6deg)
+[101.02] subgoal -> 10/14 [within radius] at (7.61, 0.51, 5deg)
+[104.40] subgoal -> 11/14 [within radius] at (8.33, 0.63, 17deg)
+[117.92] subgoal -> 12/14 [within radius] at (9.18, 2.02, 112deg)
+[129.50] stuck: no movement for 4s while commanding v=0.23 at (8.87, 2.48) -> stopped
+[129.25] run closed: stuck

@@ -1,0 +1,14 @@
+[finetune] step 4890 loss=0.0525 lr=1.00e-05 4.60s/step mem=20.0GB
+[finetune] step 4900 loss=0.0455 lr=1.00e-05 4.60s/step mem=20.0GB
+[finetune] step 4910 loss=0.0662 lr=1.00e-05 4.62s/step mem=20.0GB
+[finetune] step 4920 loss=0.0632 lr=1.00e-05 4.60s/step mem=20.0GB
+[finetune] step 4930 loss=0.0484 lr=1.00e-05 4.60s/step mem=20.0GB
+[finetune] step 4940 loss=0.0673 lr=1.00e-05 4.58s/step mem=20.0GB
+[finetune] step 4950 loss=0.0574 lr=1.00e-05 4.61s/step mem=20.0GB
+[finetune] step 4960 loss=0.1132 lr=1.00e-05 4.60s/step mem=20.0GB
+[finetune] step 4970 loss=0.0635 lr=1.00e-05 4.59s/step mem=20.0GB
+[finetune] step 4980 loss=0.0874 lr=1.00e-05 4.58s/step mem=20.0GB
+[finetune] step 4990 loss=0.0511 lr=1.00e-05 4.60s/step mem=20.0GB
+[finetune] step 5000 loss=0.0918 lr=1.00e-05 4.60s/step mem=20.0GB
+[finetune] [val step 5000] ADE=0.036m FDE=0.059m turn: ADE=0.037m FDE=0.062m heading_err=6.1deg | straight/ade=0.035 turn/ade=0.037 pose/ade=0.041 image_pose/ade=0.034 image/ade=0.033
+[finetune] saved /runs/omnivla_gazebo_20261005_133820/checkpoints/step_005000
