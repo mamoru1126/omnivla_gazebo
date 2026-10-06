@@ -22,6 +22,10 @@ turn_sample_ratio: 0.5            # 学習で「この先曲がる」サンプ�
 turn_threshold_deg: 45.0          # 判定: turn_horizon フレーム (≒1m) 以内に 45 度以上曲がる (自然な割合は約 1 割)
 turn_horizon: 10
 val_turn_ratio: 0.5               # 検証サンプルの半分を曲がるサンプルに (turn/ade で別集計)
+# 外乱つき収集 (explore の perturb:=true, 既定) で記録した「経路から外れた状態から戻る」サンプルを多めに学習する
+# (これが無いと、少し経路から外れただけで予測が崩れて衝突する)。外乱つきデータが無ければ何もしない
+recovery_sample_ratio: 0.3        # 学習で立て直しサンプルを少なくともこの割合で引く
+val_recovery_ratio: 0.3           # 検証サンプルの 3 割を立て直しサンプルに (recovery/ade で別集計)
 augment: true
 crop_v: 0.1
 crop_h: 0.05

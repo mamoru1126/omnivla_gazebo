@@ -128,7 +128,7 @@ git add log/nav/<日時> && git commit -m "nav log" && git push
 | `instruction` | `""` | 言語指示。公式の学習データに合わせ `move toward blue trash bin` のような形 |
 | `finetuned_dir` | `""` | ファインチューニング結果 (`/runs/<run>/checkpoints/step_XXXXXX`) |
 | `vla_path` | `/checkpoints/omnivla-original` | ベースモデル (または `merge_lora.py` の出力) |
-| `controller` | `upstream` | `upstream`: 公式 run_omnivla.py と同じ制御則 / `pure_pursuit` |
+| `controller` | `trajectory` | `trajectory`: 予測軌跡の旋回・速度をそのまま実行 / `upstream`: 公式 run_omnivla.py の式 / `pure_pursuit` |
 | `reach_check` | `auto` | サブゴール到達判定。`auto`=ノードに姿勢があれば真値距離、無ければ画像類似度 (DINOv2 特徴) |
 
 その他 (到達半径, 速度上限, 推論周期など) は `ros2_ws/src/omnivla_gazebo/config/navigator.yaml`。
@@ -136,6 +136,7 @@ git add log/nav/<日時> && git commit -m "nav log" && git push
 
 | 項目 | 内容 | パラメータ |
 |---|---|---|
+| 制御則 | 公式の式 (`waypoints[4]` だけから v, w を計算) は角速度が 0.3rad/s 止まりで、鋭く曲がる予測ほど大回りする (学習データのお手本は最大 0.8rad/s で曲がる)。`trajectory` は予測 wp0..wp4 (各 (k+1)/3 秒後) の道のりと向きの変化を時間で最小二乗フィットして、予測した旋回の速さ・曲率・減速をそのまま実行する | `controller`, `track_max_v`, `track_max_w` |
 | 予測速度の尊重 | 予測軌跡が短い (モデルが減速を予測) ときは速度を落とす。公式は 0.1m 先でも上限速度で進み、壁の手前でも減速しない | `respect_predicted_speed` |
 | サブゴールの通過判定 | 半径 (`subgoal_radius`) に入らなくても、`pass_radius` 以内で真横より後ろに来たら通過扱い。サブゴールの周りを回り続けるのを防ぐ (最終ゴールには使わない) | `pass_radius`, `pass_angle_deg` |
 | 動けない時の停止 | 前進指令中に `stuck_timeout` 秒動かなければ (障害物に押し付け) 停止して走行を終了 (`summary.json` の reason=stuck) | `stuck_timeout` |
@@ -147,7 +148,7 @@ git add log/nav/<日時> && git commit -m "nav log" && git push
 1. 最新のカメラ画像と真値オドメトリを取得
 2. topomap の現在ノードに到達していれば次のノードへ (最終ノード到達で停止)
 3. OmniVLA(現在画像, サブゴール画像[, 相対姿勢]) → 正規化 waypoint (8, 4) → ×0.1m でメートルに
-4. `waypoints[4]` から (v, w) を計算して `/cmd_vel` へ
+4. 予測軌跡から (v, w) を計算して `/cmd_vel` へ (`trajectory`: wp0..wp4 を再現する一定の (v, w))
 
 推論部分は ROS 非依存の `omnivla_nav/policy.py` にあり、実機や別のシミュレータからも同じように使えます:
 ```python
@@ -174,7 +175,13 @@ WORLD=office_0 EPISODES=100 docker compose run --rm explore  # 端末 2 → /dat
 ```
 **手動**: `ros2 launch omnivla_gazebo collect_teleop.launch.py out_dir:=/data/raw/teleop` + teleop_twist_keyboard。
 
-保存形式は GNM (visualnav-transformer) と同じ (`<軌跡>/0.jpg…`, `traj_data.pkl` = `{"position": (N,2), "yaw": (N,)}`)。
+**外乱つき収集 (DART, 既定で有効)**: 走行中 3〜8 秒ごとに 0.8〜2.5 秒だけお手本の指令をランダムな旋回に置き換えて
+ロボットを経路から外し (最大 0.7m 程度, 障害物の近くとゴール手前では行わない)、その後お手本が経路へ戻る様子を記録します。
+外乱中のフレームは `traj_data.pkl` の `perturbed` に記録され、正解ラベルには使いません (外乱直後の「立て直し」だけを学習)。
+お手本は常に経路の上を走るので、これが無いとモデルは「経路から外れた状態」を見たことがなく、
+少しずれただけで予測が崩れて衝突します。無効にするなら `explore.launch.py perturb:=false`。
+
+保存形式は GNM (visualnav-transformer) と同じ (`<軌跡>/0.jpg…`, `traj_data.pkl` = `{"position": (N,2), "yaw": (N,), "perturbed": (N,)}`)。
 確認 (コンテナ内): `python3 training/inspect_dataset.py /data/raw --num_viz 16` (1 フレームあたりの移動量が 0.1m 前後か、
 正解軌跡 (緑) が画像上の進行方向と一致するかを見る)。
 
@@ -217,7 +224,10 @@ docker compose run --rm shell python3 tools/plot_nav_log.py log/nav/latest
   既定では「この先 1m 以内に 45° 以上曲がる」サンプル (自然には約 1 割) を学習の 5 割で引きます
   (`turn_sample_ratio`, `turn_threshold_deg`, `turn_horizon`。0 で一様)。
   検証も半分を曲がるサンプルにして、`turn: ADE / FDE / heading_err` を別に表示します。曲がり角で失敗するならここを見ます。
+- 立て直しサンプルの重み付け: 外乱つきで集めたデータがあれば、外乱直後 (経路から外れた状態から戻る) のサンプルを
+  学習の 3 割以上で引きます (`recovery_sample_ratio`)。検証も 3 割をそのサンプルにして `recovery: ADE …` を表示します。
 - 途中から再開: `--resume_from` で指定した step から `--max_steps` だけ追加で学習 (コマンドは上)。
+  学習率は設定 (`learning_rate`, `lr_decay_step`) に従います (step 番号は続きから数える)。
 - VRAM が足りない場合: `batch_size: 1` + `grad_accumulation_steps` を増やす、`lora_target: llm` (視覚エンコーダに LoRA を入れない)。
 - 重要: `metric_waypoint_spacing` (既定 0.1m) は推論側と一致させる (navigator は `finetune_meta.json` から自動で読む)。
 
@@ -231,6 +241,54 @@ FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 GOAL_PATH=/data/goals/demo doc
 # 公式形式のマージ済みモデルを作る (公式 run_omnivla.py でも使える)
 python3 training/merge_lora.py --finetuned_dir /runs/<run>/checkpoints/step_005000 --out_dir /checkpoints/omnivla-gazebo
 ```
+
+### 曲がり角で経路から外れる・ぶつかる場合 (追加データ + 追加学習)
+
+`log/nav/20261006_005858` (全 5000 step 学習後, 机の角で stuck) の解析で分かった原因は 2 つです。
+
+1. **制御**: 公式の式 (`upstream`) は角速度 0.3rad/s 止まりで、鋭く曲がる予測ほど大回りします。
+   机の角では予測の約半分の速さでしか曲がれず、経路から 0.15 → 0.6m 外れました。→ `controller: trajectory` (既定) に変更。
+2. **学習データ**: お手本は常に経路の上を走るので、モデルは「経路から外れた状態」を学習していません。
+   ずれが 0.1m 以内の間は予測はお手本とほぼ一致していましたが (2.7 秒先の向き +40° vs お手本 +41°)、
+   0.6m 外れると予測が崩れて逆向き (−27〜−57°) になりました。→ 外乱つき収集 (DART) のデータを足して追加学習。
+
+運動学シミュレーション (同じ demo 経路, 予測に学習後相当の誤差 3cm/6° を入れた 10 試行) での到達数:
+
+| 予測モデルの性質 | `upstream` | `trajectory` |
+|---|---|---|
+| 経路から外れても戻れない (今のモデル相当) | 2/10 | 5/10 |
+| 外れた状態から 2 割だけ戻れる (立て直しを学習したモデル相当) | 7/10 (机の角で衝突) | **10/10** |
+
+制御だけでは足りず、立て直しの学習が必要です。手順 (`git pull` だけで反映, イメージの再ビルドは不要):
+
+```bash
+# 0) まず今のモデルのまま trajectory 制御で試す (既定が trajectory になっている)
+docker compose up sim                                                                  # 端末 1
+docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 --goal_dir /data/goals/demo
+FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 GOAL_PATH=/data/goals/demo docker compose run --rm nav
+
+# 1) 外乱つきでデータを追加収集 (既存データと同じ /data/raw/office_0 に増える, 1 エピソード ≈ 40〜70 秒)
+docker compose stop sim && HEADLESS=true docker compose up sim                         # 端末 1 (GUI なしで速く)
+WORLD=office_0 EPISODES=150 SEED=1 docker compose run --rm explore                      # 端末 2
+docker compose run --rm shell python3 training/inspect_dataset.py /data/raw --num_viz 0  # perturbed_frames > 0 を確認
+
+# 2) 追加学習: step 5000 から 3000 step (7000 まで lr 1e-4, その後 1e-5)。古いデータと新しいデータを混ぜて学習する
+docker compose stop sim
+docker compose run --rm shell python3 training/finetune_omnivla.py --config training/configs/finetune_gazebo.yaml \
+    --resume_from /runs/<run>/checkpoints/step_005000 --max_steps 3000 --lr_decay_step 7000
+#    ログの "recovery samples … -> sampled at >= 30%" と、500 step ごとの [val] recovery: ADE が下がるのを確認
+
+# 3) 走らせる (新しい <run2> の step_008000)
+FINETUNED_DIR=/runs/<run2>/checkpoints/step_008000 GOAL_PATH=/data/goals/demo docker compose run --rm nav
+
+# 4) 1 本だけでなく成功率で確認: navigator をゴール無しで起動し、ランダムな経路 20 本 (サブゴール列) を評価
+FINETUNED_DIR=/runs/<run2>/checkpoints/step_008000 docker compose run --rm nav         # 端末 2
+docker compose run --rm shell ros2 launch omnivla_gazebo eval.launch.py \
+    world:=office_0 num_tasks:=20 mode:=route min_dist:=4.0 max_dist:=12.0 label:=dart  # 端末 3
+```
+
+時間に余裕があれば 2) の代わりに、全データでベースモデルから学習し直す (`docker compose run --rm train`) 方がより確実です。
+失敗した走行は今までどおり `log/nav/<日時>` を push してください。
 
 ### シミュレーション評価 (`eval.launch.py`)
 
@@ -253,7 +311,7 @@ docker-compose.yml     sim / nav / explore / train / shell サービス
 omnivla_nav/           ROS 非依存のコア (推論ラッパ, 制御, 地図・経路計画, データ形式, 可視化)
   policy.py            OmniVLAPolicy: 画像/姿勢/言語を引数で受け取る推論
   omnivla_model.py     モデル読み込み (公式 / LoRA), プロンプト, forward (推論と学習で共通)
-  controller.py        公式の制御則 (+ pure pursuit)
+  controller.py        予測軌跡 → (v, w) (trajectory / 公式の式 / pure pursuit)
   sim_map.py           SDF → 占有格子, Dijkstra 経路計画
 ros2_ws/src/omnivla_gazebo/
   omnivla_gazebo/      ROS 2 ノード (navigator, auto_explorer, data_collector, topomap_recorder, eval_runner, teleport)
@@ -288,8 +346,8 @@ docs/                  公式スクリプトの確認結果
 
 ## 検証状況・既知の制約
 
-- `tests/test_core.py` (座標変換が公式の GPS→ゴール計算と一致すること, 行動ラベル, 制御則, SDF→地図, 経路計画,
-  エキスパート走行の運動学シミュレーション, データ入出力) はパスしています。Docker ビルド時にも実行されます。
+- `tests/test_core.py` (座標変換が公式の GPS→ゴール計算と一致すること, 行動ラベル, 制御則 (trajectory が予測軌跡を再現すること,
+  正しい予測での閉ループ走行), SDF→地図, 経路計画, エキスパート走行と外乱つき走行の運動学シミュレーション, データ入出力) はパスしています。Docker ビルド時にも実行されます。
 - この環境の作成時点では GPU/Docker デーモンが無い環境で作業したため、**Docker ビルド、Gazebo 実行、7B モデルでの推論・学習は未実行**です。
   初回は `scripts/smoke_test_policy.py` と `finetune_omnivla.py --dry_run true` で確認してください。
 - 衛星画像 modality (0-3) は扱っていません。言語 modality は推論のみ (Gazebo データに指示文が無いため学習では使わない)。

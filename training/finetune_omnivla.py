@@ -75,6 +75,9 @@ class FinetuneConfig:
     turn_threshold_deg: float = 45.0   # 曲がるサンプルの判定: turn_horizon フレーム以内に何度以上曲がるか
     turn_horizon: int = 10
     val_turn_ratio: float = 0.5        # 検証サンプルに含める曲がるサンプルの割合 (turn/ade で別集計)
+    # 外乱 (DART) 直後 = 経路から外れた状態から戻るサンプルを少なくともこの割合で引く (無ければ何もしない)
+    recovery_sample_ratio: float = 0.3
+    val_recovery_ratio: float = 0.3    # 検証サンプルに含める立て直しサンプルの割合 (recovery/ade で別集計)
     augment: bool = True
     crop_v: float = 0.1
     crop_h: float = 0.05
@@ -252,9 +255,11 @@ def save_checkpoint(run_dir: Path, step: int, cfg: FinetuneConfig, vla, action_h
 
 
 def make_loader(ds, cfg: FinetuneConfig, shuffle: bool, distributed: bool, rank: int, world: int, collate_fn):
-    if shuffle and cfg.turn_sample_ratio > 0:
+    if shuffle and (cfg.turn_sample_ratio > 0 or cfg.recovery_sample_ratio > 0):
         # 曲がるサンプルを turn_sample_ratio の割合で引く (元データはほぼ直進なので、そのままだと直進ばかり学習する)
-        sampler = WeightedEpochSampler(ds.sample_weights(cfg.turn_sample_ratio), len(ds) // world, cfg.seed, rank)
+        # 外乱からの立て直しサンプルは少なくとも recovery_sample_ratio の割合で引く
+        weights = ds.sample_weights(cfg.turn_sample_ratio, cfg.recovery_sample_ratio)
+        sampler = WeightedEpochSampler(weights, len(ds) // world, cfg.seed, rank)
     elif distributed:
         sampler = DistributedSampler(ds, num_replicas=world, rank=rank, shuffle=shuffle, seed=cfg.seed)
     else:
@@ -357,6 +362,9 @@ def main(argv=None):
     if cfg.resume_from and os.path.exists(os.path.join(cfg.resume_from, "optimizer.pt")):
         optimizer.load_state_dict(torch.load(os.path.join(cfg.resume_from, "optimizer.pt"), map_location="cpu"))
         say("optimizer state restored")
+    for group in optimizer.param_groups:
+        # 再開時も学習率は設定ファイル/引数の値 (と lr_decay_step のスケジュール) に従う
+        group["lr"] = group["initial_lr"] = cfg.learning_rate
 
     def lr_lambda(step: int) -> float:
         s = step + start_step
@@ -386,9 +394,13 @@ def main(argv=None):
     train_ds = GazeboNavDataset(train_dirs, processor, action_tokenizer, ds_cfg, train=True, seed=cfg.seed)
     val_ds = GazeboNavDataset(val_dirs, processor, action_tokenizer, ds_cfg, train=False, seed=cfg.seed,
                               max_samples=cfg.val_batches * cfg.batch_size,
-                              turn_ratio=cfg.val_turn_ratio) if val_dirs else None
+                              turn_ratio=cfg.val_turn_ratio,
+                              recovery_ratio=cfg.val_recovery_ratio) if val_dirs else None
     say(f"samples: train={len(train_ds)} ({train_ds.num_frames()} frames)"
         + (f", val={len(val_ds)} (turn {val_ds.turn_fraction() * 100:.0f}%)" if val_ds else ""))
+    say(f"recovery samples (right after a DART perturbation): {train_ds.recovery_fraction() * 100:.1f}% -> sampled at "
+        + (f">= {cfg.recovery_sample_ratio * 100:.0f}%" if train_ds.recovery_fraction() > 0 else
+           "0% (perturb:=true で集めたデータがありません)"))
     say(f"turning samples in train data: {train_ds.turn_fraction() * 100:.1f}% "
         f"(> {cfg.turn_threshold_deg:.0f}deg within {cfg.turn_horizon} frames) -> sampled at "
         + (f"{cfg.turn_sample_ratio * 100:.0f}%" if cfg.turn_sample_ratio > 0 else "natural rate"))

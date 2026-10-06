@@ -3,7 +3,8 @@
 ディレクトリ構成:
     <root>/<traj_name>/
         0.jpg, 1.jpg, ...          # 記録した RGB 画像
-        traj_data.pkl              # {"position": (N,2) float64, "yaw": (N,) float64}
+        traj_data.pkl              # {"position": (N,2) float64, "yaw": (N,) float64,
+                                   #  "perturbed": (N,) bool  ... 外乱を入れていたフレーム (DART, 任意)}
         meta.json                  # 本リポジトリ独自のメタ情報 (記録レート, ワールド名, 時刻など)
 
 GNM/ViNT/NoMaD の学習コード (vint_train) と同じ形式なので、そちらの学習にも流用できる。
@@ -39,13 +40,15 @@ class TrajectoryWriter:
         self.positions: List[Tuple[float, float]] = []
         self.yaws: List[float] = []
         self.stamps: List[float] = []
+        self.perturbed: List[bool] = []
         self.closed = False
 
     def __len__(self) -> int:
         return len(self.positions)
 
     def add(self, image: Union[np.ndarray, Image.Image], x: float, y: float, yaw: float,
-            stamp: Optional[float] = None) -> int:
+            stamp: Optional[float] = None, perturbed: bool = False) -> int:
+        """perturbed=True: このフレームの間はお手本ではなく外乱で動いていた (正解ラベルに使わない)."""
         if self.closed:
             raise RuntimeError("writer already closed")
         if isinstance(image, np.ndarray):
@@ -58,6 +61,7 @@ class TrajectoryWriter:
         self.positions.append((float(x), float(y)))
         self.yaws.append(float(yaw))
         self.stamps.append(float(stamp) if stamp is not None else float("nan"))
+        self.perturbed.append(bool(perturbed))
         return idx
 
     def path_length(self) -> float:
@@ -77,6 +81,7 @@ class TrajectoryWriter:
         data = {
             "position": np.asarray(self.positions, dtype=np.float64).reshape(-1, 2),
             "yaw": np.asarray(self.yaws, dtype=np.float64).reshape(-1),
+            "perturbed": np.asarray(self.perturbed, dtype=bool).reshape(-1),
         }
         with open(os.path.join(self.dir, TRAJ_FILE), "wb") as f:
             pickle.dump(data, f)
@@ -85,6 +90,7 @@ class TrajectoryWriter:
         meta.update({
             "num_frames": len(self.positions),
             "path_length_m": self.path_length(),
+            "perturbed_frames": int(sum(self.perturbed)),
             "stamps": self.stamps,
             "saved_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         })
@@ -104,7 +110,10 @@ def load_trajectory(traj_dir: str) -> Dict[str, np.ndarray]:
     yaw = np.asarray(data["yaw"], dtype=np.float64).reshape(-1)
     if len(pos) != len(yaw):
         raise ValueError(f"{traj_dir}: position/yaw length mismatch")
-    return {"position": pos, "yaw": yaw}
+    pert = np.asarray(data.get("perturbed", np.zeros(len(pos), dtype=bool)), dtype=bool).reshape(-1)
+    if len(pert) != len(pos):
+        raise ValueError(f"{traj_dir}: perturbed length mismatch")
+    return {"position": pos, "yaw": yaw, "perturbed": pert}
 
 
 def load_meta(traj_dir: str) -> dict:

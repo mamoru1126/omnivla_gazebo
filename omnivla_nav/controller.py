@@ -1,12 +1,21 @@
 """OmniVLA が出力した waypoint 列を (v, w) 速度指令に変換するコントローラ (ROS 非依存).
 
-mode="upstream":
+mode="upstream" (公式):
     OmniVLA 公式 inference/run_omnivla.py の制御則を忠実に再現したもの。
     (waypoint[4] を DT=1/3 で追従 -> 0.5 / 1.0 でクリップ -> v<=0.3, w<=0.3 に曲率を保って制限)
     公式コードで未定義だった clip_angle もここで実装している。
     ただし目標点が後方 (dx<0) のとき公式の atan(dy/dx) は旋回方向が逆になるため atan2 に直している。
+    注意: 予測した動きをそのまま実行する式ではない。
+      * 角速度が maxw=0.3rad/s で頭打ち (学習データのお手本は最大 0.8rad/s で曲がる)
+      * 0.5/1.0 のクリップと曲率保存の制限により、旋回半径 0.5m 未満の予測は 0.5m 以上に引き伸ばされる
+        (クリップが掛からない範囲でも曲率 atan(dy/dx)/dx は予測点を通る円弧の曲率 2dy/(dx²+dy²) の約半分)
+    そのため鋭く曲がる予測ほどロボットは外側に膨らみ、経路から外れる (office_0 の机の角で 0.6m 外れて衝突した)。
+mode="trajectory" (既定):
+    予測軌跡そのものを再現する。waypoint k は学習データの記録周期 (3Hz) で (k+1)*dt 秒後の姿勢なので、
+    先頭 track_horizon+1 点の「向きの変化」と「進んだ道のり」を時間で最小二乗フィットして (v, w) を決める。
+    モデルが予測した旋回の速さ・曲率・減速をそのまま実行する (ゴール方向へ向ける等の規則は入れない)。
 mode="pure_pursuit":
-    予測軌跡上の前方注視点に向かう pure pursuit。上流より滑らかだが、学習時の想定とは異なる。
+    予測軌跡上の前方注視点に向かう pure pursuit。
 """
 from __future__ import annotations
 
@@ -29,7 +38,12 @@ def clip_angle(theta: float) -> float:
 
 @dataclass
 class ControllerConfig:
-    mode: str = "upstream"          # "upstream" | "pure_pursuit"
+    mode: str = "trajectory"        # "trajectory" | "upstream" | "pure_pursuit"
+    # --- trajectory ---
+    track_horizon: int = 4          # wp0..wp{track_horizon} (≒1.7 秒分) に合わせる
+    track_max_v: float = 0.4        # 学習データ (お手本) の速度 0.3m/s に余裕を持たせた上限
+    track_max_w: float = 1.0        # お手本の最大角速度 0.8rad/s に余裕を持たせた上限
+    track_phi_scale: float = 0.15   # 予測点までの距離がこれより近いときは、位置より予測した向きで旋回量を決める [m]
     # --- upstream ---
     waypoint_index: int = 4         # 公式は waypoints[0][4] を使う
     dt: float = 1.0 / 3.0           # 公式の DT (tick_rate=3Hz)
@@ -119,6 +133,34 @@ def pure_pursuit_command(waypoints_xy: np.ndarray, cfg: ControllerConfig) -> Tup
     return float(v), float(w)
 
 
+def trajectory_command(waypoints: np.ndarray, cfg: ControllerConfig) -> Tuple[float, float]:
+    """予測軌跡 (各点は (k+1)*dt 秒後) を最もよく再現する一定の (v, w)."""
+    wps = np.asarray(waypoints, dtype=np.float64)
+    K = int(np.clip(cfg.track_horizon, 0, len(wps) - 1))
+    t = (np.arange(K + 1) + 1.0) * cfg.dt
+    xy = wps[:K + 1, :2]
+    yaw = np.unwrap(np.arctan2(wps[:K + 1, 3], wps[:K + 1, 2]))       # 予測された向き
+    chord = np.linalg.norm(xy, axis=1)
+    phi = 2.0 * np.arctan2(xy[:, 1], xy[:, 0])                        # その点を通る円弧での向きの変化
+    # 道のり: 円弧長 = 弦 * (phi/2) / sin(phi/2)
+    half = np.abs(phi) / 2.0
+    arc = np.where(half > 1e-6, chord * half / np.maximum(np.sin(half), 1e-6), chord)
+    # 向きの変化: モデルが予測した向きと、位置から決まる円弧の向きの重み付き平均
+    # (点が近い = ゆっくり/その場旋回のときは位置の誤差で phi が暴れるので、予測した向きを重視する)
+    a = 0.5 * chord ** 2 / (chord ** 2 + cfg.track_phi_scale ** 2)
+    turn = a * phi + (1.0 - a) * yaw
+    v = float(np.dot(t, arc) / np.dot(t, t))
+    w = float(np.dot(t, turn) / np.dot(t, t))
+    v = max(v, 0.0)
+    # 速度上限: 曲率 (w/v) と比率を保ったまま全体を遅くする
+    s = 1.0
+    if v > cfg.track_max_v:
+        s = min(s, cfg.track_max_v / v)
+    if abs(w) > cfg.track_max_w:
+        s = min(s, cfg.track_max_w / abs(w))
+    return v * s, w * s
+
+
 def compute_command(waypoints: np.ndarray, cfg: ControllerConfig) -> Tuple[float, float]:
     """waypoints: (8, 4) = [x[m], y[m], cos, sin] (ロボット座標)."""
     waypoints = np.asarray(waypoints, dtype=np.float64)
@@ -128,6 +170,8 @@ def compute_command(waypoints: np.ndarray, cfg: ControllerConfig) -> Tuple[float
         if cfg.respect_predicted_speed:
             v, w = cap_to_predicted_speed(v, w, predicted_speed(waypoints, idx, cfg.dt))
         return v, w
+    if cfg.mode == "trajectory":
+        return trajectory_command(waypoints, cfg)
     if cfg.mode == "pure_pursuit":
         return pure_pursuit_command(waypoints, cfg)
     raise ValueError(f"unknown controller mode: {cfg.mode}")

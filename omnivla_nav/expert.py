@@ -58,3 +58,66 @@ class PathFollower:
 def unicycle_step(pose, v: float, w: float, dt: float):
     x, y, yaw = pose
     return x + v * math.cos(yaw) * dt, y + v * math.sin(yaw) * dt, yaw + w * dt
+
+
+@dataclass
+class PerturbConfig:
+    """データ収集中にお手本の走行をわざと乱す (DART: Disturbances for Augmenting Robot Trajectories).
+
+    外乱でロボットを経路から外し、その後お手本が経路へ戻る様子を記録する。
+    外乱中のフレームは正解ラベルに使わず (training 側で除外)、外乱直後の「立て直し」だけを学習させる。
+    これが無いと、モデルは経路の上を走る状態しか見たことがなく、少しずれると予測が崩れる (曲がり角で衝突した原因)。
+    """
+    enabled: bool = True
+    interval: Tuple[float, float] = (3.0, 8.0)     # 外乱と外乱の間隔 [s]
+    duration: Tuple[float, float] = (0.8, 2.5)     # 1 回の外乱の長さ [s] (経路から最大 0.7m 程度外れる)
+    angular: Tuple[float, float] = (0.4, 0.9)      # 外乱中の角速度の大きさ [rad/s] (向きはランダム)
+    linear: Tuple[float, float] = (0.1, 0.3)       # 外乱中の速度 [m/s]
+    min_clearance: float = 0.85                    # この空きが無い場所では外乱を始めない [m]
+    abort_clearance: float = 0.55                  # 外乱中にこれより障害物に近づいたら打ち切る [m]
+    min_goal_dist: float = 1.2                     # ゴール手前では外乱しない [m]
+    tail: float = 0.35                             # 外乱終了後もこの秒数はラベル除外フレーム扱い [s]
+
+
+class Perturber:
+    def __init__(self, cfg: PerturbConfig, rng):
+        self.cfg = cfg
+        self.rng = rng
+        self.active = False
+        self.end = 0.0
+        self.flag_until = -1e9
+        self.cmd = (0.0, 0.0)
+        self.next_time = None
+        self.count = 0
+
+    def reset(self, t: float) -> None:
+        self.active = False
+        self.flag_until = -1e9
+        self.next_time = t + float(self.rng.uniform(*self.cfg.interval))
+
+    def flagged(self, t: float) -> bool:
+        """この時刻に記録したフレームを「外乱中」として扱うか."""
+        return self.active or t <= self.flag_until
+
+    def step(self, t: float, clearance: float, dist_goal: float, expert_cmd: Tuple[float, float]):
+        """(v, w) を返す. 外乱中でなければお手本の指令をそのまま返す."""
+        c = self.cfg
+        if not c.enabled:
+            return expert_cmd
+        if self.next_time is None:
+            self.reset(t)
+        if self.active:
+            if t >= self.end or clearance < c.abort_clearance:
+                self.active = False
+                self.flag_until = t + c.tail
+                self.next_time = t + float(self.rng.uniform(*c.interval))
+            else:
+                return self.cmd
+        if t >= self.next_time and clearance >= c.min_clearance and dist_goal >= c.min_goal_dist:
+            sign = 1.0 if self.rng.random() < 0.5 else -1.0
+            self.cmd = (float(self.rng.uniform(*c.linear)), sign * float(self.rng.uniform(*c.angular)))
+            self.end = t + float(self.rng.uniform(*c.duration))
+            self.active = True
+            self.count += 1
+            return self.cmd
+        return expert_cmd

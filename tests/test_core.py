@@ -152,7 +152,7 @@ def test_modality_ids():
 
 # ---------------------------------------------------------------- controller
 def test_upstream_controller():
-    cfg = controller.ControllerConfig()
+    cfg = controller.ControllerConfig(mode="upstream")
     v, w = controller.upstream_command(np.array([0.5, 0.0, 1.0, 0.0]), cfg)
     assert math.isclose(v, 0.3) and math.isclose(w, 0.0, abs_tol=1e-9)
     v, w = controller.upstream_command(np.array([0.5, 0.2, 1.0, 0.0]), cfg)
@@ -175,7 +175,7 @@ def test_upstream_controller():
 
 
 def test_respect_predicted_speed_and_stuck():
-    cfg = controller.ControllerConfig()
+    cfg = controller.ControllerConfig(mode="upstream")
     wps = np.zeros((8, 4))
     wps[:, 2] = 1.0
     wps[:, 0] = 0.1 * np.arange(1, 9)            # 0.1m/step = 0.3m/s (学習データの通常速度)
@@ -184,7 +184,7 @@ def test_respect_predicted_speed_and_stuck():
     wps[:, 0] = 0.025 * np.arange(1, 9)          # 予測が短い = 減速の予測
     wps[:, 1] = 0.002 * np.arange(1, 9)
     v, w = controller.compute_command(wps, cfg)
-    v0, w0 = controller.compute_command(wps, controller.ControllerConfig(respect_predicted_speed=False))
+    v0, w0 = controller.compute_command(wps, controller.ControllerConfig(mode="upstream", respect_predicted_speed=False))
     assert v0 >= 0.29 and v < 0.1 and math.isclose(v / w, v0 / w0, rel_tol=1e-6)  # 公式は全速, 曲率は同じ
     st = controller.StuckDetector(timeout=4.0)
     assert not st.update(0.0, (0, 0, 0), 0.3)
@@ -196,6 +196,166 @@ def test_respect_predicted_speed_and_stuck():
     st.reset()
     for k in range(20):                            # 止まる指令中は判定しない
         assert not st.update(k * 0.5, (0, 0, 0), 0.0)
+
+
+def _arc_waypoints(v, w, dt=1.0 / 3.0, n=8):
+    """一定の (v, w) で走ったときの 8 waypoint (k 番目は (k+1)*dt 秒後) = 学習ラベルと同じ作り方."""
+    t = (np.arange(n) + 1.0) * dt
+    yaw = w * t
+    if abs(w) < 1e-9:
+        x, y = v * t, np.zeros(n)
+    else:
+        x, y = v / w * np.sin(yaw), v / w * (1.0 - np.cos(yaw))
+    return np.stack([x, y, np.cos(yaw), np.sin(yaw)], axis=1)
+
+
+def test_trajectory_controller_reproduces_prediction():
+    cfg = controller.ControllerConfig()
+    assert cfg.mode == "trajectory"   # 既定
+    for v, w in [(0.3, 0.0), (0.3, 0.4), (0.2, -0.8), (0.1, 0.6), (0.25, 0.3), (0.0, 0.5), (0.0, -0.7), (0.0, 0.0)]:
+        vc, wc = controller.compute_command(_arc_waypoints(v, w), cfg)
+        assert abs(vc - v) < 0.01 and abs(wc - w) < 0.01, (v, w, vc, wc)
+    # 公式の式: 角速度は 0.3rad/s 止まり (お手本は 0.8rad/s で曲がる), 旋回半径 0.5m 未満の予測は 1.4 倍以上大回り
+    # -> 曲がり角で外側に膨らむ原因
+    for v, w in [(0.2, 0.6), (0.15, 0.8), (0.1, 0.3)]:
+        vu, wu = controller.compute_command(_arc_waypoints(v, w), controller.ControllerConfig(mode="upstream"))
+        assert (vu / wu) > 1.4 * (v / w) and abs(wu) <= 0.3 + 1e-9, (v, w, vu / wu)
+    # 上限を超える予測は曲率を保ったまま遅くする
+    vc, wc = controller.compute_command(_arc_waypoints(0.3, 1.5), cfg)
+    assert abs(wc) <= cfg.track_max_w + 1e-9 and math.isclose(vc / wc, 0.3 / 1.5, rel_tol=0.02)
+    # 位置・向きの予測にばらつきがあっても大きく外れない
+    rng = np.random.default_rng(0)
+    for _ in range(50):
+        v, w = rng.uniform(0.05, 0.3), rng.uniform(-0.8, 0.8)
+        wps = _arc_waypoints(v, w)
+        sc = np.linspace(0.3, 1.0, 8)                # 先の点ほど誤差が大きい (学習後の val 誤差 ~3cm, ~6deg)
+        wps[:, :2] += rng.normal(0, 0.03, (8, 2)) * sc[:, None]
+        ang = np.arctan2(wps[:, 3], wps[:, 2]) + rng.normal(0, math.radians(6), 8) * sc
+        wps[:, 2], wps[:, 3] = np.cos(ang), np.sin(ang)
+        vc, wc = controller.compute_command(wps, cfg)
+        assert abs(vc - v) < 0.06 and abs(wc - w) < 0.12, (v, w, vc, wc)
+
+
+def _office_setup():
+    path = os.path.join(WORLDS, "office_0.sdf")
+    if not os.path.exists(path):
+        return None
+    grid = sim_map.build_occupancy_from_sdf(path, resolution=0.05)
+    planner = sim_map.PathPlanner(grid, inflate=0.4)
+    spawn = sim_map.robot_spawn_pose(path)
+    return grid, planner, planner.component(*spawn[:2])
+
+
+def _sample_task(planner, comp, rng, dmin=4.0, dmax=12.0):
+    for _ in range(100):
+        sx, sy = planner.sample_free(rng, comp, min_clearance=0.6)
+        gx, gy = planner.sample_free(rng, comp, min_clearance=0.55)
+        if dmin <= math.hypot(gx - sx, gy - sy) <= dmax:
+            route = planner.plan((sx, sy), (gx, gy), rng=rng, noise=0.6)
+            if route is not None:
+                return route
+    raise AssertionError("no task")
+
+
+def _expert_prediction(route, pose):
+    """お手本が今の姿勢から 8 フレーム (3Hz) でどう動くか (経路から外れていれば戻る) = 学習ラベルと同じ."""
+    f = expert.PathFollower(route, expert.FollowerConfig(speed=0.3))
+    f.idx = int(np.argmin(np.linalg.norm(route - np.asarray(pose[:2]), axis=1)))
+    p, out = tuple(pose), []
+    for _ in range(8):
+        for _ in range(17):
+            v, w, _ = f.step(p)
+            p = expert.unicycle_step(p, v, w, 1.0 / 51.0)
+        loc = geometry.to_local(np.asarray(p[:2]), pose[:2], pose[2])
+        out.append([loc[0], loc[1], math.cos(p[2] - pose[2]), math.sin(p[2] - pose[2])])
+    return np.asarray(out)
+
+
+def test_trajectory_controller_closed_loop():
+    """予測が正しければ (= 経路から外れても戻る予測を出せれば) trajectory 制御で衝突せずゴールまで行けるか.
+
+    DiffDrive の加速度制限 (1 m/s², 3 rad/s²) と 3Hz の推論周期を入れた運動学シミュレーション。
+    """
+    setup = _office_setup()
+    if setup is None:
+        return
+    grid, planner, comp = setup
+    rng = np.random.default_rng(5)
+    cfg = controller.ControllerConfig()
+    for ep in range(6):
+        route = _sample_task(planner, comp, rng)
+        d = np.diff(route[:4], axis=0).sum(axis=0)
+        pose, v_cur, w_cur, ok = (route[0][0], route[0][1], math.atan2(d[1], d[0])), 0.0, 0.0, False
+        for _ in range(600):
+            if math.hypot(pose[0] - route[-1][0], pose[1] - route[-1][1]) < 0.4:
+                ok = True
+                break
+            v_cmd, w_cmd = controller.compute_command(_expert_prediction(route, pose), cfg)
+            for _ in range(33):
+                v_cur += float(np.clip(v_cmd - v_cur, -0.01, 0.01))
+                w_cur += float(np.clip(w_cmd - w_cur, -0.03, 0.03))
+                pose = expert.unicycle_step(pose, v_cur, w_cur, 0.01)
+                assert grid.clearance(pose[0], pose[1]) > 0.2, f"collision in episode {ep} at {pose}"
+        assert ok, f"episode {ep} did not reach the goal"
+
+
+# ---------------------------------------------------------------- DART (外乱つきデータ収集)
+def test_label_valid_mask():
+    p = np.zeros(30, dtype=bool)
+    p[10:13] = True
+    valid = data_utils.label_valid_mask(p, 8, 1)
+    assert valid[1] and not valid[2]                 # t=2 は 3..10 に外乱フレームを含む
+    assert not valid[10] and not valid[11]
+    assert valid[12] and valid[13]                   # 外乱の最後のフレーム = 立て直しの開始は有効
+    assert valid[:2].all() and valid[12:].all() and not valid[2:12].any()
+    assert data_utils.label_valid_mask(np.zeros(5, dtype=bool)).all()
+    # 立て直しサンプルを少なくとも 3 割引く重み (曲がるサンプルの重み付けと両立)
+    turn = np.arange(100) % 10 == 0
+    rec = np.arange(100) % 20 < 2
+    w = data_utils.reweight(data_utils.balanced_weights(turn, 0.5), rec, 0.3)
+    assert math.isclose(w.sum(), 1.0) and math.isclose(w[rec].sum(), 0.3)
+    assert np.allclose(data_utils.reweight(w, np.zeros(100, bool), 0.3), w)   # 外乱データが無ければそのまま
+    assert np.allclose(data_utils.reweight(w, rec, 0.1), w)                   # 既に多ければそのまま
+
+
+def test_perturbed_expert_kinematic_sim():
+    """外乱つきのお手本走行: 衝突せず、経路から外れた状態と、そこからの立て直しが記録されるか."""
+    setup = _office_setup()
+    if setup is None:
+        return
+    grid, planner, comp = setup
+    rng = np.random.default_rng(3)
+    dt, rate = 0.05, 3.0
+    flags_all, offs, n_pert, successes, n_ep = [], [], 0, 0, 12
+    for ep in range(n_ep):
+        route = _sample_task(planner, comp, rng, 5.0, 12.0)
+        pose = (route[0][0], route[0][1], float(rng.uniform(-math.pi, math.pi)))
+        f = expert.PathFollower(route, expert.FollowerConfig(speed=0.3))
+        pert = expert.Perturber(expert.PerturbConfig(), rng)
+        pert.reset(0.0)
+        t, last_rec, flags = 0.0, -1e9, []
+        for _ in range(int(240 / dt)):
+            v, w, done = f.step(pose)
+            if done and not pert.active:
+                successes += 1
+                break
+            v, w = pert.step(t, grid.clearance(pose[0], pose[1]),
+                             math.hypot(route[-1][0] - pose[0], route[-1][1] - pose[1]), (v, w))
+            if t - last_rec >= 1.0 / rate - 1e-9:
+                flags.append(pert.flagged(t))
+                offs.append(float(np.min(np.linalg.norm(route - np.asarray(pose[:2]), axis=1))))
+                last_rec = t
+            pose = expert.unicycle_step(pose, v, w, dt)
+            t += dt
+            assert grid.clearance(pose[0], pose[1]) > 0.2, f"collision in episode {ep}"
+        n_pert += pert.count
+        flags_all.append(np.asarray(flags, dtype=bool))
+    assert successes == n_ep
+    allf = np.concatenate(flags_all)
+    valid = np.concatenate([data_utils.label_valid_mask(fl) for fl in flags_all])
+    assert n_pert >= n_ep and 0.05 < allf.mean() < 0.3, (n_pert, allf.mean())
+    assert 0.5 < valid.mean() < 0.95, valid.mean()   # 外乱区間のラベルは除外, 大半は使える
+    assert np.max(offs) > 0.4                         # 経路から外れた状態が記録されている
 
 
 def test_goal_tracker_pass_detection():

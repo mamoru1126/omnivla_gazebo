@@ -46,7 +46,9 @@ def evaluate(vla, head_fn: Callable, pose_projector, loader, num_patches: int, d
         gt = batch["actions"].to(device)
         errs = trajectory_errors(pred, gt, metric_spacing)
         mods = batch["modality_id"].long().tolist()
-        turns = [bool(m.get("turn", False)) for m in batch.get("meta", [{}] * len(mods))]
+        metas = batch.get("meta", [{}] * len(mods))
+        turns = [bool(m.get("turn", False)) for m in metas]
+        recs = [bool(m.get("recovery", False)) for m in metas]
         for k, v in errs.items():
             vals = v.cpu().numpy().tolist()
             sums[k].extend(vals)
@@ -54,6 +56,9 @@ def evaluate(vla, head_fn: Callable, pose_projector, loader, num_patches: int, d
                 per_mod[m][k].append(val)
             for tflag, val in zip(turns, vals):
                 per_turn["turn" if tflag else "straight"][k].append(val)
+            for rflag, val in zip(recs, vals):
+                if rflag:
+                    per_turn["recovery"][k].append(val)
         if viz_dir is not None and n_viz < num_viz:
             os.makedirs(viz_dir, exist_ok=True)
             pred_np = pred.cpu().numpy()

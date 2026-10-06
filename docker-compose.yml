@@ -23,7 +23,7 @@ x-omnivla: &omnivla
     GOAL_PATH: ${GOAL_PATH:-}
     FINETUNED_DIR: ${FINETUNED_DIR:-}
     MODALITY: ${MODALITY:-image}
-    CONTROLLER: ${CONTROLLER:-upstream}
+    CONTROLLER: ${CONTROLLER:-trajectory}
     WORLD: ${WORLD:-office_0}
   volumes:
     - ./:/workspace

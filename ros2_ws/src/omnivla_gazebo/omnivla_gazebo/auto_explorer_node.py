@@ -32,7 +32,7 @@ from .data_collector_node import OdomBuffer, next_due_time
 from .ros_utils import Latest, image_msg_to_rgb, make_twist, odom_to_pose2d, sleep_sim, stamp_to_sec
 from .sim_common import load_sim_map
 
-from omnivla_nav.expert import FollowerConfig, PathFollower  # noqa: E402
+from omnivla_nav.expert import FollowerConfig, PathFollower, PerturbConfig, Perturber  # noqa: E402
 from omnivla_nav.gz_utils import set_model_pose  # noqa: E402
 from omnivla_nav.trajectory_io import TrajectoryWriter, unique_name  # noqa: E402
 
@@ -58,9 +58,15 @@ class AutoExplorerNode(Node):
         p("max_angular", 0.8)
         p("lookahead", 0.6)
         p("goal_tolerance", 0.25)
-        p("stuck_timeout", 12.0)
+        p("stuck_timeout", 15.0)
         p("max_episode_time", 180.0)
         p("hold_time", 1.5)               # ゴール到着後に止まったまま記録する時間 [s]
+        # DART: お手本の走行をわざと乱し、経路から外れた状態から戻る様子を記録する (外乱中のフレームはラベルに使わない)
+        p("perturb", True)
+        p("perturb_interval_min", 3.0)
+        p("perturb_interval_max", 8.0)
+        p("perturb_duration_min", 0.8)
+        p("perturb_duration_max", 2.5)
         p("record", True)
         p("out_dir", "/data/raw/auto")
         p("record_rate", 3.0)
@@ -76,6 +82,10 @@ class AutoExplorerNode(Node):
                                        "hold_time", "record", "out_dir", "record_rate", "min_frames",
                                        "jpeg_quality", "robot_radius"]}
         self.rng = np.random.default_rng(int(g("seed")))
+        self.perturber = Perturber(PerturbConfig(
+            enabled=bool(g("perturb")),
+            interval=(float(g("perturb_interval_min")), float(g("perturb_interval_max"))),
+            duration=(float(g("perturb_duration_min")), float(g("perturb_duration_max")))), self.rng)
         self.get_logger().info("building occupancy map from world SDF...")
         self.map = load_sim_map(g("world"), g("world_sdf"), float(g("map_resolution")), float(g("robot_radius")),
                                 float(g("safety_margin")), g("robot_name"))
@@ -91,7 +101,8 @@ class AutoExplorerNode(Node):
         self.period = 1.0 / float(self.cfg["record_rate"])
         self.create_subscription(ImageMsg, g("image_topic"), self._on_image, qos_profile_sensor_data)
         self.create_subscription(Odometry, g("odom_topic"), self._on_odom, 50)
-        self.stats = {"success": 0, "stuck": 0, "collision": 0, "timeout": 0, "plan_fail": 0, "frames": 0}
+        self.stats = {"success": 0, "stuck": 0, "collision": 0, "timeout": 0, "plan_fail": 0, "frames": 0,
+                      "perturbations": 0}
         self.done = False
         threading.Thread(target=self._run, daemon=True).start()
 
@@ -116,7 +127,8 @@ class AutoExplorerNode(Node):
             if od is None:
                 return
             pose = od[1]
-            self.writer.add(image_msg_to_rgb(msg), pose[0], pose[1], pose[2], stamp=t)
+            self.writer.add(image_msg_to_rgb(msg), pose[0], pose[1], pose[2], stamp=t,
+                            perturbed=self.perturber.flagged(t))
             self.next_due = next_due_time(self.next_due, t, self.period)
 
     def _cmd(self, v: float, w: float):
@@ -206,12 +218,19 @@ class AutoExplorerNode(Node):
                                                      goal_tolerance=float(self.cfg["goal_tolerance"])))
         t0 = self._now()
         best_rem, best_t = float("inf"), t0
+        self.perturber.reset(t0)
+        n_pert = self.perturber.count
+        goal = path[-1]
         while rclpy.ok():
             now = self._now()
             pose, _ = self.latest_odom.get()
             v, w, reached = follower.step(pose)
-            if reached:
+            if reached and not self.perturber.active:
+                self.stats["perturbations"] += self.perturber.count - n_pert
                 return "success"
+            # 外乱 (DART): 一定間隔でお手本の指令を乱す。外乱中のフレームは perturbed として記録
+            v, w = self.perturber.step(now, self.map.clearance(pose[0], pose[1]),
+                                       math.hypot(goal[0] - pose[0], goal[1] - pose[1]), (v, w))
             rem = follower.remaining(pose[:2])
             if rem < best_rem - 0.05:
                 best_rem, best_t = rem, now

@@ -41,7 +41,7 @@ def main(argv=None):
     trajs = find_trajectories(args.data_dirs)
     if not trajs:
         raise SystemExit("no trajectories found")
-    lengths, frames, spacings, worlds = [], [], [], {}
+    lengths, frames, spacings, worlds, n_pert, n_pert_traj = [], [], [], {}, 0, 0
     data = []
     for d in trajs:
         tr = load_trajectory(d)
@@ -52,6 +52,8 @@ def main(argv=None):
         s = summarize_spacing(tr["position"])
         if s is not None:
             spacings.append(s)
+        n_pert += int(tr["perturbed"].sum())
+        n_pert_traj += int(tr["perturbed"].any())
         w = meta.get("world", "?")
         worlds[w] = worlds.get(w, 0) + 1
         data.append((d, tr))
@@ -63,6 +65,9 @@ def main(argv=None):
         "mean_step_m": float(np.mean(spacings)) if spacings else None,
         "worlds": worlds,
         "samples": len(build_sample_index(frames)),
+        # 外乱つき収集 (DART) のフレーム. 0 なら「経路から外れた状態から戻る」データが無い
+        "perturbed_frames": n_pert,
+        "trajectories_with_perturbation": n_pert_traj,
     }
     print(json.dumps(stats, indent=2))
     if stats["mean_step_m"] and abs(stats["mean_step_m"] - args.metric_waypoint_spacing) > 0.5 * \

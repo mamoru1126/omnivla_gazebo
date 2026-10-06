@@ -24,7 +24,8 @@ if REPO not in sys.path:
     sys.path.insert(0, REPO)
 
 from omnivla_nav.data_utils import (AugmentConfig, GoalSamplingConfig, augment_pair, balanced_weights,  # noqa: E402
-                                    build_sample_index, make_targets, modality_id, turn_flags)
+                                    build_sample_index, label_valid_mask, make_targets, modality_id,
+                                    reweight, turn_flags)
 from omnivla_nav.omnivla_model import build_prompt, make_sample  # noqa: E402
 from omnivla_nav.trajectory_io import image_path, load_trajectory  # noqa: E402
 
@@ -47,8 +48,9 @@ def parse_modality_weights(weights: Dict) -> Dict[int, float]:
 class GazeboNavDataset(Dataset):
     def __init__(self, traj_dirs: Sequence[str], processor, action_tokenizer, cfg: GazeboDatasetConfig,
                  train: bool = True, force_modality: Optional[int] = None, max_samples: Optional[int] = None,
-                 seed: int = 0, turn_ratio: float = 0.0):
-        """turn_ratio: max_samples で間引くとき、曲がるサンプルをこの割合で含める (検証セット用)."""
+                 seed: int = 0, turn_ratio: float = 0.0, recovery_ratio: float = 0.0):
+        """turn_ratio / recovery_ratio: max_samples で間引くとき、曲がるサンプル / 立て直しサンプルを
+        この割合で含める (検証セット用)."""
         self.cfg = cfg
         self.train = train
         self.force_modality = force_modality
@@ -66,15 +68,22 @@ class GazeboNavDataset(Dataset):
             self.trajs.append({"dir": d, "name": os.path.basename(d), "position": data["position"],
                                "yaw": data["yaw"], "n": n,
                                "turn": turn_flags(data["position"], data["yaw"], cfg.turn_horizon,
-                                                  cfg.turn_threshold_deg)})
-        self.index = build_sample_index([t["n"] for t in self.trajs])
+                                                  cfg.turn_threshold_deg),
+                               "perturbed": data["perturbed"],
+                               "valid": label_valid_mask(data["perturbed"], 8, cfg.waypoint_spacing)})
+        # 外乱で動いた区間が正解ラベルに入るサンプルは除く (外乱の直後 = 立て直しは残る)
+        self.index = [(ti, t) for ti, t in build_sample_index([t["n"] for t in self.trajs])
+                      if self.trajs[ti]["valid"][t]]
+        self.recovery = np.array([bool(self.trajs[ti]["perturbed"][max(0, t - 6):t + 1].any())
+                                  for ti, t in self.index], dtype=bool)
         self.turn = np.array([bool(self.trajs[ti]["turn"][t]) for ti, t in self.index], dtype=bool)
         if max_samples is not None and len(self.index) > max_samples:
             rng = np.random.default_rng(seed)
-            p = balanced_weights(self.turn, turn_ratio) if turn_ratio > 0 else None
+            p = reweight(balanced_weights(self.turn, turn_ratio), self.recovery, recovery_ratio)
             keep = np.sort(rng.choice(len(self.index), size=max_samples, replace=False, p=p))
             self.index = [self.index[i] for i in keep]
             self.turn = self.turn[keep]
+            self.recovery = self.recovery[keep]
         if not self.index:
             raise ValueError("dataset is empty")
 
@@ -84,8 +93,14 @@ class GazeboNavDataset(Dataset):
     def turn_fraction(self) -> float:
         return float(self.turn.mean()) if len(self.turn) else 0.0
 
-    def sample_weights(self, turn_ratio: float) -> np.ndarray:
-        return balanced_weights(self.turn, turn_ratio)
+    def recovery_fraction(self) -> float:
+        """外乱の直後 (2 秒以内) から始まる = 経路から外れた状態から戻るサンプルの割合."""
+        return float(self.recovery.mean()) if len(self.recovery) else 0.0
+
+    def sample_weights(self, turn_ratio: float, recovery_ratio: float = 0.0) -> np.ndarray:
+        """曲がるサンプルを turn_ratio, 外乱からの立て直しサンプルを (少なくとも) recovery_ratio の割合で引く重み."""
+        w = balanced_weights(self.turn, turn_ratio)
+        return reweight(w, self.recovery, recovery_ratio)
 
     def num_frames(self) -> int:
         return int(sum(t["n"] for t in self.trajs))
@@ -114,7 +129,7 @@ class GazeboNavDataset(Dataset):
         input_ids, labels = build_prompt(self.tokenizer, self.action_tokenizer, None, actions)
         sample = make_sample(self.image_transform, cur, goal, input_ids, labels, goal_pose, mod, actions)
         sample["meta"] = {"traj_dir": tr["dir"], "t": int(t), "goal_t": int(goal_t), "modality": mod,
-                          "turn": bool(self.turn[i])}
+                          "turn": bool(self.turn[i]), "recovery": bool(self.recovery[i])}
         return sample
 
 
