@@ -23,46 +23,64 @@ docker compose build
 docker compose run --rm shell bash scripts/download_checkpoints.sh   # 公式の重み (約16GB)
 ```
 
+各手順は「シミュレータ起動 → 作業 → シミュレータ停止」で完結します。
+シミュレータは端末1で起動し、端末2で作業します。止めるときは端末1で `Ctrl+C`（または `docker compose stop sim`）。
+
 ### 2. 学習データを集める
 
 ランダムな経路を自動走行して、画像と位置を記録します。
 
 ```bash
-HEADLESS=true WORLD=office_0 docker compose up sim            # 端末1
-WORLD=office_0 EPISODES=150 docker compose run --rm explore   # 端末2 → data/raw/office_0/
+# 端末1: シミュレータ起動 (GUI なしで速く)
+HEADLESS=true WORLD=office_0 docker compose up sim
+
+# 端末2: データ収集 → data/raw/office_0/
+WORLD=office_0 EPISODES=150 docker compose run --rm explore
+
+# 端末1: 終わったらシミュレータ停止 (Ctrl+C)
 ```
 
 ### 3. 学習する
 
+シミュレータは止めた状態で実行します（GPU を空けるため）。
+
 ```bash
-docker compose stop sim
 docker compose run --rm train    # → runs/<run>/checkpoints/step_005000/
 ```
 
 ### 4. サブゴール画像を作る
 
-現在位置からゴール座標まで、1m ごとに画像を撮影します。
+スタート位置からゴール座標まで、1m ごとに画像を撮影して `data/goals/demo/` に保存します。
 
 ```bash
-docker compose up sim                                          # 端末1
+# 端末1: シミュレータ起動
+docker compose up sim
+
+# 端末2: 撮影
 docker compose run --rm shell ros2 launch omnivla_gazebo topomap.launch.py \
     world:=office_0 out_dir:=/data/goals/demo goal_x:=7.5 goal_y:=4.0
+
+# 端末1: 終わったらシミュレータ停止 (Ctrl+C)
 ```
+
+一度作れば、同じゴールへは何度でも走らせられます。
 
 ### 5. 走らせる
 
 ```bash
-# スタート位置に戻す
-docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 --goal_dir /data/goals/demo
-# 走行
-FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 GOAL_PATH=/data/goals/demo docker compose run --rm nav
-```
-
-走行中の様子は RViz で確認できます。手順 4 の `sim` を `RVIZ=true` を付けて起動してください。
-
-```bash
+# 端末1: シミュレータ起動 (RViz で様子を見るなら RVIZ=true を付ける)
 RVIZ=true docker compose up sim
+
+# 端末2: ロボットをスタート位置に戻してから走行
+docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 --goal_dir /data/goals/demo
+FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 GOAL_PATH=/data/goals/demo docker compose run --rm nav
+
+# 端末1: 終わったらシミュレータ停止 (Ctrl+C)
 ```
+
+もう一度走らせるときは、端末2の 2 行（teleport → nav）だけを繰り返します。
+
+RViz の表示:
 
 | 表示 | 中身 |
 |---|---|
@@ -74,10 +92,20 @@ RViz を使わずに画像だけ見る場合は `docker compose run --rm shell r
 
 ### 6. 成功率を測る（任意）
 
+ランダムな経路でサブゴール撮影 → 走行 → 判定を自動で繰り返します。
+
 ```bash
-FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 docker compose run --rm nav    # 端末2
+# 端末1: シミュレータ起動
+docker compose up sim
+
+# 端末2: navigator をゴールなしで起動
+FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 docker compose run --rm nav
+
+# 端末3: 評価 (20 本) → runs/eval/<label>_<world>_<日時>/summary.json
 docker compose run --rm shell ros2 launch omnivla_gazebo eval.launch.py \
-    world:=office_0 num_tasks:=20 mode:=route label:=finetuned                    # 端末3
+    world:=office_0 num_tasks:=20 mode:=route label:=finetuned
+
+# 終わったら端末2・端末1を Ctrl+C
 ```
 
 ## 走行ログ
