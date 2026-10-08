@@ -74,6 +74,7 @@ class NavigatorNode(Node):
         p("lookahead_nodes", 1)
         p("pass_radius", 1.0)             # この距離以内でサブゴールが真横より後ろなら通過扱い
         p("pass_angle_deg", 90.0)
+        p("reach_angle_deg", 45.0)        # 途中のサブゴールは向きの差もこれ以内で到達 (0 で距離だけ)
         p("stop_at_goal", True)
         p("autostart", True)
         # control
@@ -132,7 +133,8 @@ class NavigatorNode(Node):
                                     image_threshold=float(g("image_reach_threshold")),
                                     lookahead_nodes=int(g("lookahead_nodes")),
                                     pass_radius=float(g("pass_radius")),
-                                    pass_angle_deg=float(g("pass_angle_deg")))
+                                    pass_angle_deg=float(g("pass_angle_deg")),
+                                    reach_angle_deg=float(g("reach_angle_deg")))
 
         self.cmd_pub = self.create_publisher(Twist, g("cmd_vel_topic"), 10)
         self.path_pub = self.create_publisher(Path, "/omnivla/path", 10)
