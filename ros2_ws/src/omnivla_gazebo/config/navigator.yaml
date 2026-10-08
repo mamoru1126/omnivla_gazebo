@@ -13,7 +13,7 @@ omnivla_navigator:
     instruction: ""                           # language 系: 例 "move toward blue trash bin"
     goal_path: ""                             # ゴール画像 1 枚 or topomap ディレクトリ
     reach_check: auto                         # auto(姿勢があれば真値, 無ければ画像類似度) | pose | image | none
-    subgoal_radius: 0.6
+    subgoal_radius: 0.3
     goal_radius: 0.4
     image_reach_threshold: 0.92
     lookahead_nodes: 1
