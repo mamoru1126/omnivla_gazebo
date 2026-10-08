@@ -1,0 +1,43 @@
+run: /home/claude/omnivla_gazebo/log/nav/20261008_021923
+goal: /data/goals/demo  world: office_0  modality: 6  controller: trajectory
+model: {'vla_path': '/checkpoints/omnivla-original', 'finetuned_dir': '/runs/omnivla_gazebo_20261007_045312/checkpoints/step_005000', 'metric_waypoint_spacing': 0.1}
+summary: reason=reached, reached=True, steps=157, final_dist_to_goal=0.3728625963059335, min_dist_to_goal=0.3728625963059335, path_length_m=13.985296134461382, subgoal_index=14
+
+== サブゴールごとの区間 ==
+subgoal  0: steps 1-6 (6 steps)  goal_bearing -0 -> +1 deg  dist 1.01 -> 0.63 m
+subgoal  1: steps 7-16 (10 steps)  goal_bearing +1 -> +2 deg  dist 0.53 -> 0.65 m
+subgoal  2: steps 17-26 (10 steps)  goal_bearing +2 -> +3 deg  dist 0.56 -> 0.67 m
+subgoal  3: steps 27-36 (10 steps)  goal_bearing +2 -> +6 deg  dist 0.58 -> 0.69 m
+subgoal  4: steps 37-47 (11 steps)  goal_bearing +4 -> +8 deg  dist 0.59 -> 0.62 m
+subgoal  5: steps 48-57 (10 steps)  goal_bearing +4 -> +9 deg  dist 0.52 -> 0.64 m
+subgoal  6: steps 58-67 (10 steps)  goal_bearing +4 -> +11 deg  dist 0.54 -> 0.63 m
+subgoal  7: steps 68-77 (10 steps)  goal_bearing +5 -> +12 deg  dist 0.54 -> 0.66 m
+subgoal  8: steps 78-87 (10 steps)  goal_bearing +5 -> +10 deg  dist 0.56 -> 0.66 m
+subgoal  9: steps 88-98 (11 steps)  goal_bearing +3 -> +15 deg  dist 0.56 -> 0.60 m
+subgoal 10: steps 99-118 (20 steps)  goal_bearing +17 -> -84 deg  dist 0.52 -> 0.13 m
+subgoal 11: steps 119-131 (13 steps)  goal_bearing +26 -> -9 deg  dist 0.13 -> 0.18 m
+subgoal 12: steps 132-137 (6 steps)  goal_bearing +20 -> +23 deg  dist 0.11 -> 0.65 m
+subgoal 13: steps 138-151 (14 steps)  goal_bearing +3 -> +82 deg  dist 0.55 -> 0.34 m
+subgoal 14: steps 152-157 (6 steps)  goal_bearing -9 -> +2 deg  dist 0.34 -> 0.45 m
+
+== 予測軌跡がサブゴールと逆側を向いたステップ (13/157) ==
+   (サブゴールが |bearing|>15deg の横にあるのに, 予測の 5 点目が反対側) -> モデル側の問題
+step  114 subgoal 10  goal    -21deg  pred     +8deg  v=0.15 w=+0.23
+step  115 subgoal 10  goal    -29deg  pred     +8deg  v=0.14 w=+0.24
+step  116 subgoal 10  goal    -41deg  pred     +8deg  v=0.15 w=+0.24
+step  117 subgoal 10  goal    -59deg  pred     +8deg  v=0.15 w=+0.24
+step  118 subgoal 10  goal    -84deg  pred     +7deg  v=0.15 w=+0.22
+step  144 subgoal 13  goal    +17deg  pred     -6deg  v=0.23 w=-0.14
+step  145 subgoal 13  goal    +22deg  pred     -7deg  v=0.21 w=-0.17
+step  146 subgoal 13  goal    +28deg  pred     -6deg  v=0.21 w=-0.15
+step  147 subgoal 13  goal    +35deg  pred     -6deg  v=0.22 w=-0.15
+step  148 subgoal 13  goal    +43deg  pred     -7deg  v=0.21 w=-0.16
+step  149 subgoal 13  goal    +54deg  pred     -6deg  v=0.21 w=-0.16
+step  150 subgoal 13  goal    +67deg  pred     -7deg  v=0.21 w=-0.17
+step  151 subgoal 13  goal    +82deg  pred     -6deg  v=0.21 w=-0.16
+
+== 旋回指令が予測軌跡と逆のステップ (0/157) ==
+   -> 制御 (軌跡 -> v, w の変換) 側の問題。0 であるべき
+
+== 予測した旋回を実行できていない区間 (0/157 steps) ==
+   (予測 8 点が |w|>=0.15rad/s の旋回を表すのに, 指令 w がその 50% 未満) -> 制御側の問題。0 に近いべき
