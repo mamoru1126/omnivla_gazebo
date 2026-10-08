@@ -29,6 +29,7 @@ docker compose run --rm shell bash scripts/download_checkpoints.sh   # 公式の
 ### 2. 学習データを集める
 
 ランダムな経路を自動走行して、画像と位置を記録します。
+走行中にわざと経路から外し、そこから戻る場面も自動で記録します（`perturb: true`）。これが無いと曲がり角で少しずれただけで衝突します。
 
 ```bash
 # 端末1: シミュレータ起動 (GUI なしで速く)
@@ -43,6 +44,7 @@ WORLD=office_0 EPISODES=150 docker compose run --rm explore
 ### 3. 学習する
 
 シミュレータは止めた状態で実行します（GPU を空けるため）。
+曲がる場面と、経路から戻る場面を多めに学習します（`turn_sample_ratio`, `recovery_sample_ratio`）。
 
 ```bash
 docker compose run --rm train    # → runs/<run>/checkpoints/step_005000/
