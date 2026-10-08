@@ -1,0 +1,202 @@
+{
+  "goal_source": "/data/goals/demo",
+  "world": "office_0",
+  "modality": 6,
+  "instruction": null,
+  "controller": "trajectory",
+  "model": {
+    "vla_path": "/checkpoints/omnivla-original",
+    "finetuned_dir": "/runs/omnivla_gazebo_20261007_045312/checkpoints/step_005000",
+    "metric_waypoint_spacing": 0.1
+  },
+  "start_pose": null,
+  "final_goal_pose": [
+    7.50000000000203,
+    4.000000000008224,
+    1.3171209258194707
+  ],
+  "nodes": [
+    {
+      "index": 0,
+      "path": "/data/goals/demo/0.jpg",
+      "pose": [
+        -0.9716000000216235,
+        0.06479999999856662,
+        0.06425505606914823
+      ]
+    },
+    {
+      "index": 1,
+      "path": "/data/goals/demo/1.jpg",
+      "pose": [
+        0.03580000000290758,
+        0.1296000000001856,
+        0.0642550560691928
+      ]
+    },
+    {
+      "index": 2,
+      "path": "/data/goals/demo/2.jpg",
+      "pose": [
+        1.0432000000000385,
+        0.1944999999999925,
+        0.0642550560691521
+      ]
+    },
+    {
+      "index": 3,
+      "path": "/data/goals/demo/3.jpg",
+      "pose": [
+        2.0506000000096747,
+        0.25930000000061715,
+        0.06425505606912173
+      ]
+    },
+    {
+      "index": 4,
+      "path": "/data/goals/demo/4.jpg",
+      "pose": [
+        3.0580000000113223,
+        0.32410000000073397,
+        0.0642550560692013
+      ]
+    },
+    {
+      "index": 5,
+      "path": "/data/goals/demo/5.jpg",
+      "pose": [
+        4.065400000002866,
+        0.3889000000001741,
+        0.06425505606909869
+      ]
+    },
+    {
+      "index": 6,
+      "path": "/data/goals/demo/6.jpg",
+      "pose": [
+        5.072800000013057,
+        0.45370000000085103,
+        0.06425505606915333
+      ]
+    },
+    {
+      "index": 7,
+      "path": "/data/goals/demo/7.jpg",
+      "pose": [
+        6.0802000000097305,
+        0.5186000000006277,
+        0.06425505606910813
+      ]
+    },
+    {
+      "index": 8,
+      "path": "/data/goals/demo/8.jpg",
+      "pose": [
+        7.0876000000177175,
+        0.5834000000011549,
+        0.06425505606912338
+      ]
+    },
+    {
+      "index": 9,
+      "path": "/data/goals/demo/9.jpg",
+      "pose": [
+        8.0950000000148,
+        0.6482000000051629,
+        0.34002163424399984
+      ]
+    },
+    {
+      "index": 10,
+      "path": "/data/goals/demo/10.jpg",
+      "pose": [
+        8.846499999996068,
+        0.9141000000155731,
+        1.8207992341979276
+      ]
+    },
+    {
+      "index": 11,
+      "path": "/data/goals/demo/11.jpg",
+      "pose": [
+        8.597099999989279,
+        1.8907000000054364,
+        2.654728144131025
+      ]
+    },
+    {
+      "index": 12,
+      "path": "/data/goals/demo/12.jpg",
+      "pose": [
+        7.705999999999099,
+        2.362400000001266,
+        2.178522908134789
+      ]
+    },
+    {
+      "index": 13,
+      "path": "/data/goals/demo/13.jpg",
+      "pose": [
+        7.246700000000637,
+        3.022800000002908,
+        1.3171209258194876
+      ]
+    },
+    {
+      "index": 14,
+      "path": "/data/goals/demo/14.jpg",
+      "pose": [
+        7.50000000000203,
+        4.000000000008224,
+        1.3171209258194707
+      ]
+    }
+  ],
+  "params": {
+    "vla_path": "/checkpoints/omnivla-original",
+    "checkpoint_step": -1,
+    "finetuned_dir": "/runs/omnivla_gazebo_20261007_045312/checkpoints/step_005000",
+    "device": "cuda:0",
+    "metric_waypoint_spacing": 0.0,
+    "merge_lora": true,
+    "modality": "image",
+    "instruction": "",
+    "goal_path": "/data/goals/demo",
+    "reach_check": "auto",
+    "subgoal_radius": 0.6,
+    "goal_radius": 0.4,
+    "image_reach_threshold": 0.92,
+    "lookahead_nodes": 1,
+    "pass_radius": 1.0,
+    "pass_angle_deg": 90.0,
+    "reach_angle_deg": 25.0,
+    "stop_at_goal": true,
+    "autostart": true,
+    "control_rate": 3.0,
+    "controller": "trajectory",
+    "track_horizon": 4,
+    "track_max_v": 0.4,
+    "track_max_w": 1.0,
+    "waypoint_index": 4,
+    "dt": 0.3333333,
+    "max_v": 0.3,
+    "max_w": 0.3,
+    "lookahead": 0.5,
+    "max_image_age": 1.0,
+    "cmd_timeout": 1.5,
+    "respect_predicted_speed": true,
+    "stuck_timeout": 4.0,
+    "image_topic": "/camera/image_raw",
+    "odom_topic": "/odom",
+    "cmd_vel_topic": "/cmd_vel",
+    "publish_debug_image": true,
+    "log_dir": "/workspace/log/nav",
+    "log_debug_images": true,
+    "log_raw_images": true,
+    "world": "office_0",
+    "camera_hfov": 1.75,
+    "camera_height": 0.35,
+    "camera_x": 0.17
+  },
+  "started_at": "2026-10-08 02:19:23"
+}
