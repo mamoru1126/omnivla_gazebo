@@ -23,7 +23,8 @@ x-omnivla: &omnivla
     GOAL_PATH: ${GOAL_PATH:-}
     FINETUNED_DIR: ${FINETUNED_DIR:-}
     MODALITY: ${MODALITY:-image}
-    CONTROLLER: ${CONTROLLER:-trajectory}
+    # 古い .env の CONTROLLER=upstream に上書きされないよう別名にしている
+    NAV_CONTROLLER: ${NAV_CONTROLLER:-trajectory}
     WORLD: ${WORLD:-office_0}
   volumes:
     - ./:/workspace
@@ -57,7 +58,7 @@ services:
       - -c
       - >-
         exec ros2 launch omnivla_gazebo navigate.launch.py
-        modality:=$${MODALITY} controller:=$${CONTROLLER} world:=$${WORLD}
+        modality:=$${MODALITY} controller:=$${NAV_CONTROLLER} world:=$${WORLD}
         $${GOAL_PATH:+goal_path:=$$GOAL_PATH}
         $${FINETUNED_DIR:+finetuned_dir:=$$FINETUNED_DIR}
 

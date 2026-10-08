@@ -263,8 +263,8 @@ python3 training/merge_lora.py --finetuned_dir /runs/<run>/checkpoints/step_0050
 制御だけでは足りず、立て直しの学習が必要です。手順 (`git pull` だけで反映, イメージの再ビルドは不要):
 
 ```bash
-# 準備) 以前 cp .env.example .env した場合、.env に CONTROLLER=upstream が残っていて既定の trajectory を上書きする
-sed -i 's/^CONTROLLER=.*/CONTROLLER=trajectory/' .env && grep CONTROLLER .env      # CONTROLLER=trajectory になっていること
+# 準備) 制御則の変数は NAV_CONTROLLER (既定 trajectory)。古い .env / シェルの CONTROLLER は使われない
+grep -n CONTROLLER .env; env | grep CONTROLLER     # NAV_CONTROLLER=upstream があれば消す
 #       走行ログの meta.json / report.txt の controller が trajectory になっているかでも確認できる
 
 # 0) まず今のモデルのまま trajectory 制御で試す
