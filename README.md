@@ -274,8 +274,7 @@ docker compose run --rm shell python3 training/inspect_dataset.py /data/raw --nu
 
 # 2) 追加学習: step 5000 から 3000 step (7000 まで lr 1e-4, その後 1e-5)。古いデータと新しいデータを混ぜて学習する
 docker compose stop sim
-docker compose run --rm shell python3 training/finetune_omnivla.py --config training/configs/finetune_gazebo.yaml \
-    --resume_from /runs/<run>/checkpoints/step_005000 --max_steps 3000 --lr_decay_step 7000
+docker compose run --rm shell python3 training/finetune_omnivla.py --config training/configs/finetune_gazebo.yaml --resume_from /runs/<run>/checkpoints/step_005000 --max_steps 3000 --lr_decay_step 7000
 #    ログの "recovery samples … -> sampled at >= 30%" と、500 step ごとの [val] recovery: ADE が下がるのを確認
 
 # 3) 走らせる (新しい <run2> の step_008000)
