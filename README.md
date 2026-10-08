@@ -58,6 +58,20 @@ docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 
 FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 GOAL_PATH=/data/goals/demo docker compose run --rm nav
 ```
 
+走行中の様子は RViz で確認できます。手順 4 の `sim` を `RVIZ=true` を付けて起動してください。
+
+```bash
+RVIZ=true docker compose up sim
+```
+
+| 表示 | 中身 |
+|---|---|
+| Debug | 現在画像 + 予測軌跡、サブゴール画像、俯瞰図 (`/omnivla/debug_image`) |
+| OmniVLA prediction | 予測軌跡（オレンジの線, `/omnivla/path`） |
+| GroundTruthOdom | ロボットの実際の位置と軌跡 (`/odom`) |
+
+RViz を使わずに画像だけ見る場合は `docker compose run --rm shell ros2 run rqt_image_view rqt_image_view /omnivla/debug_image`。
+
 ### 6. 成功率を測る（任意）
 
 ```bash
