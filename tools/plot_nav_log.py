@@ -120,7 +120,7 @@ def write_report(run_dir, rows, meta, summary, pred_opp, cmd_opp) -> str:
     lines.append(f"model: {meta.get('model')}")
     if meta.get("controller") == "upstream":
         lines.append("WARNING: controller=upstream (公式の式) は予測した向きを使わないので、モデルが「その場で曲がる」"
-                     "予測をしても曲がりません。.env の CONTROLLER=trajectory を確認してください")
+                     "予測をしても曲がりません。NAV_CONTROLLER=trajectory を確認してください")
     if summary:
         lines.append("summary: " + ", ".join(f"{k}={summary[k]}" for k in
                                               ("reason", "reached", "steps", "final_dist_to_goal",
