@@ -109,7 +109,8 @@ navigator は走行ごとに `log/nav/<日時>/` (リポジトリ直下) へロ�
 
 解析 (GPU 不要): `python3 tools/plot_nav_log.py log/nav/latest` で
 `overview.png` (地図上の走行軌跡と予測軌跡), `timeline.png`, `report.txt`
-(予測がサブゴールと逆を向いたステップ = モデル側の問題 / 指令が予測と逆のステップ = 制御側の問題) を作ります。
+(予測がサブゴールと逆を向いたステップ = モデル側の問題 / 指令が予測と逆のステップ・予測した旋回を実行できていない区間
+= 制御側の問題) を作ります。
 
 うまくいかなかった走行は、そのディレクトリだけ push してください (1 走行 10〜30MB 程度):
 ```bash
@@ -262,7 +263,11 @@ python3 training/merge_lora.py --finetuned_dir /runs/<run>/checkpoints/step_0050
 制御だけでは足りず、立て直しの学習が必要です。手順 (`git pull` だけで反映, イメージの再ビルドは不要):
 
 ```bash
-# 0) まず今のモデルのまま trajectory 制御で試す (既定が trajectory になっている)
+# 準備) 以前 cp .env.example .env した場合、.env に CONTROLLER=upstream が残っていて既定の trajectory を上書きする
+sed -i 's/^CONTROLLER=.*/CONTROLLER=trajectory/' .env && grep CONTROLLER .env      # CONTROLLER=trajectory になっていること
+#       走行ログの meta.json / report.txt の controller が trajectory になっているかでも確認できる
+
+# 0) まず今のモデルのまま trajectory 制御で試す
 docker compose up sim                                                                  # 端末 1
 docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 --goal_dir /data/goals/demo
 FINETUNED_DIR=/runs/<run>/checkpoints/step_005000 GOAL_PATH=/data/goals/demo docker compose run --rm nav

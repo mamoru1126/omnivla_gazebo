@@ -7,7 +7,8 @@
 出力 (ログディレクトリ内):
   overview.png   地図 + サブゴール (番号と向き) + 走行軌跡 + 予測軌跡 (左旋回=青 / 右旋回=赤)
   timeline.png   時間ごとの「サブゴールの方向」「予測軌跡の方向」「旋回指令 w」「サブゴール番号」
-  report.txt     サブゴールごとの区間, 予測がサブゴールと逆を向いたステップ, 指令が予測と逆のステップ
+  report.txt     サブゴールごとの区間, 予測がサブゴールと逆を向いたステップ, 指令が予測と逆のステップ,
+                 予測した旋回を実行できていない区間 (モデルは曲がろうとしているのに指令 w が小さい)
 """
 from __future__ import annotations
 
@@ -29,10 +30,13 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from omnivla_nav.controller import ControllerConfig, trajectory_command  # noqa: E402
 from omnivla_nav.geometry import to_world  # noqa: E402
 
 WORLDS = os.path.join(REPO, "ros2_ws", "src", "omnivla_gazebo", "worlds")
 OPPOSITE_MIN_DEG = 15.0   # これより大きく横にあるサブゴールだけ「逆向き」を判定
+UNDER_TURN_MIN_W = 0.15   # 予測の旋回がこれ [rad/s] 以上のときだけ「実行できていない」を判定
+UNDER_TURN_RATIO = 0.5    # 実行した w が予測の旋回のこの割合未満なら「実行できていない」
 
 
 def resolve_run_dir(path: str) -> str:
@@ -61,6 +65,37 @@ def waypoints_of(r) -> np.ndarray:
     return np.array([[r[f"wp{i}_x"], r[f"wp{i}_y"]] for i in range(8)])
 
 
+def predicted_turn_rate(r) -> float:
+    """予測 8 点 (位置と向き) が表す旋回の速さ [rad/s] (= trajectory 制御が出す w, 上限なし)."""
+    wps = np.array([[r[f"wp{i}_x"], r[f"wp{i}_y"], math.cos(math.radians(r[f"wp{i}_yaw_deg"])),
+                     math.sin(math.radians(r[f"wp{i}_yaw_deg"]))] for i in range(8)])
+    if not np.isfinite(wps).all():
+        return math.nan
+    return trajectory_command(wps, ControllerConfig(mode="trajectory", track_max_v=1e9, track_max_w=1e9))[1]
+
+
+def under_turn_segments(rows):
+    """モデルが曲がる予測をしているのに、実行した w がその半分未満 (または逆向き) の連続区間."""
+    segs, cur = [], []
+    for r in rows:
+        wp = r["pred_w"]
+        bad = (not math.isnan(wp) and abs(wp) >= UNDER_TURN_MIN_W
+               and (sign(r["w"]) != sign(wp) or abs(r["w"]) < UNDER_TURN_RATIO * abs(wp)))
+        if bad:
+            cur.append(r)
+        elif cur:
+            segs.append(cur)
+            cur = []
+    if cur:
+        segs.append(cur)
+    return segs
+
+
+def circular_mean_deg(a) -> float:
+    a = np.radians(np.asarray(a, dtype=np.float64))
+    return float(np.degrees(np.arctan2(np.nanmean(np.sin(a)), np.nanmean(np.cos(a)))))
+
+
 def sign(x: float, eps: float = 1e-6) -> int:
     return 0 if abs(x) < eps else (1 if x > 0 else -1)
 
@@ -83,6 +118,9 @@ def write_report(run_dir, rows, meta, summary, pred_opp, cmd_opp) -> str:
     lines.append(f"goal: {meta.get('goal_source')}  world: {meta.get('world')}  modality: {meta.get('modality')}  "
                  f"controller: {meta.get('controller')}")
     lines.append(f"model: {meta.get('model')}")
+    if meta.get("controller") == "upstream":
+        lines.append("WARNING: controller=upstream (公式の式) は予測した向きを使わないので、モデルが「その場で曲がる」"
+                     "予測をしても曲がりません。.env の CONTROLLER=trajectory を確認してください")
     if summary:
         lines.append("summary: " + ", ".join(f"{k}={summary[k]}" for k in
                                               ("reason", "reached", "steps", "final_dist_to_goal",
@@ -108,6 +146,20 @@ def write_report(run_dir, rows, meta, summary, pred_opp, cmd_opp) -> str:
     lines.append("   -> 制御 (軌跡 -> v, w の変換) 側の問題。0 であるべき")
     for r in cmd_opp[:40]:
         lines.append(f"step {int(r['step']):4d}  pred {r['pred_bearing_deg']:+6.0f}deg  w={r['w']:+.2f}")
+    segs = under_turn_segments(rows)
+    n_bad = sum(len(s) for s in segs)
+    lines.append("")
+    lines.append(f"== 予測した旋回を実行できていない区間 ({n_bad}/{len(rows)} steps) ==")
+    lines.append(f"   (予測 8 点が |w|>={UNDER_TURN_MIN_W}rad/s の旋回を表すのに, 指令 w がその {UNDER_TURN_RATIO:.0%} 未満)"
+                 " -> 制御側の問題。0 に近いべき")
+    for s in segs:
+        if len(s) < 3:
+            continue
+        dur = s[-1]["sim_time"] - s[0]["sim_time"]
+        lines.append(f"steps {int(s[0]['step']):4d}-{int(s[-1]['step']):4d} ({dur:5.1f}s) subgoal {int(s[0]['subgoal']):2d}  "
+                     f"goal {circular_mean_deg([r['goal_bearing_deg'] for r in s]):+5.0f}deg  "
+                     f"predicted w={np.mean([r['pred_w'] for r in s]):+.2f}  executed w={np.mean([r['w'] for r in s]):+.2f}  "
+                     f"v={np.mean([r['v'] for r in s]):.2f}")
     text = "\n".join(lines) + "\n"
     with open(os.path.join(run_dir, "report.txt"), "w") as f:
         f.write(text)
@@ -172,10 +224,13 @@ def plot_timeline(run_dir, rows):
     fig, axs = plt.subplots(3, 1, figsize=(12, 8), dpi=110, sharex=True)
     axs[0].plot(t, [r["goal_bearing_deg"] for r in rows], label="subgoal bearing", color="#b7791f")
     axs[0].plot(t, [r["pred_bearing_deg"] for r in rows], label="predicted (wp5) bearing", color="#2f6fdb")
+    axs[0].plot(t, [r.get("wp7_yaw_deg", math.nan) for r in rows], label="predicted heading after 2.7s (wp8 yaw)",
+                color="#2f6fdb", ls=":", lw=1.2)
     axs[0].axhline(0, color="#999", lw=0.8)
     axs[0].set_ylabel("deg (+ = left)")
     axs[0].legend(fontsize=8)
-    axs[1].plot(t, [r["w"] for r in rows], label="w [rad/s]", color="#d0602f")
+    axs[1].plot(t, [r["w"] for r in rows], label="w [rad/s] (command)", color="#d0602f")
+    axs[1].plot(t, [r["pred_w"] for r in rows], label="predicted turn rate [rad/s]", color="#d0602f", ls=":", lw=1.2)
     axs[1].plot(t, [r["v"] for r in rows], label="v [m/s]", color="#2e8b57")
     axs[1].axhline(0, color="#999", lw=0.8)
     axs[1].legend(fontsize=8)
@@ -208,6 +263,8 @@ def main(argv=None):
         raise SystemExit("steps.csv is empty (navigator が推論する前に終了した)")
     world = args.world or meta.get("world") or ""
     sdf = world if world.endswith(".sdf") else (os.path.join(WORLDS, f"{world}.sdf") if world else "")
+    for r in rows:
+        r["pred_w"] = predicted_turn_rate(r)
     pred_opp, cmd_opp = analyze(rows, meta)
     print(write_report(run_dir, rows, meta, summary, pred_opp, cmd_opp))
     print("->", plot_overview(run_dir, rows, meta, sdf, args.every))
