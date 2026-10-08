@@ -543,6 +543,23 @@ def test_navlog_and_analyzer():
         assert "(5/5)" in rep  # サブゴールは左 (+27deg) なのに予測は右 -> 全ステップ検出
         assert os.path.exists(os.path.join(run, "overview.png")) and os.path.exists(os.path.join(run, "timeline.png"))
         assert json.load(open(os.path.join(run, "meta.json")))["world"] == "office_0"
+        # その場で左に曲がる予測 (位置はほぼ動かず向きだけ +60deg) を w≈0 で実行 -> 「実行できていない区間」に出る
+        sys.path.insert(0, os.path.join(REPO, "tools"))
+        import plot_nav_log
+        rows = []
+        for k in range(6):
+            r = {"step": k + 1, "sim_time": k / 3, "subgoal": 0, "goal_bearing_deg": 90.0, "v": 0.05, "w": 0.01}
+            for i in range(8):
+                yaw = 60.0 * (i + 1) / 8
+                r.update({f"wp{i}_x": 0.02 * (i + 1), f"wp{i}_y": 0.0, f"wp{i}_yaw_deg": yaw})
+            r["pred_w"] = plot_nav_log.predicted_turn_rate(r)
+            rows.append(r)
+        assert rows[0]["pred_w"] > 0.3
+        segs = plot_nav_log.under_turn_segments(rows)
+        assert len(segs) == 1 and len(segs[0]) == 6
+        for r in rows:
+            r["w"] = r["pred_w"]                      # trajectory 制御なら予測どおり曲がる
+        assert not plot_nav_log.under_turn_segments(rows)
     finally:
         shutil.rmtree(tmp)
 

@@ -1,6 +1,7 @@
 run: /home/claude/omnivla_gazebo/log/nav/20261005_132710
 goal: /data/goals/demo  world: office_0  modality: 6  controller: upstream
 model: {'vla_path': '/checkpoints/omnivla-original', 'finetuned_dir': '/runs/omnivla_gazebo_20261005_102132/checkpoints/step_003000', 'metric_waypoint_spacing': 0.1}
+WARNING: controller=upstream (公式の式) は予測した向きを使わないので、モデルが「その場で曲がる」予測をしても曲がりません。.env の CONTROLLER=trajectory を確認してください
 summary: reason=shutdown, reached=False, steps=249, final_dist_to_goal=2.0456959667768033, min_dist_to_goal=2.0456441829944887, path_length_m=13.033723302664889, subgoal_index=11
 
 == サブゴールごとの区間 ==
@@ -25,3 +26,6 @@ step  133 subgoal 11  goal   +140deg  pred    -10deg  v=0.28 w=-0.30
 
 == 旋回指令が予測軌跡と逆のステップ (0/249) ==
    -> 制御 (軌跡 -> v, w の変換) 側の問題。0 であるべき
+
+== 予測した旋回を実行できていない区間 (0/249 steps) ==
+   (予測 8 点が |w|>=0.15rad/s の旋回を表すのに, 指令 w がその 50% 未満) -> 制御側の問題。0 に近いべき
