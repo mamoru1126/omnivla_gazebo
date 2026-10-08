@@ -130,11 +130,15 @@ class GoalTracker:
     pose 判定では、途中のサブゴールは「半径内に入った」以外に「pass_radius 以内まで近づいて、
     もう真横より後ろ (|方位| > pass_angle) にある」でも通過扱いにする。少しずれてサブゴールの周りを
     回ってしまい、永遠に次へ進めない (= 後ろのサブゴールを追い続ける) のを防ぐ。最終ゴールには使わない。
+
+    reach_angle_deg > 0 のとき、途中のサブゴールの「半径内に入った」判定には、ロボットの向きとノードの向き
+    (= その画像を撮った向き) の差が reach_angle_deg 以内であることも求める。曲がり角で向きがずれたまま
+    次の画像へ切り替わる (角を内側にショートカットする) のを防ぐ。通過判定と最終ゴールには使わない。
     """
 
     def __init__(self, nodes: Sequence[GoalNode], reach_check: str = "auto", subgoal_radius: float = 0.6,
                  goal_radius: float = 0.4, image_threshold: float = 0.92, lookahead_nodes: int = 2,
-                 pass_radius: float = 1.0, pass_angle_deg: float = 90.0):
+                 pass_radius: float = 1.0, pass_angle_deg: float = 90.0, reach_angle_deg: float = 45.0):
         if not nodes:
             raise ValueError("empty goal sequence")
         self.nodes = list(nodes)
@@ -145,6 +149,8 @@ class GoalTracker:
         self.lookahead_nodes = max(0, int(lookahead_nodes))
         self.pass_radius = float(pass_radius)
         self.pass_angle = math.radians(pass_angle_deg)
+        self.reach_angle = math.radians(reach_angle_deg) if reach_angle_deg > 0 else None
+        self.last_heading_error: Optional[float] = None
         self.last_reason: Optional[str] = None
         self.index = 0
         self.done = False
@@ -173,8 +179,14 @@ class GoalTracker:
             d = math.hypot(dx, dy)
             self.last_distance = d
             if d < (self.goal_radius if final else self.subgoal_radius):
-                self.last_reason = "within radius"
-                return True
+                if final or self.reach_angle is None or len(node.pose) < 3 or len(robot_pose) < 3:
+                    self.last_reason = "within radius"
+                    return True
+                err = (robot_pose[2] - node.pose[2] + math.pi) % (2 * math.pi) - math.pi
+                self.last_heading_error = err
+                if abs(err) <= self.reach_angle:
+                    self.last_reason = f"within radius, heading {math.degrees(err):+.0f}deg"
+                    return True
             if not final and d < self.pass_radius and len(robot_pose) > 2:
                 bearing = (math.atan2(dy, dx) - robot_pose[2] + math.pi) % (2 * math.pi) - math.pi
                 if abs(bearing) > self.pass_angle:

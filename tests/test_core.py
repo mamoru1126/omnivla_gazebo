@@ -367,6 +367,16 @@ def test_goal_tracker_pass_detection():
     assert tr.update((1.6, 0.5, 0.0)) and tr.index == 1 and "passed" in tr.last_reason  # 0.78m, 左後ろ 140deg
     fin = topomap.GoalTracker(nodes[1:], goal_radius=0.4)
     assert not fin.update((3.5, 1.5, 0.0))          # 最終ゴールは通過扱いにしない
+    # 向きの条件: 半径内でも向きが 45deg 以上ずれていれば (曲がり角) まだ到達にしない
+    corner = [topomap.GoalNode(img, (1.0, 1.0, math.pi / 2)), topomap.GoalNode(img, (1.0, 2.0, math.pi / 2))]
+    tr = topomap.GoalTracker(corner, subgoal_radius=0.6, lookahead_nodes=0)
+    assert not tr.update((0.6, 0.8, 0.0))           # 0.45m だが 90deg ずれ
+    assert not tr.update((0.7, 0.85, math.radians(30)))  # 60deg ずれ
+    assert tr.update((0.75, 0.9, math.radians(60))) and "heading" in tr.last_reason  # 30deg -> 到達
+    off = topomap.GoalTracker(corner, subgoal_radius=0.6, lookahead_nodes=0, reach_angle_deg=0)
+    assert off.update((0.6, 0.8, 0.0))              # 0 で距離だけ (従来どおり)
+    fin = topomap.GoalTracker(corner[1:], goal_radius=0.4)
+    assert fin.update((1.0, 1.8, 0.0)) and fin.done  # 最終ゴールは向きを問わない
 
 
 # ---------------------------------------------------------------- sim_map

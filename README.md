@@ -139,6 +139,7 @@ git add log/nav/<日時> && git commit -m "nav log" && git push
 |---|---|---|
 | 制御則 | 公式の式 (`waypoints[4]` だけから v, w を計算) は角速度が 0.3rad/s 止まりで、鋭く曲がる予測ほど大回りする (学習データのお手本は最大 0.8rad/s で曲がる)。`trajectory` は予測 wp0..wp4 (各 (k+1)/3 秒後) の道のりと向きの変化を時間で最小二乗フィットして、予測した旋回の速さ・曲率・減速をそのまま実行する | `controller`, `track_max_v`, `track_max_w` |
 | 予測速度の尊重 | 予測軌跡が短い (モデルが減速を予測) ときは速度を落とす。公式は 0.1m 先でも上限速度で進み、壁の手前でも減速しない | `respect_predicted_speed` |
+| サブゴール到達の向き条件 | 途中のサブゴールは半径内に入るだけでなく、ロボットの向きとその画像を撮った向きの差が `reach_angle_deg` (45°) 以内で到達。曲がり角で向きがずれたまま次へ切り替わって角を内側に詰めるのを防ぐ (最終ゴールには使わない, 0 で無効) | `reach_angle_deg` |
 | サブゴールの通過判定 | 半径 (`subgoal_radius`) に入らなくても、`pass_radius` 以内で真横より後ろに来たら通過扱い。サブゴールの周りを回り続けるのを防ぐ (最終ゴールには使わない) | `pass_radius`, `pass_angle_deg` |
 | 動けない時の停止 | 前進指令中に `stuck_timeout` 秒動かなければ (障害物に押し付け) 停止して走行を終了 (`summary.json` の reason=stuck) | `stuck_timeout` |
 
