@@ -138,7 +138,7 @@ class GoalTracker:
 
     def __init__(self, nodes: Sequence[GoalNode], reach_check: str = "auto", subgoal_radius: float = 0.6,
                  goal_radius: float = 0.4, image_threshold: float = 0.92, lookahead_nodes: int = 2,
-                 pass_radius: float = 1.0, pass_angle_deg: float = 90.0, reach_angle_deg: float = 45.0):
+                 pass_radius: float = 1.0, pass_angle_deg: float = 90.0, reach_angle_deg: float = 25.0):
         if not nodes:
             raise ValueError("empty goal sequence")
         self.nodes = list(nodes)

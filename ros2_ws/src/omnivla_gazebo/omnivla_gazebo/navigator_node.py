@@ -74,7 +74,7 @@ class NavigatorNode(Node):
         p("lookahead_nodes", 1)
         p("pass_radius", 1.0)             # この距離以内でサブゴールが真横より後ろなら通過扱い
         p("pass_angle_deg", 90.0)
-        p("reach_angle_deg", 45.0)        # 途中のサブゴールは向きの差もこれ以内で到達 (0 で距離だけ)
+        p("reach_angle_deg", 25.0)        # 途中のサブゴールは向きの差もこれ以内で到達 (0 で距離だけ)
         p("stop_at_goal", True)
         p("autostart", True)
         # control

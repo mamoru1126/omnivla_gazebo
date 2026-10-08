@@ -372,7 +372,8 @@ def test_goal_tracker_pass_detection():
     tr = topomap.GoalTracker(corner, subgoal_radius=0.6, lookahead_nodes=0)
     assert not tr.update((0.6, 0.8, 0.0))           # 0.45m だが 90deg ずれ
     assert not tr.update((0.7, 0.85, math.radians(30)))  # 60deg ずれ
-    assert tr.update((0.75, 0.9, math.radians(60))) and "heading" in tr.last_reason  # 30deg -> 到達
+    assert not tr.update((0.72, 0.88, math.radians(60)))  # 30deg ずれ (既定 25deg) -> まだ
+    assert tr.update((0.75, 0.9, math.radians(70))) and "heading" in tr.last_reason  # 20deg -> 到達
     off = topomap.GoalTracker(corner, subgoal_radius=0.6, lookahead_nodes=0, reach_angle_deg=0)
     assert off.update((0.6, 0.8, 0.0))              # 0 で距離だけ (従来どおり)
     fin = topomap.GoalTracker(corner[1:], goal_radius=0.4)

@@ -19,7 +19,7 @@ omnivla_navigator:
     lookahead_nodes: 1
     pass_radius: 1.0                          # この距離以内でサブゴールが真横より後ろに来たら通過扱い (周回防止)
     pass_angle_deg: 90.0
-    reach_angle_deg: 45.0                     # 途中のサブゴールは向きの差もこれ以内で到達 (曲がり角のショートカット防止, 0 で距離だけ)
+    reach_angle_deg: 25.0                     # 途中のサブゴールは向きの差もこれ以内で到達 (曲がり角のショートカット防止, 0 で距離だけ)
     stop_at_goal: true
     autostart: true
     # ---- control ----
