@@ -182,7 +182,7 @@ class NavigatorNode(Node):
             self.get_logger().warn(
                 f"controller={self.ctrl.mode}: 予測軌跡をそのまま実行しない制御則です"
                 + (" (公式の式は予測した向きを使わず, その場で曲がる予測をしても曲がりません)" if self.ctrl.mode == "upstream" else "")
-                + "。通常は controller:=trajectory (.env の CONTROLLER=trajectory) を使ってください")
+                + "。通常は controller:=trajectory (NAV_CONTROLLER=trajectory) を使ってください")
         self.thread = threading.Thread(target=self._loop, daemon=True)
         self.thread.start()
 
