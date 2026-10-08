@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OmniVLA × Gazebo 統合ガイド</title>
-<meta name="description" content="OmniVLA を Gazebo 上で自律移動させるまでの手順 (環境構築 → データ収集 → ファインチューニング → ゴール画像作成 → 自律移動 → 評価)">
+<title>OmniVLA × Gazebo の仕組み</title>
+<meta name="description" content="OmniVLA を Gazebo でサブゴール画像をたどって自律移動させる仕組みと、学習・制御で工夫した点の解説">
 <style>
 :root {
   --bg: #f7f6f2; --surface: #ffffff; --surface2: #efede6; --text: #1f2328; --muted: #5d6470;
@@ -94,37 +94,43 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line);
 
 <header class="hero">
   <div class="kicker">OMNIVLA × GAZEBO HARMONIC × ROS 2 HUMBLE</div>
-  <h1>OmniVLA を Gazebo で自律移動させるまでの統合ガイド</h1>
+  <h1>OmniVLA を Gazebo で自律移動させる仕組み</h1>
   <p class="lead">
-    ゴールまでの経路を 1m ごとに撮影した<strong>サブゴール画像</strong>を用意し、OmniVLA が「今見えている画像」と「今のサブゴール画像」から進路を出す ―
-    サブゴールに着いたら次の画像へ切り替え、最終ゴールまでたどり着くまでを、リポジトリ
-    <a href="https://github.com/mamoru1126/omnivla_gazebo">mamoru1126/omnivla_gazebo</a> を使って順に組み上げる手順です。
-    公式の重みは実写で学習されているので、まず Gazebo で集めたデータでファインチューニングしてから走らせます。
+    ゴールまでの経路を 1m ごとに撮影した<strong>サブゴール画像</strong>を用意し、OmniVLA が「今見えている画像」と「今のサブゴール画像」から進路を出す。
+    サブゴールに着いたら次の画像へ切り替え、最終ゴールまでたどり着く ― このページでは、その仕組みと、うまく走らせるために工夫した点を説明します。
   </p>
+  <p class="lead">実行手順は <a href="https://github.com/mamoru1126/omnivla_gazebo#readme">README</a> にまとめています。</p>
 </header>
 
 <nav class="toc" aria-label="目次">
   <ol>
+    <li><a href="#vla">VLA と OmniVLA</a></li>
     <li><a href="#whole">全体像</a></li>
+    <li><a href="#subgoal">サブゴール画像をたどる</a></li>
     <li><a href="#loop">1 ステップで何が起きるか</a></li>
-    <li><a href="#roadmap">ロードマップ</a></li>
-    <li><a href="#setup">手順 1〜2: 環境構築</a></li>
-    <li><a href="#ft">手順 3〜4: データ収集と学習</a></li>
-    <li><a href="#nav">手順 5〜6: Gazebo で自律移動</a></li>
-    <li><a href="#eval">手順 7: 成功率の評価</a></li>
-    <li><a href="#log">走行ログと解析</a></li>
+    <li><a href="#ft">Gazebo の見え方に適応させる</a></li>
+    <li><a href="#lessons">やってみて分かったこと</a></li>
+    <li><a href="#rule">ルールベースとの違い</a></li>
     <li><a href="#real">実機へ持っていくとき</a></li>
-    <li><a href="#trouble">つまずきやすい点</a></li>
     <li><a href="#terms">用語</a></li>
   </ol>
 </nav>
 
 <!-- ============================================================ -->
+<h2 id="vla">VLA と OmniVLA</h2>
+<div class="grid2">
+  <div class="card"><b>VLA (Vision-Language-Action)</b><br>
+  カメラ画像と指示から、ロボットの行動を直接出力する大規模 AI モデル。
+  Web 規模の画像と文章で事前学習したモデルを土台にしているので、物や場面の意味を理解したうえで動き方を決められます。</div>
+  <div class="card"><b>OmniVLA</b><br>
+  移動ロボット向けの VLA (ICRA 2026, 7B)。ゴールを<strong>画像・位置・言葉</strong>のどれでも指定でき、
+  現在の画像から「この先約 2.7 秒分の進路 (8 点)」を出力します。今回はゴールを画像で与えるモードを使っています。</div>
+</div>
+
+<!-- ============================================================ -->
 <h2 id="whole">全体像</h2>
-<p>
-  Docker コンテナを役割ごとに 3 つ並べ、ROS 2 のトピックでつなぎます。Gazebo が「ロボットの目と足」、
-  OmniVLA navigator が「どちらに進むかを決める頭」です。ファインチューニング時は Gazebo 側でデータを集め、学習コンテナで LoRA を学習します。
-</p>
+<p>Docker コンテナを役割ごとに並べ、ROS 2 のトピックでつなぎます。Gazebo が「ロボットの目と足」、
+OmniVLA の navigator が「どちらに進むかを決める頭」です。学習時は Gazebo 側でデータを集め、学習コンテナで LoRA を学習します。</p>
 <div class="diagram" role="img" aria-label="システム構成図">
 <svg viewBox="0 0 940 430" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -198,12 +204,57 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line);
   <text x="524" y="304" font-size="12" fill="var(--c-vla)">finetuned_dir で差し替え</text>
 </svg>
 </div>
-<p class="caption">全コンテナは同じイメージ (docker-compose の sim / nav / explore / train / shell サービス)。ホストネットワーク共有で ROS 2 と gz-transport がつながる。</p>
+<p class="caption">全コンテナは同じイメージ。ホストネットワーク共有で ROS 2 と Gazebo がつながる。</p>
+
+<!-- ============================================================ -->
+<h2 id="subgoal">サブゴール画像をたどる</h2>
+<p>OmniVLA は数 m 先までしか見通せない「反応型」のモデルです。今の画像から見えない 10m 先の別の部屋のゴールへは、1 枚の画像だけでは道が分かりません。
+そこで、遠いゴールまでの道のりを<strong>見える範囲の小さなゴールに区切って</strong>渡します。</p>
+<div class="diagram" role="img" aria-label="サブゴール画像列の考え方">
+<svg viewBox="0 0 940 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <path d="M60,170 L560,170 Q640,170 660,110 L700,50" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="60" cy="170" r="11" fill="var(--c-sim)"/>
+  <text x="60" y="205" text-anchor="middle" font-size="13" fill="var(--c-sim)">スタート</text>
+  <g fill="var(--surface)" stroke="var(--c-data)" stroke-width="2">
+    <rect x="125" y="150" width="34" height="40" rx="4"/><rect x="225" y="150" width="34" height="40" rx="4"/>
+    <rect x="325" y="150" width="34" height="40" rx="4"/><rect x="425" y="150" width="34" height="40" rx="4"/>
+    <rect x="525" y="150" width="34" height="40" rx="4"/><rect x="620" y="115" width="34" height="40" rx="4"/>
+  </g>
+  <g font-size="12" fill="var(--c-data)" text-anchor="middle">
+    <text x="142" y="175">0</text><text x="242" y="175">1</text><text x="342" y="175">2</text>
+    <text x="442" y="175">3</text><text x="542" y="175">4</text><text x="637" y="140">5</text>
+  </g>
+  <rect x="680" y="22" width="40" height="44" rx="5" fill="var(--warn-soft)" stroke="var(--c-data)" stroke-width="2.5"/>
+  <text x="700" y="49" text-anchor="middle" font-size="12" font-weight="700" fill="var(--c-data)">goal</text>
+  <text x="242" y="128" text-anchor="middle" font-size="13" fill="var(--c-vla)">今のサブゴール</text>
+  <line x1="242" y1="133" x2="242" y2="147" stroke="var(--c-vla)" stroke-width="2" marker-end="url(#ar4)"/>
+  <rect x="170" y="158" width="20" height="24" rx="3" fill="var(--c-vla)"/>
+  <g font-size="13" fill="var(--text)">
+    <text x="760" y="110">・経路を 1m ごとに撮影</text>
+    <text x="760" y="134">・着いたら次の画像へ</text>
+    <text x="760" y="158">・最後の画像で停止</text>
+  </g>
+</svg>
+</div>
+<div class="grid2">
+  <div class="card"><b>サブゴール画像の作り方</b><br>
+  地図上でスタートからゴールまで経路を計画し、ロボットを 1m ごとにテレポートさせて前方を撮影します。
+  モデルへの入力は画像だけで、撮影した位置・向きは「着いたか」の判定にだけ使います。</div>
+  <div class="card"><b>「着いた」の判定</b><br>
+  距離 0.3m 以内 <em>かつ</em> ロボットの向きとその画像を撮った向きの差が 25° 以内。
+  向きを見ないと、曲がり角で向きがずれたまま次の画像に切り替わり、角を内側に詰めてしまいます。
+  少しずれて後ろに回った場合は通過扱いにして先へ進みます。</div>
+</div>
 
 <!-- ============================================================ -->
 <h2 id="loop">1 ステップ (約 0.33 秒) で何が起きるか</h2>
-<p>OmniVLA は「遠くのゴールまでの完全な経路」は出しません。出すのは<strong>この先約 2.7 秒分の 8 点の軌跡</strong>だけです。
-それを少しだけ実行して、また撮り直して推論する、を繰り返すことで前に進みます。</p>
+<p>OmniVLA が出すのは<strong>この先約 2.7 秒分の 8 点の軌跡</strong>だけです。
+それを少しだけ実行して、また撮り直して推論する、を 3Hz で繰り返して前に進みます。</p>
 <div class="diagram" role="img" aria-label="制御ループ">
 <svg viewBox="0 0 940 250" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -247,55 +298,16 @@ footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line);
   <text x="470" y="232" text-anchor="middle" font-size="13" fill="var(--muted)">最後のゴール画像に到達したら停止</text>
 </svg>
 </div>
-<div class="grid2">
-  <div class="card"><b>② サブゴールに「着いた」の判定</b><br>
-  距離 0.3m 以内 <em>かつ</em> ロボットの向きとその画像を撮った向きの差が 25° 以内。
-  曲がり角で向きがずれたまま次へ進む (角を内側に詰める) のを防ぎます。少しずれて後ろに回った場合は通過扱いにして先へ進みます。</div>
-  <div class="card"><b>④ 制御</b><br>
-  8 点の k 点目は (k+1)/3 秒後の位置と向きです。手前 5 点の「進んだ道のり」と「向きの変化」に合う一定の速度・角速度を求めて、
-  モデルが予測した曲がり方・減速をそのまま実行します。</div>
-</div>
+<div class="card"><b>④ 制御: 予測した軌跡をそのまま実行する</b><br>
+8 点の k 点目は (k+1)/3 秒後の位置と向きです。手前 5 点の「進んだ道のり」と「向きの変化」に最もよく合う一定の速度・角速度を求めて、
+モデルが予測した曲がり方・減速をそのまま実行します。OmniVLA 公式の変換式は 5 点目の位置しか見ないため、
+その場で曲がる予測を無視したり、鋭い曲がり角で大回りしたりします (<a href="#lessons">後述</a>)。</div>
 
 <!-- ============================================================ -->
-<h2 id="roadmap">ロードマップ</h2>
-<div class="tablewrap">
-<table>
-  <thead><tr><th>段階</th><th>手順</th><th>ゴール</th><th>目安時間</th></tr></thead>
-  <tbody>
-    <tr><td>A. 準備</td><td>1〜2</td><td>イメージ構築・重み取得</td><td>1〜1.5 時間 (大半はダウンロード)</td></tr>
-    <tr><td>B. 適応</td><td>3〜4</td><td>Gazebo でデータを集めて LoRA 学習</td><td>収集 2〜3 時間 + 学習 数時間</td></tr>
-    <tr><td>C. 走行</td><td>5〜6</td><td>サブゴール画像をたどってゴールまで自律移動</td><td>30 分</td></tr>
-    <tr><td>D. 評価</td><td>7</td><td>ランダムな経路で成功率を測る</td><td>30 分〜</td></tr>
-  </tbody>
-</table>
-</div>
-<div class="note"><b>前提:</b> Linux + NVIDIA GPU (VRAM 24GB, RTX 3090 クラス) + Docker + NVIDIA Container Toolkit。
-コマンドはすべてリポジトリのルートで実行します。Gazebo と学習は同じ GPU に同時に載らないので、学習の前に <code>docker compose stop sim</code> します。</div>
-
-<!-- ============================================================ -->
-<h2 id="setup">A. 環境構築</h2>
-<ol class="steps">
-  <li class="step">
-    <h3>Docker イメージを作る</h3>
-    <div class="meta"><span class="tag time">20〜40 分</span><span class="tag">1 回だけ</span></div>
-    <pre><code>git clone https://github.com/mamoru1126/omnivla_gazebo
-cd omnivla_gazebo
-cp .env.example .env
-docker compose build</code></pre>
-    <p>Ubuntu 22.04 / Python 3.10 / ROS 2 Humble / Gazebo Harmonic / PyTorch 2.2 / OmniVLA (コミット固定) を 1 つのイメージにまとめます。</p>
-  </li>
-
-  <li class="step">
-    <h3>公式チェックポイントを取得する</h3>
-    <div class="meta"><span class="tag time">回線次第 (約 16GB)</span></div>
-    <pre><code>docker compose run --rm shell bash scripts/download_checkpoints.sh
-<span class="c"># 任意: GPU で推論できるか確認 (Gazebo なし) → ./runs/smoke_test/*.jpg</span>
-docker compose run --rm shell python3 scripts/smoke_test_policy.py</code></pre>
-  </li>
-</ol>
-
-<!-- ============================================================ -->
-<h2 id="ft">B. Gazebo の見え方に適応させる (データ収集と学習)</h2>
+<h2 id="ft">Gazebo の見え方に適応させる</h2>
+<p>公式の重みは実世界の走行データで学習されているので、Gazebo の見た目ではそのままだとうまく動きません。
+そこで Gazebo 内でお手本の自動走行を記録し、LoRA で追加学習します。</p>
+<h3>学習データの作り方</h3>
 <div class="diagram" role="img" aria-label="学習データの作り方">
 <svg viewBox="0 0 940 210" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -329,111 +341,77 @@ docker compose run --rm shell python3 scripts/smoke_test_policy.py</code></pre>
   <text x="470" y="175" text-anchor="middle" font-size="13" fill="var(--muted)">ゴールは同じ走行の「未来のフレーム」からランダムに選ぶ (hindsight relabeling) → 1 本の走行から大量の学習サンプルができる</text>
 </svg>
 </div>
+<p>お手本はランダムな位置から、ランダムなゴールまで経路計画して走ります。経路も毎回少しずつ揺らして、いろいろな場面を記録します。</p>
 
-<ol class="steps" style="counter-reset: step 2">
-  <li class="step">
-    <h3>お手本走行を自動で集める</h3>
-    <div class="meta"><span class="tag time">1 エピソード約 1 分</span><span class="tag">GUI なしが速い</span></div>
-    <pre><code>HEADLESS=true WORLD=office_0 docker compose up sim                <span class="c"># 端末 1</span>
-WORLD=office_0 EPISODES=150 docker compose run --rm explore        <span class="c"># 端末 2 → /data/raw/office_0/</span></code></pre>
-    <p>各エピソードで「ランダムな位置にテレポート → ランダムなゴールまで経路計画 → 0.3 m/s で追従しながら画像と真値位置を 3Hz で記録」を繰り返します。</p>
-    <div class="card"><b>外乱つき収集 (既定で有効)</b><br>
-    走行中、数秒おきにわざとロボットを経路から外し (最大 0.7m 程度)、そこからお手本が経路へ戻る様子を記録します。
-    外乱で動いた区間は正解に使わず、「外れた状態から戻る」動きだけを学習させます。
-    これが無いとモデルは経路の上を走る状態しか知らず、曲がり角で少しずれただけで予測が崩れて衝突します。</div>
-    <p>見た目の多様性が汎化に効くので、ワールドを増やして集めるのもおすすめです:</p>
-    <pre><code>docker compose run --rm shell python3 tools/generate_worlds.py --worlds office park --seeds 1 2 3
-<span class="c"># → office_1..3, park_1..3。WORLD=office_1 などで sim と explore を起動</span></code></pre>
-    <div class="check"><b>確認:</b> <code>docker compose run --rm shell python3 training/inspect_dataset.py /data/raw --num_viz 16</code> で
-    1 フレームあたりの移動量 ≈ 0.1m、<code>perturbed_frames</code> &gt; 0、正解軌跡 (緑) が画像上の進行方向と一致していること。</div>
-  </li>
+<h3>経路から外れた状態も学習させる (外乱つき収集)</h3>
+<div class="diagram" role="img" aria-label="外乱つき収集">
+<svg viewBox="0 0 940 200" xmlns="http://www.w3.org/2000/svg">
+  <path d="M40,120 L900,120" stroke="var(--line)" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <text x="40" y="150" font-size="13" fill="var(--muted)">お手本の経路</text>
+  <path d="M40,120 L300,120" stroke="var(--c-sim)" stroke-width="3" fill="none"/>
+  <path d="M300,120 Q370,118 430,60" stroke="var(--warn)" stroke-width="3" stroke-dasharray="7 5" fill="none"/>
+  <path d="M430,60 Q520,50 600,95 Q640,120 700,120 L900,120" stroke="var(--c-sim)" stroke-width="3" fill="none"/>
+  <text x="365" y="52" font-size="13" fill="var(--warn)" text-anchor="middle">外乱: わざと外す</text>
+  <text x="365" y="70" font-size="12" fill="var(--muted)" text-anchor="middle">(正解に使わない)</text>
+  <text x="560" y="20" font-size="13" fill="var(--c-sim)" text-anchor="middle">お手本が経路へ戻る</text>
+  <text x="560" y="36" font-size="12" fill="var(--muted)" text-anchor="middle">(この動きを学習)</text>
+  <circle cx="430" cy="60" r="6" fill="var(--warn)"/>
+  <text x="470" y="180" font-size="13" fill="var(--muted)" text-anchor="middle">数秒おきに最大 0.7m ほど外す。障害物の近くとゴール手前では外さない</text>
+</svg>
+</div>
+<p>お手本は常に経路の上を走るので、そのまま学習するとモデルは「経路から外れた状態」を一度も見たことがありません。
+すると、少しずれただけで予測が崩れ、さらにずれる…と悪化して衝突します。
+走行中にわざと外し、そこから戻る動きを記録することで、ずれても自分で戻れるようにします (DART と呼ばれる手法)。</p>
 
-  <li class="step">
-    <h3>LoRA で学習する</h3>
-    <div class="meta"><span class="tag time">5000 step で数時間</span><span class="tag">sim は停止</span></div>
-    <pre><code>docker compose stop sim
-docker compose run --rm train      <span class="c"># → runs/&lt;run&gt;/checkpoints/step_005000/</span></code></pre>
-    <ul>
-      <li>公式と同じ設定: 全 Linear 層に LoRA (r=32)、軌跡ヘッドも学習、lr 1e-4</li>
-      <li>自動走行のデータはほとんど直進なので、<strong>曲がる場面</strong>と<strong>経路から戻る場面</strong>を多めに引いて学習します</li>
-      <li>500 step ごとに検証誤差 (<code>ADE</code>) が出ます。<code>turn</code> は曲がる場面、<code>recovery</code> は戻る場面の誤差</li>
-    </ul>
-    <div class="note"><b>VRAM が足りないとき:</b> <code>batch_size: 1</code> にして <code>grad_accumulation_steps</code> を増やす、
-    または <code>lora_target: llm</code>。中断した学習は <code>--resume_from runs/&lt;run&gt;/checkpoints/step_XXXXXX --max_steps &lt;追加 step&gt;</code> で再開できます。</div>
-  </li>
-</ol>
+<h3>少ない場面を多めに学習させる</h3>
+<div class="grid2">
+  <div class="card"><b>曲がる場面</b><br>
+  自動走行はほとんど直進なので、そのままだと「とりあえず直進」を覚えます。
+  「この先 1m 以内に 45° 以上曲がる」場面 (自然には約 1 割) を学習の 5 割で引きます。</div>
+  <div class="card"><b>経路から戻る場面</b><br>
+  外乱の直後から始まる場面を、学習の 3 割以上で引きます。
+  学習中の検証でも、直進・曲がる・戻るの誤差を別々に表示して、どこが弱いかを確認できます。</div>
+</div>
 
 <!-- ============================================================ -->
-<h2 id="nav">C. Gazebo で自律移動</h2>
-<ol class="steps" style="counter-reset: step 4">
-  <li class="step">
-    <h3>目的地までのサブゴール画像列を作る</h3>
-    <div class="meta"><span class="tag time">1〜2 分</span></div>
-    <pre><code>docker compose up sim                                             <span class="c"># 端末 1 (GUI あり)</span>
-docker compose run --rm shell ros2 launch omnivla_gazebo topomap.launch.py \
-    world:=office_0 out_dir:=/data/goals/demo goal_x:=7.5 goal_y:=4.0  <span class="c"># 端末 2</span></code></pre>
-    <p>地図上で現在位置から (7.5, 4.0) までの経路を計画し、<strong>1m ごとにロボットをテレポートさせて前方の画像を撮影</strong>します。
-    撮り終えたらロボットはスタート位置に戻ります。</p>
-    <div class="grid2">
-      <div class="card"><b>なぜ 1 枚でなく列にするのか</b><br>
-      OmniVLA は数 m 先までしか見通せない反応型の方策です。部屋をまたぐ遠いゴールは、見える範囲の画像を順にたどる方が安定します。</div>
-      <div class="card"><b>座標の選び方</b><br>
-      <code>ros2_ws/src/omnivla_gazebo/maps/office_0.png</code> が地図 (黒=障害物, 赤=スポーン位置)。
-      引数は <code>7.5</code> のように小数で書く。作り直すときは <code>overwrite:=true</code>。</div>
-    </div>
-  </li>
-
-  <li class="step">
-    <h3>学習したモデルで走らせる</h3>
-    <div class="meta"><span class="tag time">モデル読み込み 1 分 + 走行 1 分</span></div>
-    <pre><code><span class="c"># スタート姿勢に戻す (走行後や sim 再起動後は必須)</span>
-docker compose run --rm shell ros2 run omnivla_gazebo teleport --world office_0 --goal_dir /data/goals/demo
-<span class="c"># 走行 (起動するとすぐ走り出す)</span>
-FINETUNED_DIR=/runs/&lt;run&gt;/checkpoints/step_005000 GOAL_PATH=/data/goals/demo docker compose run --rm nav
-
-<span class="c"># 様子を見る (端末 3)</span>
-docker compose run --rm shell ros2 run rqt_image_view rqt_image_view /omnivla/debug_image</code></pre>
-    <p>デバッグ画像には「現在画像 + 予測軌跡」「今のサブゴール画像」「俯瞰の軌跡」が並びます。
-    ログに <code>subgoal -&gt; 3/14</code> のように進捗が出て、最後に <code>final goal reached</code> で停止します。</p>
-    <div class="check"><b>実績:</b> office_0 で廊下を直進 → ドアを抜けて左に曲がり → 部屋の奥のゴールまで (約 14m, サブゴール 15 枚) 到達。</div>
-  </li>
-</ol>
-
-<!-- ============================================================ -->
-<h2 id="eval">D. 成功率の評価</h2>
-<ol class="steps" style="counter-reset: step 6">
-  <li class="step">
-    <h3>ランダムな経路で成功率を測る</h3>
-    <div class="meta"><span class="tag time">20 タスクで 30 分程度</span></div>
-    <pre><code>docker compose up sim                                                          <span class="c"># 端末 1</span>
-FINETUNED_DIR=/runs/&lt;run&gt;/checkpoints/step_005000 docker compose run --rm nav  <span class="c"># 端末 2 (空ならゼロショット)</span>
-docker compose run --rm shell ros2 launch omnivla_gazebo eval.launch.py \
-    world:=office_0 num_tasks:=20 mode:=route min_dist:=4.0 max_dist:=12.0 label:=finetuned   <span class="c"># 端末 3</span></code></pre>
-    <p>評価ノードが「ゴールまでのサブゴール画像を撮る → スタートへテレポート → 走行 → 到達/タイムアウト/衝突を判定」を自動で繰り返し、
-    <code>runs/eval/&lt;label&gt;_&lt;world&gt;_&lt;時刻&gt;/summary.json</code> に成功率・SPL・衝突回数をまとめます。
-    <code>seed</code> が同じならタスクも同じなので、ゼロショットと学習後をそのまま比較できます
-    (<code>mode:=single</code> は 2〜5m 先のゴール画像 1 枚)。</p>
-  </li>
-</ol>
-
-<!-- ============================================================ -->
-<h2 id="log">走行ログと解析</h2>
-<p>navigator は走行ごとに <code>log/nav/&lt;日時&gt;/</code> へログを自動で保存します (git 管理外)。</p>
+<h2 id="lessons">やってみて分かったこと</h2>
+<p>最初は曲がり角でぶつかったり、逆方向へ進んだりしました。走行ごとのログ (予測軌跡・指令値・画像) を解析して、
+原因を「モデル側」と「制御側」に切り分けながら直しました。</p>
 <div class="tablewrap">
 <table>
-  <thead><tr><th>ファイル</th><th>中身</th></tr></thead>
+  <thead><tr><th>症状</th><th>原因</th><th>対策</th></tr></thead>
   <tbody>
-    <tr><td><code>steps.csv</code></td><td>推論ごとの位置姿勢, サブゴール, 予測 8 点, 指令 (v, ω)</td></tr>
-    <tr><td><code>events.log</code> / <code>summary.json</code></td><td>サブゴールの切り替え, 到達したか, 終了理由</td></tr>
-    <tr><td><code>debug/</code>, <code>raw/</code>, <code>goals/</code></td><td>毎ステップのデバッグ画像, カメラ画像, ゴール画像</td></tr>
+    <tr><td>モデルは正しく曲がる予測をしているのに、ロボットが曲がらない</td>
+        <td><b>制御側</b>: 公式の変換式は 5 点目の位置しか見ない。その場で回る予測を無視し、角速度も 0.3rad/s で頭打ち</td>
+        <td>予測軌跡全体を再現する制御に変更</td></tr>
+    <tr><td>曲がり角で少し外れると、予測が崩れて衝突する</td>
+        <td><b>モデル側</b>: 経路から外れた状態の学習データが無い</td>
+        <td>外乱つき収集 + 戻る場面の重み付け</td></tr>
+    <tr><td>曲がり角でサブゴールが早く切り替わり、角を内側に詰める</td>
+        <td><b>判定</b>: 距離だけで「着いた」と判定していた</td>
+        <td>向きの差も判定に追加</td></tr>
   </tbody>
 </table>
 </div>
-<pre><code>python3 tools/plot_nav_log.py log/nav/latest
-<span class="c"># → overview.png (地図上の軌跡と予測), timeline.png, report.txt</span></code></pre>
-<p><code>report.txt</code> は失敗の原因を切り分けます: 予測がサブゴールと逆を向いた = <strong>モデル側</strong>、
-予測した旋回を実行できていない = <strong>制御側</strong>。ログの共有は別リポジトリ
-(<a href="https://github.com/mamoru1126/omnivla_gazebo_logs">omnivla_gazebo_logs</a>, private) に push します。</p>
+<div class="check"><b>結果:</b> office_0 で、廊下を直進 → ドアを抜けて左に曲がり → 部屋の奥のゴールまで (約 14m, サブゴール 15 枚) 到達。</div>
+<div class="note"><b>ポイント:</b> VLA の判断そのものより、その外側 (予測をどう実行するか、どんなデータで学習するか) で失敗していました。
+VLA を使うときも、ログを取って原因を切り分けられる仕組みが重要です。</div>
+
+<!-- ============================================================ -->
+<h2 id="rule">ルールベースとの違い</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th></th><th>ルールベース</th><th>今回の方式 (VLA)</th></tr></thead>
+  <tbody>
+    <tr><td>ゴールの指定</td><td>地図上の座標</td><td>画像 (将来的には言葉も)</td></tr>
+    <tr><td>走行中の判断</td><td>地図・自己位置・人が書いたルール</td><td>画像から AI が判断 (走行ルールは書いていない)</td></tr>
+    <tr><td>新しい環境への対応</td><td>地図の作成・ルールの調整</td><td>データを集めて学習</td></tr>
+    <tr><td>得意</td><td>決まったルートを確実に、安全を保証して走る</td><td>意味で指示する、地図が作りにくい・変わりやすい場所</td></tr>
+    <tr><td>苦手</td><td>想定外の状況 (ルールの書き足しが必要)</td><td>安全の保証・判断理由の説明、反応速度 (約 3Hz)</td></tr>
+  </tbody>
+</table>
+</div>
+<p>実用では、「どこへ・どう通るか」を VLA が決め、障害物との距離や緊急停止といった安全側は従来の仕組みで守る、という組み合わせが現実的です。</p>
 
 <!-- ============================================================ -->
 <h2 id="real">実機へ持っていくとき</h2>
@@ -441,27 +419,10 @@ docker compose run --rm shell ros2 launch omnivla_gazebo eval.launch.py \
 <table>
   <thead><tr><th>Gazebo での部品</th><th>実機での置き換え</th></tr></thead>
   <tbody>
-    <tr><td><code>/camera/image_raw</code></td><td>実カメラのトピック (<code>image_topic</code>)。画角・高さを学習時と近づける</td></tr>
-    <tr><td><code>/odom</code> (真値)</td><td>自己位置推定の出力。無い場合は到達判定を画像の類似度 (<code>reach_check: image</code>) にする</td></tr>
-    <tr><td>テレポートで作るサブゴール画像列</td><td>手動走行しながら <code>topomap.launch.py mode:=distance</code> で記録</td></tr>
-    <tr><td>学習データ (自動走行)</td><td>実機の走行ログ (画像 + オドメトリ) を同じ形式に変換して追加学習</td></tr>
-  </tbody>
-</table>
-</div>
-<p>推論部分 (<code>omnivla_nav/policy.py</code>) は ROS に依存しないので、ROS 以外のロボット制御系からもそのまま呼べます。</p>
-
-<!-- ============================================================ -->
-<h2 id="trouble">つまずきやすい点</h2>
-<div class="tablewrap">
-<table>
-  <thead><tr><th>症状</th><th>原因と対処</th></tr></thead>
-  <tbody>
-    <tr><td>Gazebo の画面が出ない</td><td>ホストで <code>xhost +local:root</code>。不要なら <code>HEADLESS=true</code></td></tr>
-    <tr><td><code>waiting for camera image</code> が続く</td><td>描画に GPU が必要。NVIDIA Container Toolkit を確認。<code>docker compose logs sim</code></td></tr>
-    <tr><td>テレポートできない / トピックが見えない</td><td>コンテナ間で <code>GZ_PARTITION</code>, <code>ROS_DOMAIN_ID</code> を揃える (<code>.env</code>)</td></tr>
-    <tr><td>CUDA out of memory</td><td>学習時は <code>docker compose stop sim</code></td></tr>
-    <tr><td>ゴールと逆を向いて走り出す</td><td>スタート姿勢に戻していない。走行前に teleport を実行</td></tr>
-    <tr><td>曲がり角で外に膨らむ・ぶつかる</td><td>外乱つきで集めたデータが足りない。<code>explore</code> で追加収集して学習し直す</td></tr>
+    <tr><td>シミュレータのカメラ</td><td>実カメラ。画角・高さを学習時と近づける</td></tr>
+    <tr><td>正確な位置 (真値)</td><td>自己位置推定。無い場合は「着いた」の判定を画像の類似度で行う</td></tr>
+    <tr><td>テレポートで撮るサブゴール画像</td><td>手動で走らせながら一定距離ごとに撮影</td></tr>
+    <tr><td>自動走行の学習データ</td><td>実機の走行ログ (画像 + オドメトリ) を同じ形式に変換して追加学習</td></tr>
   </tbody>
 </table>
 </div>
@@ -482,7 +443,7 @@ docker compose run --rm shell ros2 launch omnivla_gazebo eval.launch.py \
 <footer>
   リポジトリ: <a href="https://github.com/mamoru1126/omnivla_gazebo">mamoru1126/omnivla_gazebo</a> ·
   公式 OmniVLA: <a href="https://github.com/NHirose/OmniVLA">NHirose/OmniVLA</a> ·
-  公式スクリプトから変えた点: <a href="https://github.com/mamoru1126/omnivla_gazebo/blob/master/docs/omnivla_input_review.md">docs/omnivla_input_review.md</a>
+  手順: <a href="https://github.com/mamoru1126/omnivla_gazebo#readme">README</a> · 公式スクリプトから変えた点: <a href="https://github.com/mamoru1126/omnivla_gazebo/blob/master/docs/omnivla_input_review.md">docs/omnivla_input_review.md</a>
 </footer>
 </div>
 <script>
