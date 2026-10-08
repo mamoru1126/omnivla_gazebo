@@ -1,0 +1,6 @@
+OK:   ros2 launch omnivla_gazebo topomap.launch.py world:=office_0 out_dir:=/tmp/goals goal_x:=7.5 goal_y:=4.0
+OK:   ros2 launch omnivla_gazebo topomap.launch.py mode:=distance out_dir:=/tmp/goals2
+OK:   ros2 launch omnivla_gazebo explore.launch.py world:=office_0 out_dir:=/tmp/raw num_episodes:=1
+OK:   ros2 launch omnivla_gazebo collect_teleop.launch.py out_dir:=/tmp/teleop
+OK:   ros2 launch omnivla_gazebo eval.launch.py world:=office_0 out_dir:=/tmp/eval num_tasks:=1
+OK:   ros2 launch omnivla_gazebo sim.launch.py headless:=true

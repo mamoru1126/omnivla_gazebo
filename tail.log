@@ -1,0 +1,400 @@
+#15 22.62   Downloading aiohttp-3.14.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+#15 22.64 Collecting anyio (from httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#15 22.65   Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+#15 22.67 Collecting httpcore==1.* (from httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#15 22.68   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+#15 22.70 Collecting h11>=0.16 (from httpcore==1.*->httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#15 22.71   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+#15 22.73 Collecting aiohappyeyeballs>=2.5.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#15 22.74   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+#15 22.75 Collecting aiosignal>=1.4.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#15 22.76   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+#15 22.78 Collecting async-timeout<6.0,>=4.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#15 22.79   Downloading async_timeout-5.0.1-py3-none-any.whl.metadata (5.1 kB)
+#15 22.79 Requirement already satisfied: attrs>=17.3.0 in /usr/lib/python3/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1) (21.2.0)
+#15 22.84 Collecting frozenlist>=1.1.1 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#15 22.85   Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+#15 23.04 Collecting multidict<7.0,>=4.5 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#15 23.05   Downloading multidict-6.9.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+#15 23.11 Collecting propcache>=0.2.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#15 23.12   Downloading propcache-0.5.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
+#15 23.47 Collecting yarl<2.0,>=1.25.1 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets->OmniVLA==0.0.1)
+#15 23.48   Downloading yarl-1.25.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
+#15 23.53 Collecting exceptiongroup>=1.0.2 (from anyio->httpx<1.0.0->datasets->OmniVLA==0.0.1)
+#15 23.54   Downloading exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)
+#15 23.59 Collecting starlette>=0.46.0 (from fastapi->OmniVLA==0.0.1)
+#15 23.60   Downloading starlette-1.7.0-py3-none-any.whl.metadata (6.6 kB)
+#15 23.68 Collecting pydantic>=2.9.0 (from fastapi->OmniVLA==0.0.1)
+#15 23.69   Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+#15 23.71 Collecting typing-inspection>=0.4.2 (from fastapi->OmniVLA==0.0.1)
+#15 23.72   Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+#15 23.73 Collecting annotated-doc>=0.0.2 (from fastapi->OmniVLA==0.0.1)
+#15 23.74   Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+#15 23.76 Collecting opentelemetry-api>=1.44.0 (from fastapi->OmniVLA==0.0.1)
+#15 23.77   Downloading opentelemetry_api-1.45.1-py3-none-any.whl.metadata (1.4 kB)
+#15 23.79 Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi->OmniVLA==0.0.1)
+#15 23.80   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+#15 24.29 Collecting pydantic-core==2.46.5 (from pydantic>=2.9.0->fastapi->OmniVLA==0.0.1)
+#15 24.30   Downloading pydantic_core-2.46.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+#15 24.35 Collecting ftfy (from openai-clip->OmniVLA==0.0.1)
+#15 24.36   Downloading ftfy-6.3.1-py3-none-any.whl.metadata (7.3 kB)
+#15 24.39 Collecting wcwidth (from ftfy->openai-clip->OmniVLA==0.0.1)
+#15 24.40   Downloading wcwidth-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (23 kB)
+#15 24.41 Collecting python-dateutil>=2.8.2 (from pandas->datasets->OmniVLA==0.0.1)
+#15 24.42   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+#15 24.42 Requirement already satisfied: pytz>=2020.1 in /usr/lib/python3/dist-packages (from pandas->datasets->OmniVLA==0.0.1) (2022.1)
+#15 24.44 Collecting tzdata>=2022.7 (from pandas->datasets->OmniVLA==0.0.1)
+#15 24.45   Downloading tzdata-2026.5-py2.py3-none-any.whl.metadata (1.4 kB)
+#15 24.48 Collecting markdown-it-py>=2.2.0 (from rich->OmniVLA==0.0.1)
+#15 24.49   Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+#15 24.51 Collecting pygments<3.0.0,>=2.13.0 (from rich->OmniVLA==0.0.1)
+#15 24.52   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+#15 24.54 Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich->OmniVLA==0.0.1)
+#15 24.55   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+#15 24.56 Collecting absl-py>=1.0.0 (from tensorflow==2.15.0->OmniVLA==0.0.1)
+#15 24.57   Downloading absl_py-1.4.0-py3-none-any.whl.metadata (2.3 kB)
+#15 24.59 Collecting googleapis-common-protos<2,>=1.52.0 (from tensorflow-metadata->tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#15 24.60   Downloading googleapis_common_protos-1.75.5-py3-none-any.whl.metadata (8.5 kB)
+#15 24.64 Collecting protobuf (from OmniVLA==0.0.1)
+#15 24.65   Downloading protobuf-3.20.3-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl.metadata (679 bytes)
+#15 24.68 INFO: pip is looking at multiple versions of googleapis-common-protos to determine which version is compatible with other requirements. This could take a while.
+#15 24.68 Collecting googleapis-common-protos<2,>=1.52.0 (from tensorflow-metadata->tensorflow_datasets==4.9.3->OmniVLA==0.0.1)
+#15 24.69   Downloading googleapis_common_protos-1.75.4-py3-none-any.whl.metadata (8.5 kB)
+#15 24.70   Downloading googleapis_common_protos-1.75.3-py3-none-any.whl.metadata (8.5 kB)
+#15 24.71   Downloading googleapis_common_protos-1.75.2-py3-none-any.whl.metadata (8.5 kB)
+#15 24.73   Downloading googleapis_common_protos-1.75.1-py3-none-any.whl.metadata (8.5 kB)
+#15 24.74   Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)
+#15 24.80   Downloading googleapis_common_protos-1.74.0-py3-none-any.whl.metadata (9.2 kB)
+#15 24.81   Downloading googleapis_common_protos-1.73.1-py3-none-any.whl.metadata (9.2 kB)
+#15 24.81 INFO: pip is still looking at multiple versions of googleapis-common-protos to determine which version is compatible with other requirements. This could take a while.
+#15 24.82   Downloading googleapis_common_protos-1.73.0-py3-none-any.whl.metadata (9.4 kB)
+#15 24.90 Collecting opentelemetry-exporter-otlp-proto-http>=1.43.0 (from wandb->OmniVLA==0.0.1)
+#15 24.91   Downloading opentelemetry_exporter_otlp_proto_http-1.45.1-py3-none-any.whl.metadata (3.0 kB)
+#15 24.93 Collecting opentelemetry-sdk>=1.43.0 (from wandb->OmniVLA==0.0.1)
+#15 24.94   Downloading opentelemetry_sdk-1.45.1-py3-none-any.whl.metadata (1.6 kB)
+#15 24.96 Collecting platformdirs (from wandb->OmniVLA==0.0.1)
+#15 24.97   Downloading platformdirs-4.12.4-py3-none-any.whl.metadata (5.5 kB)
+#15 25.00 INFO: pip is looking at multiple versions of wandb to determine which version is compatible with other requirements. This could take a while.
+#15 25.01 Collecting wandb (from OmniVLA==0.0.1)
+#15 25.02   Downloading wandb-0.29.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.04   Downloading wandb-0.28.2-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.06   Downloading wandb-0.28.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.08   Downloading wandb-0.28.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.30 Collecting gitpython!=3.1.29,>=1.0.0 (from wandb->OmniVLA==0.0.1)
+#15 25.31   Downloading gitpython-3.2.0-py3-none-any.whl.metadata (13 kB)
+#15 25.35 Collecting wandb (from OmniVLA==0.0.1)
+#15 25.36   Downloading wandb-0.27.2-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.38   Downloading wandb-0.27.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.40   Downloading wandb-0.27.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.41 INFO: pip is still looking at multiple versions of wandb to determine which version is compatible with other requirements. This could take a while.
+#15 25.42   Downloading wandb-0.26.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.45   Downloading wandb-0.26.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.47   Downloading wandb-0.25.1-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+#15 25.52   Downloading wandb-0.25.0-py3-none-manylinux_2_28_x86_64.whl.metadata (12 kB)
+#15 25.63 Collecting sentry-sdk>=2.0.0 (from wandb->OmniVLA==0.0.1)
+#15 25.64   Downloading sentry_sdk-2.71.0-py3-none-any.whl.metadata (11 kB)
+#15 25.67 Collecting gitdb<5,>=4.0.1 (from gitpython!=3.1.29,>=1.0.0->wandb->OmniVLA==0.0.1)
+#15 25.68   Downloading gitdb-4.0.12-py3-none-any.whl.metadata (1.2 kB)
+#15 25.70 Collecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython!=3.1.29,>=1.0.0->wandb->OmniVLA==0.0.1)
+#15 25.71   Downloading smmap-5.0.3-py3-none-any.whl.metadata (4.6 kB)
+#15 25.74 Collecting asciitree (from zarr->OmniVLA==0.0.1)
+#15 25.75   Downloading asciitree-0.3.3.tar.gz (4.0 kB)
+#15 25.75   Installing build dependencies: started
+#15 26.57   Installing build dependencies: finished with status 'done'
+#15 26.57   Getting requirements to build wheel: started
+#15 26.78   Getting requirements to build wheel: finished with status 'done'
+#15 26.79   Preparing metadata (pyproject.toml): started
+#15 26.91   Preparing metadata (pyproject.toml): finished with status 'done'
+#15 26.94 Collecting numcodecs>=0.10.0 (from zarr->OmniVLA==0.0.1)
+#15 26.96   Downloading numcodecs-0.13.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.9 kB)
+#15 26.98 Collecting fasteners (from zarr->OmniVLA==0.0.1)
+#15 26.99   Downloading fasteners-0.20-py3-none-any.whl.metadata (4.8 kB)
+#15 27.02 Downloading huggingface_hub-0.29.1-py3-none-any.whl (468 kB)
+#15 27.04 Downloading tokenizers-0.19.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.6 MB)
+#15 27.08    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 76.2 MB/s  0:00:00
+#15 27.10 Downloading diffusers-0.11.1-py3-none-any.whl (524 kB)
+#15 27.12    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 524.9/524.9 kB 582.7 MB/s  0:00:00
+#15 27.13 Downloading draccus-0.8.0-py3-none-any.whl (66 kB)
+#15 27.14 Downloading peft-0.11.1-py3-none-any.whl (251 kB)
+#15 27.16 Downloading sentencepiece-0.1.99-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.3 MB)
+#15 27.17    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 98.8 MB/s  0:00:00
+#15 27.18 Downloading tensorflow-2.15.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (475.2 MB)
+#15 34.63    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 475.2/475.2 MB 82.4 MB/s  0:00:07
+#15 34.65 Downloading tensorflow_datasets-4.9.3-py3-none-any.whl (5.0 MB)
+#15 34.76    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 43.2 MB/s  0:00:00
+#15 34.77 Downloading tensorflow_graphics-2021.12.3-py3-none-any.whl (4.3 MB)
+#15 34.81    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 100.5 MB/s  0:00:00
+#15 34.83 Downloading timm-0.9.10-py3-none-any.whl (2.2 MB)
+#15 34.85    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 103.3 MB/s  0:00:00
+#15 34.86 Downloading grpcio-1.84.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.2 MB)
+#15 34.93    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.2/7.2 MB 100.5 MB/s  0:00:00
+#15 34.94 Downloading keras-2.15.0-py3-none-any.whl (1.7 MB)
+#15 34.96    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 102.9 MB/s  0:00:00
+#15 34.97 Downloading mergedeep-1.3.4-py3-none-any.whl (6.4 kB)
+#15 34.98 Downloading ml_dtypes-0.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.0 MB)
+#15 34.99    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 95.3 MB/s  0:00:00
+#15 35.00 Downloading pyyaml-6.0.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (770 kB)
+#15 35.01    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 770.3/770.3 kB 133.2 MB/s  0:00:00
+#15 35.02 Downloading pyyaml_include-1.4.1-py3-none-any.whl (19 kB)
+#15 35.03 Downloading tensorboard-2.15.2-py3-none-any.whl (5.5 MB)
+#15 35.09    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.5/5.5 MB 101.1 MB/s  0:00:00
+#15 35.10 Downloading google_auth-2.61.0-py3-none-any.whl (268 kB)
+#15 35.11 Downloading google_auth_oauthlib-1.5.0-py3-none-any.whl (20 kB)
+#15 35.12 Downloading tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl (6.6 MB)
+#15 35.18    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 103.7 MB/s  0:00:00
+#15 35.19 Downloading tensorflow_estimator-2.15.0-py2.py3-none-any.whl (441 kB)
+#15 35.21 Downloading typing_inspect-0.9.0-py3-none-any.whl (8.8 kB)
+#15 35.22 Downloading wrapt-1.14.2-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (76 kB)
+#15 35.23 Downloading accelerate-0.34.2-py3-none-any.whl (324 kB)
+#15 35.25 Downloading astunparse-1.6.3-py2.py3-none-any.whl (12 kB)
+#15 35.26 Downloading cryptography-50.0.2-cp39-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+#15 35.30    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 100.6 MB/s  0:00:00
+#15 35.32 Downloading cffi-2.1.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (218 kB)
+#15 35.33 Downloading etils-1.13.0-py3-none-any.whl (170 kB)
+#15 35.34 Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+#15 35.35 Downloading gast-0.7.0-py3-none-any.whl (22 kB)
+#15 35.36 Downloading google_pasta-0.2.0-py3-none-any.whl (57 kB)
+#15 35.37 Downloading h5py-3.16.0-cp310-cp310-manylinux_2_28_x86_64.whl (5.1 MB)
+#15 35.42    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 99.5 MB/s  0:00:00
+#15 35.44 Downloading libclang-18.1.1-py2.py3-none-manylinux2010_x86_64.whl (24.5 MB)
+#15 35.67    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.5/24.5 MB 104.7 MB/s  0:00:00
+#15 35.68 Downloading markdown-3.10.3-py3-none-any.whl (110 kB)
+#15 35.69 Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+#15 35.70 Downloading openexr-3.5.2-cp310-cp310-manylinux_2_28_x86_64.whl (1.7 MB)
+#15 35.72    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 114.9 MB/s  0:00:00
+#15 35.73 Downloading opt_einsum-3.4.0-py3-none-any.whl (71 kB)
+#15 35.74 Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+#15 35.75 Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
+#15 35.76 Downloading regex-2026.9.29-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (797 kB)
+#15 35.76    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 797.6/797.6 kB 137.3 MB/s  0:00:00
+#15 35.77 Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+#15 35.78 Downloading oauthlib-4.0.0-py3-none-any.whl (159 kB)
+#15 35.79 Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+#15 35.81 Downloading tensorflow_addons-0.23.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (611 kB)
+#15 35.81    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 611.8/611.8 kB 156.0 MB/s  0:00:00
+#15 35.82 Downloading typeguard-2.13.3-py3-none-any.whl (17 kB)
+#15 35.83 Downloading tensorflow_io_gcs_filesystem-0.37.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.1 MB)
+#15 35.88    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 106.6 MB/s  0:00:00
+#15 35.89 Downloading termcolor-3.3.0-py3-none-any.whl (7.7 kB)
+#15 35.90 Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+#15 35.92 Downloading trimesh-5.1.1-py3-none-any.whl (750 kB)
+#15 35.92    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 750.4/750.4 kB 136.8 MB/s  0:00:00
+#15 35.93 Downloading werkzeug-3.1.9-py3-none-any.whl (228 kB)
+#15 35.94 Downloading array_record-0.8.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.5 MB)
+#15 35.97    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.5/2.5 MB 109.5 MB/s  0:00:00
+#15 35.98 Downloading av-17.1.0-cp310-cp310-manylinux_2_28_x86_64.whl (36.6 MB)
+#15 36.32    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.6/36.6 MB 106.5 MB/s  0:00:00
+#15 36.33 Downloading click-8.5.0-py3-none-any.whl (125 kB)
+#15 36.34 Downloading datasets-5.0.1-py3-none-any.whl (559 kB)
+#15 36.35    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 559.1/559.1 kB 107.9 MB/s  0:00:00
+#15 36.36 Downloading dill-0.4.1-py3-none-any.whl (120 kB)
+#15 36.37 Downloading fsspec-2026.6.0-py3-none-any.whl (203 kB)
+#15 36.38 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+#15 36.39 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+#15 36.40 Downloading multiprocess-0.70.19-py310-none-any.whl (134 kB)
+#15 36.41 Downloading aiohttp-3.14.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.9 MB)
+#15 36.44    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 80.6 MB/s  0:00:00
+#15 36.45 Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+#15 36.46 Downloading multidict-6.9.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (303 kB)
+#15 36.47 Downloading yarl-1.25.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (118 kB)
+#15 36.48 Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+#15 36.49 Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+#15 36.50 Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (219 kB)
+#15 36.51 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+#15 36.52 Downloading propcache-0.5.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (224 kB)
+#15 36.54 Downloading pyarrow-25.0.1-cp310-cp310-manylinux_2_28_x86_64.whl (50.1 MB)
+#15 37.17    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.1/50.1 MB 79.3 MB/s  0:00:00
+#15 37.18 Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+#15 37.19 Downloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+#15 37.20 Downloading dm_tree-0.1.10-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (183 kB)
+#15 37.21 Downloading einops-0.8.2-py3-none-any.whl (65 kB)
+#15 37.22 Downloading fastapi-0.142.4-py3-none-any.whl (144 kB)
+#15 37.23 Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+#15 37.24 Downloading opentelemetry_api-1.45.1-py3-none-any.whl (60 kB)
+#15 37.25 Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+#15 37.27 Downloading pydantic_core-2.46.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+#15 37.29    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 84.8 MB/s  0:00:00
+#15 37.30 Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+#15 37.31 Downloading starlette-1.7.0-py3-none-any.whl (78 kB)
+#15 37.32 Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+#15 37.33 Downloading imageio-2.38.0-py3-none-any.whl (328 kB)
+#15 37.35 Downloading importlib_resources-7.1.0-py3-none-any.whl (37 kB)
+#15 37.36 Downloading json_numpy-2.1.1-py3-none-any.whl (5.5 kB)
+#15 37.37 Downloading jsonlines-4.0.0-py3-none-any.whl (8.7 kB)
+#15 37.38 Downloading lmdb-3.0.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (560 kB)
+#15 37.39    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 560.9/560.9 kB 117.1 MB/s  0:00:00
+#15 37.40 Downloading ftfy-6.3.1-py3-none-any.whl (44 kB)
+#15 37.41 Downloading pandas-2.3.3-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.8 MB)
+#15 37.56    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 83.5 MB/s  0:00:00
+#15 37.57 Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+#15 37.58 Downloading tzdata-2026.5-py2.py3-none-any.whl (347 kB)
+#15 37.59 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+#15 37.60 Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+#15 37.62 Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+#15 37.63    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 84.8 MB/s  0:00:00
+#15 37.64 Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+#15 37.65 Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+#15 37.67 Downloading tensorflow_metadata-1.14.0-py3-none-any.whl (28 kB)
+#15 37.68 Downloading absl_py-1.4.0-py3-none-any.whl (126 kB)
+#15 37.69 Downloading googleapis_common_protos-1.73.0-py3-none-any.whl (297 kB)
+#15 37.70 Downloading protobuf-3.20.3-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (1.1 MB)
+#15 37.71    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 84.1 MB/s  0:00:00
+#15 37.73 Downloading utm-0.9.0-py3-none-any.whl (8.6 kB)
+#15 37.74 Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+#15 37.75 Downloading wandb-0.25.0-py3-none-manylinux_2_28_x86_64.whl (25.3 MB)
+#15 38.03    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 25.3/25.3 MB 89.3 MB/s  0:00:00
+#15 38.04 Downloading gitpython-3.2.0-py3-none-any.whl (228 kB)
+#15 38.05 Downloading gitdb-4.0.12-py3-none-any.whl (62 kB)
+#15 38.06 Downloading smmap-5.0.3-py3-none-any.whl (24 kB)
+#15 38.07 Downloading sentry_sdk-2.71.0-py3-none-any.whl (534 kB)
+#15 38.08    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 534.3/534.3 kB 90.5 MB/s  0:00:00
+#15 38.09 Downloading platformdirs-4.12.4-py3-none-any.whl (32 kB)
+#15 38.10 Downloading wcwidth-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (769 kB)
+#15 38.11    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 769.8/769.8 kB 73.1 MB/s  0:00:00
+#15 38.12 Downloading xxhash-4.0.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (249 kB)
+#15 38.13 Downloading zarr-2.18.3-py3-none-any.whl (210 kB)
+#15 38.14 Downloading numcodecs-0.13.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.6 MB)
+#15 38.24    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.6/8.6 MB 88.7 MB/s  0:00:00
+#15 38.25 Downloading fasteners-0.20-py3-none-any.whl (18 kB)
+#15 38.84 Building wheels for collected packages: OmniVLA, dlimp, transformers, efficientnet_pytorch, openai-clip, promise, asciitree
+#15 38.84   Building wheel for OmniVLA (pyproject.toml): started
+#15 39.07   Building wheel for OmniVLA (pyproject.toml): finished with status 'done'
+#15 39.07   Created wheel for OmniVLA: filename=omnivla-0.0.1-py3-none-any.whl size=239229 sha256=244415de6420dfea934408bedfedbc343563a7eaf625e4122ca5866cf6856c5a
+#15 39.07   Stored in directory: /tmp/pip-ephem-wheel-cache-qjtdd20c/wheels/dd/ce/27/d18cc42eba70a31cb9385811c5c9ebccbeabda45d1e3b33ee4
+#15 39.07   Building wheel for dlimp (pyproject.toml): started
+#15 39.23   Building wheel for dlimp (pyproject.toml): finished with status 'done'
+#15 39.23   Created wheel for dlimp: filename=dlimp-0.0.1-py3-none-any.whl size=13525 sha256=7904d5cf6d594e244d181fc2a7dc259de4f3c78fa2b56e91b6ddf76112bdffb7
+#15 39.23   Stored in directory: /tmp/pip-ephem-wheel-cache-qjtdd20c/wheels/50/74/75/6b593b968c85c58e4b79e09f749df8d461cb7b6011b73b257d
+#15 39.23   Building wheel for transformers (pyproject.toml): started
+#15 41.59   Building wheel for transformers (pyproject.toml): finished with status 'done'
+#15 41.60   Created wheel for transformers: filename=transformers-4.40.1-py3-none-any.whl size=8999460 sha256=954de56b71331a271c63e83f2ba1e80dc419764b5f42b70e2d73c8401ec49caf
+#15 41.60   Stored in directory: /tmp/pip-ephem-wheel-cache-qjtdd20c/wheels/74/23/d5/b13d14504d0146f89a7c48664217002b71ba931355bd11bbf9
+#15 41.61   Building wheel for efficientnet_pytorch (pyproject.toml): started
+#15 41.76   Building wheel for efficientnet_pytorch (pyproject.toml): finished with status 'done'
+#15 41.76   Created wheel for efficientnet_pytorch: filename=efficientnet_pytorch-0.7.1-py3-none-any.whl size=16478 sha256=34725f60e0fbf62b1afc9f6bd4f957eb06601fb29d093c77ce237a5206d61024
+#15 41.76   Stored in directory: /tmp/pip-ephem-wheel-cache-qjtdd20c/wheels/03/3f/e9/911b1bc46869644912bda90a56bcf7b960f20b5187feea3baf
+#15 41.76   Building wheel for openai-clip (pyproject.toml): started
+#15 41.94   Building wheel for openai-clip (pyproject.toml): finished with status 'done'
+#15 41.95   Created wheel for openai-clip: filename=openai_clip-1.0.1-py3-none-any.whl size=1368631 sha256=5a420c509216895e0e06e70857ff4e4da122d11094614133ffdafeade9a4e595
+#15 41.95   Stored in directory: /tmp/pip-ephem-wheel-cache-qjtdd20c/wheels/08/77/8e/8d2f862df6bf7fb4e2007062d2cbaeae49862ec7b56d041229
+#15 41.95   Building wheel for promise (pyproject.toml): started
+#15 42.10   Building wheel for promise (pyproject.toml): finished with status 'done'
+#15 42.10   Created wheel for promise: filename=promise-2.3-py3-none-any.whl size=21582 sha256=8b01d4ca976ace7bbf1cc02365b158ef76fb0c520ba9115c1e2313f1090ec9d1
+#15 42.10   Stored in directory: /tmp/pip-ephem-wheel-cache-qjtdd20c/wheels/54/4e/28/3ed0e1c8a752867445bab994d2340724928aa3ab059c57c8db
+#15 42.11   Building wheel for asciitree (pyproject.toml): started
+#15 42.25   Building wheel for asciitree (pyproject.toml): finished with status 'done'
+#15 42.25   Created wheel for asciitree: filename=asciitree-0.3.3-py3-none-any.whl size=5097 sha256=f1048909108e8ac44920252740a3524ad3e81760896e87bfa7ec631347c11626
+#15 42.25   Stored in directory: /tmp/pip-ephem-wheel-cache-qjtdd20c/wheels/7f/4e/be/1171b40f43b918087657ec57cf3b81fa1a2e027d8755baa184
+#15 42.25 Successfully built OmniVLA dlimp transformers efficientnet_pytorch openai-clip promise asciitree
+#15 42.84 Installing collected packages: sentencepiece, libclang, flatbuffers, asciitree, xxhash, wrapt, werkzeug, wcwidth, utm, tzdata, typing-inspection, typeguard, trimesh, tqdm, termcolor, tensorflow-io-gcs-filesystem, tensorflow-estimator, tensorboard-data-server, smmap, sentry-sdk, safetensors, regex, pyyaml, python-dateutil, pygments, pydantic-core, pycparser, pyasn1, pyarrow, protobuf, propcache, promise, platformdirs, opt-einsum, opentelemetry-api, OpenEXR, oauthlib, numcodecs, mypy-extensions, multidict, ml-dtypes, mergedeep, mdurl, markdown, lmdb, keras, jsonlines, json-numpy, importlib_resources, imageio, h5py, h11, grpcio, google-pasta, gast, fsspec, frozenlist, fasteners, exceptiongroup, etils, einops, dill, click, av, async-timeout, annotated-types, annotated-doc, aiohappyeyeballs, absl-py, zarr, yarl, uvicorn, typing-inspect, tensorflow-addons, requests-oauthlib, pyyaml-include, pydantic, pyasn1-modules, pandas, multiprocess, markdown-it-py, huggingface_hub, httpcore, googleapis-common-protos, gitdb, ftfy, dm-tree, cffi, astunparse, anyio, aiosignal, tokenizers, tensorflow-metadata, starlette, rich, openai-clip, httpx, gitpython, draccus, diffusers, cryptography, aiohttp, wandb, transformers, google-auth, fastapi, efficientnet_pytorch, array-record, accelerate, timm, peft, google-auth-oauthlib, datasets, tensorflow_datasets, tensorboard, tensorflow, tensorflow_graphics, dlimp, OmniVLA
+#15 44.34   Attempting uninstall: pyyaml
+#15 44.34     Found existing installation: PyYAML 5.4.1
+#15 44.34     Uninstalling PyYAML-5.4.1:
+#15 44.40       Successfully uninstalled PyYAML-5.4.1
+#15 44.59   Attempting uninstall: python-dateutil
+#15 44.59     Found existing installation: python-dateutil 2.8.1
+#15 44.59     Uninstalling python-dateutil-2.8.1:
+#15 44.65       Successfully uninstalled python-dateutil-2.8.1
+#15 44.68   Attempting uninstall: pygments
+#15 44.68     Found existing installation: Pygments 2.11.2
+#15 44.69     Uninstalling Pygments-2.11.2:
+#15 44.75       Successfully uninstalled Pygments-2.11.2
+#15 46.28   Attempting uninstall: protobuf
+#15 46.29     Found existing installation: protobuf 3.12.4
+#15 46.29     Uninstalling protobuf-3.12.4:
+#15 46.34       Successfully uninstalled protobuf-3.12.4
+#15 48.06   Attempting uninstall: gast
+#15 48.06     Found existing installation: gast 0.5.2
+#15 48.06     Uninstalling gast-0.5.2:
+#15 48.12       Successfully uninstalled gast-0.5.2
+#15 48.14   Attempting uninstall: fsspec
+#15 48.14     Found existing installation: fsspec 2026.9.0
+#15 48.14     Uninstalling fsspec-2026.9.0:
+#15 48.15       Successfully uninstalled fsspec-2026.9.0
+#15 53.57   Attempting uninstall: cryptography
+#15 53.57     Found existing installation: cryptography 3.4.8
+#15 53.57     Uninstalling cryptography-3.4.8:
+#15 53.63       Successfully uninstalled cryptography-3.4.8
+#15 71.16 
+#15 71.18 Successfully installed OmniVLA-0.0.1 OpenEXR-3.5.2 absl-py-1.4.0 accelerate-0.34.2 aiohappyeyeballs-2.7.1 aiohttp-3.14.4 aiosignal-1.4.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 array-record-0.8.1 asciitree-0.3.3 astunparse-1.6.3 async-timeout-5.0.1 av-17.1.0 cffi-2.1.1 click-8.5.0 cryptography-50.0.2 datasets-5.0.1 diffusers-0.11.1 dill-0.4.1 dlimp-0.0.1 dm-tree-0.1.10 draccus-0.8.0 efficientnet_pytorch-0.7.1 einops-0.8.2 etils-1.13.0 exceptiongroup-1.3.1 fastapi-0.142.4 fasteners-0.20 flatbuffers-25.12.19 frozenlist-1.8.0 fsspec-2026.6.0 ftfy-6.3.1 gast-0.7.0 gitdb-4.0.12 gitpython-3.2.0 google-auth-2.61.0 google-auth-oauthlib-1.5.0 google-pasta-0.2.0 googleapis-common-protos-1.73.0 grpcio-1.84.0 h11-0.16.0 h5py-3.16.0 httpcore-1.0.9 httpx-0.28.1 huggingface_hub-0.29.1 imageio-2.38.0 importlib_resources-7.1.0 json-numpy-2.1.1 jsonlines-4.0.0 keras-2.15.0 libclang-18.1.1 lmdb-3.0.0 markdown-3.10.3 markdown-it-py-4.2.0 mdurl-0.1.2 mergedeep-1.3.4 ml-dtypes-0.2.0 multidict-6.9.1 multiprocess-0.70.19 mypy-extensions-1.1.0 numcodecs-0.13.1 oauthlib-4.0.0 openai-clip-1.0.1 opentelemetry-api-1.45.1 opt-einsum-3.4.0 pandas-2.3.3 peft-0.11.1 platformdirs-4.12.4 promise-2.3 propcache-0.5.4 protobuf-3.20.3 pyarrow-25.0.1 pyasn1-0.6.4 pyasn1-modules-0.4.2 pycparser-3.0 pydantic-2.13.5 pydantic-core-2.46.5 pygments-2.21.0 python-dateutil-2.9.0.post0 pyyaml-6.0.3 pyyaml-include-1.4.1 regex-2026.9.29 requests-oauthlib-2.0.0 rich-15.0.0 safetensors-0.8.0 sentencepiece-0.1.99 sentry-sdk-2.71.0 smmap-5.0.3 starlette-1.7.0 tensorboard-2.15.2 tensorboard-data-server-0.7.2 tensorflow-2.15.0 tensorflow-addons-0.23.0 tensorflow-estimator-2.15.0 tensorflow-io-gcs-filesystem-0.37.1 tensorflow-metadata-1.14.0 tensorflow_datasets-4.9.3 tensorflow_graphics-2021.12.3 termcolor-3.3.0 timm-0.9.10 tokenizers-0.19.1 tqdm-4.70.1 transformers-4.40.1 trimesh-5.1.1 typeguard-2.13.3 typing-inspect-0.9.0 typing-inspection-0.4.4 tzdata-2026.5 utm-0.9.0 uvicorn-0.54.0 wandb-0.25.0 wcwidth-0.9.2 werkzeug-3.1.9 wrapt-1.14.2 xxhash-4.0.1 yarl-1.25.1 zarr-2.18.3
+#15 71.18 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#15 74.70 Collecting scipy<1.15,>=1.10
+#15 74.74   Downloading scipy-1.14.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+#15 74.75 Requirement already satisfied: pyyaml in /usr/local/lib/python3.10/dist-packages (6.0.3)
+#15 74.75 Requirement already satisfied: pytest in /usr/lib/python3/dist-packages (6.2.5)
+#15 74.75 Requirement already satisfied: numpy<2.3,>=1.23.5 in /usr/local/lib/python3.10/dist-packages (from scipy<1.15,>=1.10) (1.26.4)
+#15 74.76 Downloading scipy-1.14.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (41.2 MB)
+#15 75.00    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 41.2/41.2 MB 171.8 MB/s  0:00:00
+#15 75.51 Installing collected packages: scipy
+#15 75.51   Attempting uninstall: scipy
+#15 75.51     Found existing installation: scipy 1.8.0
+#15 75.51     Uninstalling scipy-1.8.0:
+#15 75.63       Successfully uninstalled scipy-1.8.0
+#15 78.58 Successfully installed scipy-1.14.1
+#15 78.58 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#15 DONE 85.7s
+
+#16 [ 8/13] COPY . /workspace
+#16 DONE 0.9s
+
+#17 [ 9/13] WORKDIR /workspace
+#17 DONE 0.0s
+
+#18 [10/13] RUN source /opt/ros/humble/setup.bash     && mkdir -p /opt/omnivla_ws     && colcon --log-base /opt/omnivla_ws/log build --symlink-install         --base-paths /workspace/ros2_ws/src         --build-base /opt/omnivla_ws/build --install-base /opt/omnivla_ws/install
+#18 0.450 Starting >>> omnivla_gazebo
+#18 1.730 Finished <<< omnivla_gazebo [1.28s]
+#18 1.730 
+#18 1.730 Summary: 1 package finished [1.38s]
+#18 DONE 1.8s
+
+#19 [11/13] RUN source /opt/ros/humble/setup.bash && cd /workspace     && PYTHONPATH=/workspace python3 -c "import torch, transformers, peft, prismatic, omnivla_nav.policy; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"     && python3 tests/test_core.py
+#19 3.711 Using OmniVLA constants:
+#19 3.711   NUM_ACTIONS_CHUNK = 8
+#19 3.711   ACTION_DIM = 4
+#19 3.711   POSE_DIM = 4
+#19 3.711   ACTION_PROPRIO_NORMALIZATION_TYPE = bounds_q99
+#19 3.711 If needed, manually set the correct constants in `prismatic/vla/constants.py`!
+#19 3.865 2026-10-08 05:51:59.949912: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+#19 3.892 2026-10-08 05:51:59.977566: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+#19 3.892 2026-10-08 05:51:59.977617: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+#19 3.893 2026-10-08 05:51:59.978482: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+#19 3.898 2026-10-08 05:51:59.983043: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+#19 3.898 To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+#19 4.512 2026-10-08 05:52:00.596738: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+#19 12.34 torch 2.2.0+cu121 transformers 4.40.1 peft 0.11.1
+#19 13.60 PASS test_action_targets_straight_and_turn
+#19 14.38 PASS test_expert_follower_kinematic_sim
+#19 14.42 PASS test_flip_and_sampling
+#19 14.77 PASS test_generated_worlds_are_navigable
+#19 14.77 PASS test_goal_pose_matches_upstream_convention
+#19 14.77 PASS test_goal_tracker_pass_detection
+#19 14.77 PASS test_label_valid_mask
+#19 14.77 PASS test_local_axes
+#19 14.78 PASS test_local_world_roundtrip
+#19 14.79 PASS test_make_targets_and_augment
+#19 14.79 PASS test_modality_ids
+#19 16.14 PASS test_navlog_and_analyzer
+#19 17.60 PASS test_perturbed_expert_kinematic_sim
+#19 17.61 PASS test_respect_predicted_speed_and_stuck
+#19 17.62 PASS test_sdf_map_and_planner
+#19 17.68 PASS test_topomap_and_tracker
+#19 21.27 PASS test_trajectory_controller_closed_loop
+#19 21.28 PASS test_trajectory_controller_reproduces_prediction
+#19 21.28 PASS test_trajectory_io_roundtrip
+#19 21.28 PASS test_turn_flags_and_balanced_weights
+#19 21.28 PASS test_upstream_controller
+#19 21.29 PASS test_viz
+#19 DONE 21.7s
+
+#20 [12/13] COPY docker/entrypoint.sh /entrypoint.sh
+#20 DONE 0.0s
+
+#21 [13/13] RUN chmod +x /entrypoint.sh
+#21 DONE 0.2s
+
+#22 exporting to image
+#22 exporting layers
+#22 exporting layers 43.1s done
+#22 writing image sha256:b089eac1ad27ace2b723aab2dea98ebfc36b0ca24199d237f27a3f4556e0bdf9 done
+#22 naming to docker.io/library/omnivla_gazebo:ci done
+#22 DONE 43.1s
