@@ -4,6 +4,9 @@
   ros2 launch omnivla_gazebo topomap.launch.py world:=office_0 out_dir:=/data/goals/demo goal_x:=7.5 goal_y:=4.0
   # 手動操縦しながら 1m ごとに保存
   ros2 launch omnivla_gazebo topomap.launch.py mode:=distance out_dir:=/data/goals/teleop
+  # 要所だけのルート帳 (言葉 + 要所の景色で切り替え)
+  ros2 launch omnivla_gazebo topomap.launch.py mode:=routebook style:=language switch:=image \\
+      out_dir:=/data/routes/demo goal_x:=7.5 goal_y:=4.0
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -25,6 +28,14 @@ def generate_launch_description():
         "goal_yaw": (nan, float),
         "start_x": (nan, float),
         "start_y": (nan, float),
+        "start_yaw": (nan, float),
+        # routebook
+        "style": ("language", str),
+        "switch": ("image", str),
+        "phrase_straight": ("go straight", str),
+        "phrase_left": ("turn left", str),
+        "phrase_right": ("turn right", str),
+        "min_turn_deg": ("40.0", float),
     }
     decls = [DeclareLaunchArgument(k, default_value=v[0]) for k, v in args.items()]
     params = {k: ParameterValue(LaunchConfiguration(k), value_type=v[1]) for k, v in args.items()}

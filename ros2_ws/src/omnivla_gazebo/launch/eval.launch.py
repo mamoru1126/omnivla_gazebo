@@ -1,6 +1,10 @@
 """シミュレーション評価 (navigate.launch.py を goal_path なしで起動しておくこと).
 
   ros2 launch omnivla_gazebo eval.launch.py world:=office_0 num_tasks:=20 mode:=single label:=zeroshot
+  # 要所だけのルート帳 (style: language / image / pose / language_pose, switch: image / odom / pose)
+  ros2 launch omnivla_gazebo eval.launch.py world:=office_0 num_tasks:=20 mode:=routebook style:=language switch:=image
+  # 言葉の指示がどれくらい効くか (開けた場所 num_tasks か所 x 指示 + 物に向かう指示 object_probes 回)
+  ros2 launch omnivla_gazebo eval.launch.py world:=office_0 mode:=language num_tasks:=5 object_probes:=10
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -23,6 +27,19 @@ def generate_launch_description():
         "tasks_file": ("", str),
         "out_dir": ("/runs/eval", str),
         "label": ("", str),
+        # routebook
+        "style": ("language", str),
+        "switch": ("image", str),
+        "phrase_straight": ("go straight", str),
+        "phrase_left": ("turn left", str),
+        "phrase_right": ("turn right", str),
+        "min_turn_deg": ("40.0", float),
+        # language
+        "instructions": ("left:turn left;left:go left;right:turn right;right:go right;"
+                         "straight:go straight;straight:move forward", str),
+        "object_probes": ("10", int),
+        "object_template": ("move toward {target}", str),
+        "probe_time": ("10.0", float),
     }
     decls = [DeclareLaunchArgument(k, default_value=v[0]) for k, v in args.items()]
     params = {k: ParameterValue(LaunchConfiguration(k), value_type=v[1]) for k, v in args.items()}

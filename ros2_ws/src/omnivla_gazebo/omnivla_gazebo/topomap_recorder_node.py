@@ -4,14 +4,19 @@ mode:
   route    : (Gazebo 専用・おすすめ) 現在位置 (または start_x/start_y) から goal_x/goal_y までの経路を地図上で計画し、
              spacing [m] ごとにロボットをテレポートさせてその場の画像と真値姿勢を保存する。
              最後にロボットをスタート位置に戻すので、そのまま navigator を起動すればゴールを目指す。
+  routebook: (Gazebo 専用) route と同じく経路を計画し、曲がり角などの「要所」だけを拾ってルート帳 (route.yaml) を作る。
+             要所ごとに「言葉 / 景色 / 相対位置」の指示と、次の要所に着いたことの判定を書く (style, switch)。
+             景色を使う場合は要所でだけ画像を撮る。経路と要所の図 (route_map.png) も保存する
   distance : 手動操縦 (teleop) 中、spacing [m] 進むごとに画像を保存 (ViNT/NoMaD の create_topomap と同様)
   manual   : 端末で Enter を押すたびに画像を保存 ('q' + Enter で終了)
 
-出力: <out_dir>/0.jpg, 1.jpg, ..., poses.yaml  (navigator の goal_path にそのまま渡せる)
+出力: <out_dir>/0.jpg, 1.jpg, ..., poses.yaml  (routebook: route.yaml, key_*.jpg, route_map.png)
+      どれも navigator の goal_path にそのまま渡せる
 """
 from __future__ import annotations
 
 import math
+import os
 import sys
 import threading
 import time
@@ -37,8 +42,17 @@ class TopomapRecorderNode(Node):
         p = self.declare_parameter
         p("out_dir", "/data/goals/route")
         p("overwrite", False)
-        p("mode", "route")             # route | distance | manual
+        p("mode", "route")             # route | routebook | distance | manual
         p("spacing", 1.0)              # [m]
+        # routebook: 要所と要所の間の指示 (language | image | pose | language_pose) と、要所に着いた判定
+        # (image: 要所の景色 / odom: 道のりと曲がった角度 / pose: Gazebo の真値の位置)
+        p("style", "language")
+        p("switch", "image")
+        p("phrase_straight", "go straight")
+        p("phrase_left", "turn left")
+        p("phrase_right", "turn right")
+        p("min_turn_deg", 40.0)        # これより小さい曲がりは要所にしない
+        p("start_yaw", float("nan"))   # nan: 経路の向き
         p("goal_x", float("nan"))
         p("goal_y", float("nan"))
         p("goal_yaw", float("nan"))    # nan: 経路の向き
@@ -97,6 +111,8 @@ class TopomapRecorderNode(Node):
             mode = self.g("mode")
             if mode == "route":
                 self._route()
+            elif mode == "routebook":
+                self._routebook()
             elif mode == "distance":
                 self._distance()
             elif mode == "manual":
@@ -105,7 +121,8 @@ class TopomapRecorderNode(Node):
                 raise ValueError(f"unknown mode {mode}")
         except Exception as e:  # noqa: BLE001
             self.get_logger().error(str(e))
-        self.get_logger().info(f"topomap: {len(self.writer.nodes)} nodes in {self.writer.out_dir}")
+        if self.g("mode") != "routebook":
+            self.get_logger().info(f"topomap: {len(self.writer.nodes)} nodes in {self.writer.out_dir}")
         self.done = True
 
     def _route(self):
@@ -137,6 +154,46 @@ class TopomapRecorderNode(Node):
         self._teleport(start[0], start[1], start_yaw, sim.world)
         self.writer.set_start((start[0], start[1], start_yaw))
         self.get_logger().info(f"robot returned to start ({start[0]:.2f}, {start[1]:.2f}, yaw {start_yaw:.2f})")
+
+    def _routebook(self):
+        from PIL import Image
+
+        from .sim_common import load_sim_map
+        from omnivla_nav.routebook import Phrases, describe_book, plan_route_book
+
+        g = self.g
+        if math.isnan(g("goal_x")) or math.isnan(g("goal_y")):
+            raise ValueError("routebook mode requires goal_x and goal_y")
+        sim = load_sim_map(g("world"), g("world_sdf"), 0.05, float(g("robot_radius")), float(g("safety_margin")),
+                           g("robot_name"))
+        pose, _ = self.latest_odom.get()
+        start = (pose[0], pose[1]) if math.isnan(g("start_x")) else (g("start_x"), g("start_y"))
+        path = sim.planner.plan(start, (g("goal_x"), g("goal_y")))
+        if path is None:
+            raise RuntimeError(f"no path from {start} to ({g('goal_x')}, {g('goal_y')})")
+        start_yaw = float(path_headings(path)[0]) if math.isnan(g("start_yaw")) else float(g("start_yaw"))
+        plan = plan_route_book(path, (start[0], start[1], start_yaw),
+                               goal_yaw=None if math.isnan(g("goal_yaw")) else float(g("goal_yaw")),
+                               style=g("style"), switch=g("switch"),
+                               phrases=Phrases(g("phrase_straight"), g("phrase_left"), g("phrase_right")),
+                               min_turn_deg=float(g("min_turn_deg")))
+        plan.book.meta["world"] = sim.world
+        length = float(np.linalg.norm(np.diff(path, axis=0), axis=1).sum())
+        self.get_logger().info(f"route length {length:.1f} m -> {len(plan.book.steps)} steps "
+                               f"(style={g('style')}, switch={g('switch')}), {len(plan.key_poses)} key images")
+        for name, kp in plan.key_poses.items():
+            self._teleport(kp[0], kp[1], kp[2], sim.world)
+            plan.book.images[name] = Image.fromarray(self._fresh_image(self.get_clock().now().nanoseconds * 1e-9))
+            self.get_logger().info(f"saved {name} at ({kp[0]:.2f}, {kp[1]:.2f}, {math.degrees(kp[2]):.0f}deg)")
+        out = plan.book.save(self.writer.out_dir)
+        preview = sim.grid.preview(inflate=sim.planner.inflate, path=path,
+                                   points=[lg.end[:2] for lg in plan.legs], scale=4)
+        preview.save(os.path.join(self.writer.out_dir, "route_map.png"))
+        for line in describe_book(plan.book):
+            self.get_logger().info(line)
+        self._teleport(start[0], start[1], start_yaw, sim.world)
+        self.get_logger().info(f"route book: {out} (robot returned to start "
+                               f"({start[0]:.2f}, {start[1]:.2f}, yaw {start_yaw:.2f}))")
 
     def _teleport(self, x, y, yaw, world):
         ok, msg = set_model_pose(world, self.g("robot_name"), float(x), float(y), float(yaw))

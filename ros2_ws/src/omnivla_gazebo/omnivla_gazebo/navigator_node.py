@@ -9,11 +9,16 @@
 を繰り返す。
 
 ゴールの与え方:
-  * パラメータ goal_path : 画像 1 枚、または topomap ディレクトリ (0.jpg, 1.jpg, ..., poses.yaml)
-  * トピック /omnivla/goal_dir (std_msgs/String)       : topomap ディレクトリを実行中に切り替え
+  * パラメータ goal_path : 画像 1 枚、topomap ディレクトリ (0.jpg, 1.jpg, ..., poses.yaml)、
+                           またはルート帳 (route.yaml を含むディレクトリ. omnivla_nav/routebook.py)
+  * トピック /omnivla/goal_dir (std_msgs/String)       : topomap / ルート帳を実行中に切り替え
   * トピック /omnivla/goal_image (sensor_msgs/Image)   : 単一ゴール画像
     (+ 直前に /omnivla/goal_pose (PoseStamped, odom 座標) を送ると到達判定・pose modality に使う)
+  * modality:=language + instruction (ゴール無し): 言葉だけで走り続ける。
+    /omnivla/instruction (std_msgs/String) で走行中に指示を変えられる
   * /omnivla/enable (std_msgs/Bool) で開始/停止
+ルート帳: 要所ごとの指示 (言葉 / 景色 / 相対位置) を順に実行し、終わり条件 (景色が見えた・道のり・
+  曲がった角度・時間 …) を満たしたら次の指示へ自動で切り替える。modality はステップごとに決まる。
 出力:
   /cmd_vel, /omnivla/path (予測軌跡, odom 座標), /omnivla/debug_image, /omnivla/status (JSON)
 """
@@ -40,9 +45,10 @@ from std_msgs.msg import Bool, String
 from .ros_utils import Latest, image_msg_to_rgb, make_twist, odom_to_pose2d, rgb_to_image_msg, stamp_to_sec
 
 from omnivla_nav.controller import ControllerConfig, StuckDetector, compute_command  # noqa: E402
-from omnivla_nav.data_utils import IMAGE_MODALITIES, POSE_MODALITIES, modality_id  # noqa: E402
+from omnivla_nav.data_utils import IMAGE_MODALITIES, LANGUAGE_MODALITIES, POSE_MODALITIES, modality_id  # noqa: E402
 from omnivla_nav.navlog import NavRunLogger  # noqa: E402
 from omnivla_nav.geometry import quaternion_from_yaw, relative_pose, to_world, yaw_from_quaternion  # noqa: E402
+from omnivla_nav.routebook import RouteBook, RouteRunner, RunnerConfig, is_route_book, load_route_book  # noqa: E402
 from omnivla_nav.topomap import GoalNode, GoalTracker, load_goal_sequence  # noqa: E402
 from omnivla_nav.viz import CameraModel, render_debug  # noqa: E402
 from PIL import Image  # noqa: E402
@@ -77,6 +83,11 @@ class NavigatorNode(Node):
         p("reach_angle_deg", 25.0)        # 途中のサブゴールは向きの差もこれ以内で到達 (0 で距離だけ)
         p("stop_at_goal", True)
         p("autostart", True)
+        # ルート帳 (route.yaml) の既定値 (ステップの until に書けばそちらが優先)
+        p("route_image_threshold", 0.9)   # until.image: 景色の類似度のしきい値
+        p("route_reach_radius", 0.4)      # until.reached: move のゴールに着いたとみなす距離 [m]
+        p("route_pose_radius", 0.5)       # until.pose: 真値の位置の判定半径 [m]
+        p("route_step_timeout", 0.0)      # 1 ステップの制限時間 [s] (0 = なし. 超えたら失敗で停止)
         # control
         p("control_rate", 3.0)
         p("controller", "trajectory")     # trajectory | upstream | pure_pursuit
@@ -135,6 +146,10 @@ class NavigatorNode(Node):
                                     pass_radius=float(g("pass_radius")),
                                     pass_angle_deg=float(g("pass_angle_deg")),
                                     reach_angle_deg=float(g("reach_angle_deg")))
+        self._route_cfg = RunnerConfig(image_threshold=float(g("route_image_threshold")),
+                                       reach_radius=float(g("route_reach_radius")),
+                                       pose_radius=float(g("route_pose_radius")),
+                                       default_timeout=float(g("route_step_timeout")))
 
         self.cmd_pub = self.create_publisher(Twist, g("cmd_vel_topic"), 10)
         self.path_pub = self.create_publisher(Path, "/omnivla/path", 10)
@@ -145,6 +160,7 @@ class NavigatorNode(Node):
         self.latest_odom = Latest()
         self.lock = threading.Lock()
         self.tracker: Optional[GoalTracker] = None
+        self.route: Optional[RouteRunner] = None
         self.enabled = bool(g("autostart"))
         self.pending_goal_pose = None
         self.step_count = 0
@@ -177,8 +193,9 @@ class NavigatorNode(Node):
         self.model_info = {"vla_path": g("vla_path"), "finetuned_dir": g("finetuned_dir"),
                            "metric_waypoint_spacing": self.policy.metric_spacing}
         if g("goal_path"):
-            self._set_goals(load_goal_sequence(g("goal_path")), source=g("goal_path"))
-        self.state = "idle" if self.tracker is None else ("running" if self.enabled else "paused")
+            self._load_goal(g("goal_path"))
+        has_goal = self.tracker is not None or self.route is not None
+        self.state = "idle" if not has_goal else ("running" if self.enabled else "paused")
         self.get_logger().info(f"OmniVLA navigator ready: modality={self.modality}, controller={self.ctrl.mode}")
         if self.ctrl.mode != "trajectory":
             self.get_logger().warn(
@@ -213,7 +230,7 @@ class NavigatorNode(Node):
 
     def _on_goal_dir(self, msg: String):
         try:
-            self._set_goals(load_goal_sequence(msg.data), source=msg.data)
+            self._load_goal(msg.data)
         except Exception as e:  # noqa: BLE001
             self.get_logger().error(f"failed to load goal dir {msg.data}: {e}")
 
@@ -224,19 +241,37 @@ class NavigatorNode(Node):
         if self.enabled:
             self.stuck.reset()
             with self.lock:
-                tracker = self.tracker
+                tracker, route = self.tracker, self.route
             if self.runlog is None and tracker is not None and not tracker.done:
                 self._open_runlog(tracker.nodes, "resumed (/omnivla/enable)")
+            if self.runlog is None and route is not None and not (route.done or route.failed):
+                self._open_route_log(route.book, "resumed (/omnivla/enable)")
         if not self.enabled:
             self._publish_cmd(0.0, 0.0)
 
     def _on_instruction(self, msg: String):
+        with self.lock:
+            route = self.route
+        if route is not None:
+            self.get_logger().warn("a route book is running: /omnivla/instruction is ignored "
+                                   "(the route book decides the instruction of each step)")
+            return
         self.instruction = msg.data or None
         self.get_logger().info(f"instruction: {self.instruction}")
+        self._event(f"instruction: {self.instruction}")
+
+    def _load_goal(self, path: str):
+        """topomap / 画像 1 枚 / ルート帳 のどれかを読んで走行を始める."""
+        if is_route_book(path):
+            self._set_route(load_route_book(path), source=path)
+        else:
+            self._set_goals(load_goal_sequence(path), source=path)
 
     def _set_goals(self, nodes, source: str):
+        self._close_runlog("goal_changed")  # 前の走行のログは前のゴールの状態で閉じる
         with self.lock:
             self.tracker = GoalTracker(nodes, **self._tracker_kwargs)
+            self.route = None
         self.stuck.reset()
         self._open_runlog(nodes, source)
         if self.modality in POSE_MODALITIES and any(n.pose is None for n in nodes):
@@ -244,13 +279,40 @@ class NavigatorNode(Node):
         self.get_logger().info(f"new goal: {len(nodes)} node(s) from {source}")
         self.state = "running" if self.enabled else "paused"
 
+    def _set_route(self, book: RouteBook, source: str):
+        runner = RouteRunner(book, self._route_cfg)
+        self._close_runlog("goal_changed")
+        with self.lock:
+            self.route = runner
+            self.tracker = None
+        self.stuck.reset()
+        self._open_route_log(book, source)
+        self.get_logger().info(f"new route book: {len(book.steps)} step(s) from {source}")
+        for i, s in enumerate(book.steps):
+            self.get_logger().info(f"  {i + 1}. [{s.modality}] {s.describe()}  until {runner.until_of(s) or '(none)'}")
+        self.state = "running" if self.enabled else "paused"
+
     # ------------------------------------------------------------------ run log
     def _open_runlog(self, nodes, source: str):
+        final = nodes[-1].pose if nodes and nodes[-1].pose is not None else None
+        extra = {"nodes": [{"index": i, "path": n.path, "pose": n.pose} for i, n in enumerate(nodes)]}
+        self._open_log([n.image for n in nodes], source, final, extra)
+
+    def _open_route_log(self, book: RouteBook, source: str):
+        names, images = [], []
+        for s in book.steps:
+            for name in s.image_names():
+                if name not in names:
+                    names.append(name)
+                    images.append(book.image(name))
+        extra = {"route": book.to_dict(), "route_images": names}
+        self._open_log(images, source, book.goal, extra)
+
+    def _open_log(self, images, source: str, final_goal, extra):
         self._close_runlog("goal_changed")
         if not self.log_dir:
             return
         pose, _ = self.latest_odom.get()
-        final = nodes[-1].pose if nodes and nodes[-1].pose is not None else None
         meta = {
             "goal_source": source,
             "world": self.params_snapshot.get("world", ""),
@@ -259,12 +321,12 @@ class NavigatorNode(Node):
             "controller": self.ctrl.mode,
             "model": getattr(self, "model_info", {}),
             "start_pose": pose,
-            "final_goal_pose": final,
-            "nodes": [{"index": i, "path": n.path, "pose": n.pose} for i, n in enumerate(nodes)],
+            "final_goal_pose": final_goal,
             "params": self.params_snapshot,
         }
+        meta.update(extra)
         try:
-            self.runlog = NavRunLogger(self.log_dir, meta, [n.image for n in nodes], self.log_debug, self.log_raw,
+            self.runlog = NavRunLogger(self.log_dir, meta, images, self.log_debug, self.log_raw,
                                        self.ctrl.waypoint_index)
             self.get_logger().info(f"run log: {self.runlog.dir}")
         except OSError as e:
@@ -273,7 +335,12 @@ class NavigatorNode(Node):
 
     def _close_runlog(self, reason: str, reached: bool = False):
         if self.runlog is not None:
-            s = self.runlog.close(reason, reached, {"subgoal_index": self.tracker.index if self.tracker else None})
+            extra = {"subgoal_index": self.tracker.index if self.tracker else None}
+            if self.route is not None:
+                extra.update({"route_step": self.route.index, "route_steps": self.route.num_steps,
+                              "route_done": self.route.done, "route_failed": self.route.failed,
+                              "route_history": self.route.history})
+            s = self.runlog.close(reason, reached, extra)
             self.get_logger().info(f"run log closed ({reason}): {self.runlog.dir} "
                                    f"final_dist={s.get('final_dist_to_goal')}")
             self.runlog = None
@@ -299,6 +366,14 @@ class NavigatorNode(Node):
             data.update({"subgoal": self.tracker.index, "num_nodes": len(self.tracker.nodes),
                          "done": self.tracker.done, "dist": self.tracker.last_distance,
                          "similarity": self.tracker.last_similarity})
+        route = self.route
+        if route is not None:
+            cur = route.current
+            data.update({"route_step": route.index, "route_steps": route.num_steps, "done": route.done,
+                         "failed": route.failed, "instruction": cur.instruction, "step_modality": cur.modality,
+                         "similarity": route.state.similarity, "reason": route.last_reason})
+        elif self.modality in LANGUAGE_MODALITIES:
+            data["instruction"] = self.instruction
         data.update(extra)
         self.status_pub.publish(String(data=json.dumps(data)))
 
@@ -320,9 +395,37 @@ class NavigatorNode(Node):
                 self._publish_cmd(0.0, 0.0)
                 time.sleep(0.5)
 
+    def _idle(self, state: str):
+        """走らせない周期 (停止中・ゴール無し・到達後)."""
+        if self.moving:
+            self._publish_cmd(0.0, 0.0)
+        self.state = state
+        if self.step_count % 10 == 0:
+            self._publish_status()
+        self.step_count += 1
+
+    def _observe(self, now: float):
+        """推論に使う最新のカメラ画像と姿勢. 画像が無い / 古いときは (None, None)."""
+        img, t_img = self.latest_image.get()
+        if img is None:
+            self.get_logger().warn("waiting for camera image...", throttle_duration_sec=5.0)
+            return None, None
+        if now - t_img > self.max_image_age:
+            self.get_logger().warn(f"camera image is old ({now - t_img:.2f}s)", throttle_duration_sec=5.0)
+            self._event(f"camera image is old ({now - t_img:.2f}s) -> stop")
+            self._publish_cmd(0.0, 0.0)
+            return None, None
+        pose, _ = self.latest_odom.get()
+        if self.runlog is not None:
+            self.runlog.track_pose(now, pose)
+        return img, pose
+
     def _step(self, now: float):
         with self.lock:
-            tracker = self.tracker
+            tracker, route = self.tracker, self.route
+        if route is not None:
+            self._step_route(now, route)
+            return
         if tracker is None and self.modality == 7 and self.instruction:
             # 言語のみ: ゴール画像/姿勢は不要。終了判定はしない (/omnivla/enable false で止める)
             with self.lock:
@@ -336,25 +439,11 @@ class NavigatorNode(Node):
             if created:
                 self._open_runlog(tracker.nodes, f"language: {self.instruction}")
         if not self.enabled or tracker is None:
-            if self.moving:
-                self._publish_cmd(0.0, 0.0)
-            self.state = "idle" if tracker is None else ("reached" if tracker.done else "paused")
-            if self.step_count % 10 == 0:
-                self._publish_status()
-            self.step_count += 1
+            self._idle("idle" if tracker is None else ("reached" if tracker.done else "paused"))
             return
-        img, t_img = self.latest_image.get()
+        img, pose = self._observe(now)
         if img is None:
-            self.get_logger().warn("waiting for camera image...", throttle_duration_sec=5.0)
             return
-        if now - t_img > self.max_image_age:
-            self.get_logger().warn(f"camera image is old ({now - t_img:.2f}s)", throttle_duration_sec=5.0)
-            self._event(f"camera image is old ({now - t_img:.2f}s) -> stop")
-            self._publish_cmd(0.0, 0.0)
-            return
-        pose, _ = self.latest_odom.get()
-        if self.runlog is not None:
-            self.runlog.track_pose(now, pose)
 
         cache = {}
 
@@ -391,6 +480,62 @@ class NavigatorNode(Node):
             return
         out = self.policy.predict(img, goal_image=node.image if self.modality in IMAGE_MODALITIES else None,
                                   goal_pose=goal_local, instruction=self.instruction, modality=self.modality)
+        info = [f"subgoal {tracker.index}/{len(tracker.nodes) - 1}"]
+        if tracker.last_distance is not None:
+            info.append(f"dist to subgoal {tracker.last_distance:.2f} m")
+        if tracker.last_similarity is not None:
+            info.append(f"similarity {tracker.last_similarity:.3f}")
+        self._drive(now, img, pose, out, self.modality, node.image, goal_local, info,
+                    tracker.index, len(tracker.nodes), node.pose, tracker.last_distance, tracker.last_similarity)
+
+    def _step_route(self, now: float, route: RouteRunner):
+        """ルート帳: 終わり条件を見てステップを進め、今のステップの指示でモデルを動かす."""
+        if not self.enabled:
+            self._idle("reached" if route.done else ("failed" if route.failed else "paused"))
+            return
+        if route.done or route.failed:
+            self._idle("reached" if route.done else "failed")
+            return
+        img, pose = self._observe(now)
+        if img is None:
+            return
+        cache = {}
+
+        def similarity(name: str, image) -> float:
+            if "cur" not in cache:
+                cache["cur"] = self.policy.embed(img)
+            return self.policy.similarity(cache["cur"],
+                                          self.policy.embed(image, cache_key=f"route:{id(route.book)}:{name}"))
+
+        ev = route.update(now, pose, similarity)
+        if ev:
+            self.get_logger().info(ev)
+            self._event(ev + (f" at ({pose[0]:.2f}, {pose[1]:.2f}, {math.degrees(pose[2]):.0f}deg)"
+                              if pose is not None else ""))
+        if route.done or route.failed:
+            self._publish_cmd(0.0, 0.0)
+            self.state = "reached" if route.done else "failed"
+            if route.failed or self.stop_at_goal:
+                self.enabled = False
+            self._close_runlog("reached" if route.done else f"failed: {route.last_reason}", reached=route.done)
+            self._publish_status()
+            return
+        try:
+            inp = route.inputs(pose)
+        except ValueError as e:
+            self.get_logger().error(f"route step {route.index + 1}: {e}", throttle_duration_sec=5.0)
+            self._event(f"route step {route.index + 1}: {e} -> stop")
+            self._publish_cmd(0.0, 0.0)
+            return
+        out = self.policy.predict(img, goal_image=inp.goal_image, goal_pose=inp.goal_pose,
+                                  instruction=inp.instruction, modality=inp.modality)
+        st = route.state
+        self._drive(now, img, pose, out, modality_id(inp.modality), inp.key_image, inp.goal_pose, route.lines(),
+                    route.index, route.num_steps, None, st.move_dist, st.similarity)
+
+    def _drive(self, now: float, img, pose, out, modality: int, panel, goal_local, info, index: int, count: int,
+               node_pose, dist, sim):
+        """予測軌跡 -> 速度指令. 押し付け検知、予測軌跡・デバッグ画像・走行ログ・状態の出力."""
         v, w = compute_command(out.waypoints, self.ctrl)
         if self.stuck.update(now, pose, v):
             # 前進指令を出し続けているのに動いていない = 障害物に押し付けている。止めて終了
@@ -413,22 +558,16 @@ class NavigatorNode(Node):
             self._publish_path(out.waypoints, pose, stamp)
         dbg = None
         if self.publish_debug or (self.runlog is not None and self.log_debug):
-            lines = [f"step {self.step_count}  modality {self.modality}",
-                     f"subgoal {tracker.index}/{len(tracker.nodes) - 1}",
-                     f"v={v:.2f} m/s  w={w:.2f} rad/s",
-                     f"latency {out.latency * 1000:.0f} ms"]
-            if tracker.last_distance is not None:
-                lines.append(f"dist to subgoal {tracker.last_distance:.2f} m")
-            if tracker.last_similarity is not None:
-                lines.append(f"similarity {tracker.last_similarity:.3f}")
-            dbg = render_debug(img, node.image, out.waypoints, self.cam,
+            lines = [f"step {self.step_count}  modality {modality}"] + list(info) + \
+                [f"v={v:.2f} m/s  w={w:.2f} rad/s", f"latency {out.latency * 1000:.0f} ms"]
+            dbg = render_debug(img, panel, out.waypoints, self.cam,
                                goal_local[:2] if goal_local is not None else None, lines)
             if self.publish_debug:
                 self.debug_pub.publish(rgb_to_image_msg(np.asarray(dbg), stamp))
         if self.runlog is not None:
-            self.runlog.step(self.step_count, now, pose, tracker.index, len(tracker.nodes), node.pose, goal_local,
-                             self.modality, self.ctrl.mode, v, w, out.latency, out.waypoints,
-                             tracker.last_distance, tracker.last_similarity, self.state, dbg, img)
+            self.runlog.step(self.step_count, now, pose, index, count, node_pose, goal_local,
+                             modality, self.ctrl.mode, v, w, out.latency, out.waypoints,
+                             dist, sim, self.state, dbg, img)
         self._publish_status(v=v, w=w, latency=out.latency)
 
     def _publish_path(self, waypoints: np.ndarray, pose, stamp):

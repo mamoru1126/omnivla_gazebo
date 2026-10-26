@@ -18,6 +18,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 from omnivla_nav import controller, data_utils, expert, geometry, navlog, sim_map, topomap, trajectory_io, viz  # noqa: E402
+from omnivla_nav import langprobe, routebook  # noqa: E402
 
 WORLDS = os.path.join(REPO, "ros2_ws", "src", "omnivla_gazebo", "worlds")
 
@@ -583,6 +584,273 @@ def test_viz():
                            goal_local=(3.0, 1.0), lines=["a", "b"], gt_waypoints=wps * 0.9)
     assert img.size == (640, 480)
 
+
+
+# ---------------------------------------------------------------- route book (要所の指示)
+def test_routebook_format_and_modalities():
+    tmp = tempfile.mkdtemp()
+    try:
+        steps = [routebook.RouteStep(instruction="go straight", until={"image": "key_0.jpg", "after_m": 1.0}),
+                 routebook.RouteStep(goal_image="key_0.jpg"),
+                 routebook.RouteStep(move=(2.0, -1.0, math.radians(-90))),
+                 routebook.RouteStep(instruction="turn left", move=(1.0, 1.0, 0.0), until={"time": 5}, timeout=30)]
+        book = routebook.RouteBook(steps, start=(1.0, 2.0, 0.5), goal=(3.0, 4.0, 0.0), meta={"style": "x"})
+        book.images["key_0.jpg"] = Image.new("RGB", (32, 24), (200, 10, 10))
+        out = os.path.join(tmp, "r")
+        book.save(out)
+        assert routebook.is_route_book(out) and routebook.is_route_book(os.path.join(out, "route.yaml"))
+        assert not routebook.is_route_book(tmp)
+        loaded = routebook.load_route_book(out)
+        assert [s.modality for s in loaded.steps] == ["language", "image", "pose", "language_pose"]
+        assert loaded.start == (1.0, 2.0, 0.5) and loaded.goal == (3.0, 4.0, 0.0)
+        assert math.isclose(math.degrees(loaded.steps[2].move[2]), -90.0, abs_tol=1e-6)
+        assert loaded.steps[3].timeout == 30.0 and loaded.image("key_0.jpg").size == (32, 24)
+        runner = routebook.RouteRunner(loaded)
+        assert runner.until_of(loaded.steps[1]) == {"image": "key_0.jpg"}       # 景色だけ: その景色で終わり
+        assert runner.until_of(loaded.steps[2]) == {"reached": 0.4}             # 相対位置だけ: 着いたら終わり
+        # topomap はルート帳ではない
+        tw = topomap.TopomapWriter(os.path.join(tmp, "topo"))
+        tw.add(Image.new("RGB", (8, 8)), (0.0, 0.0, 0.0))
+        assert not routebook.is_route_book(os.path.join(tmp, "topo"))
+        for bad in ({"instruction": "a", "goal_image": "b.jpg"}, {"until": {"time": 1}}, {"move": [1]},
+                    {"instruction": "a", "until": {"when": 1}}, {"instruction": "a", "speed": 1}):
+            try:
+                routebook.parse_step(bad)
+            except ValueError:
+                continue
+            raise AssertionError(f"accepted invalid step {bad}")
+    finally:
+        shutil.rmtree(tmp)
+
+
+def test_route_runner_conditions():
+    img = Image.new("RGB", (8, 8))
+    steps = [routebook.RouteStep(instruction="go straight", until={"distance": 1.0}),
+             routebook.RouteStep(instruction="turn right", until={"turn_deg": -60}),
+             routebook.RouteStep(instruction="go straight", until={"image": "k.jpg", "after_m": 0.5}),
+             routebook.RouteStep(move=(1.0, 0.0, 0.0)),
+             routebook.RouteStep(instruction="wait", until={"time": 2.0}),
+             routebook.RouteStep(instruction="go", until={"pose": [5.0, 5.0, 90.0], "radius": 0.3})]
+    book = routebook.RouteBook(steps)
+    book.images["k.jpg"] = img
+    r = routebook.RouteRunner(book)
+    sims = {"value": 0.95}
+    sim = lambda name, image: sims["value"]  # noqa: E731
+    t, pose = 0.0, (0.0, 0.0, 0.0)
+    assert r.update(t, pose) is None and r.index == 0
+    assert r.update(1.0, (0.6, 0.0, 0.0)) is None
+    ev = r.update(2.0, (1.05, 0.0, 0.0))
+    assert ev and "distance" in ev and r.index == 1
+    # 左に回っても右の条件は満たさない
+    assert r.update(3.0, (1.05, 0.0, math.radians(70))) is None
+    r.update(4.0, (1.05, 0.0, math.radians(0)))
+    ev = r.update(5.0, (1.05, 0.0, math.radians(-65)))
+    assert ev and "turned" in ev and r.index == 2
+    # 景色が似ていても after_m 進むまでは判定しない
+    assert r.update(6.0, (1.25, -0.0, math.radians(-65)), sim) is None and r.state.similarity == 0.95
+    ev = r.update(7.0, (1.45, -0.6, math.radians(-65)), sim)
+    assert ev and "image" in ev and r.index == 3
+    inp = r.inputs((1.45, -0.6, math.radians(-65)))
+    assert inp.modality == "pose" and math.isclose(inp.goal_pose[0], 1.0, abs_tol=1e-6)
+    gx = 1.45 + math.cos(math.radians(-65))
+    gy = -0.6 + math.sin(math.radians(-65))
+    assert r.update(8.0, (gx - 0.5, gy, 0.0)) is None
+    ev = r.update(9.0, (gx - 0.1, gy + 0.1, 0.0))
+    assert ev and "reached" in ev and r.index == 4
+    assert r.update(10.0, (gx, gy, 0.0)) is None
+    ev = r.update(11.5, (gx, gy, 0.0))
+    assert ev and "time" in ev and r.index == 5
+    assert r.update(12.0, (5.1, 5.0, 0.0)) is None             # 位置は合っているが向きが違う
+    ev = r.update(13.0, (5.1, 5.0, math.radians(80)))
+    assert r.done and ev.startswith("route finished") and len(r.history) == 6
+    assert r.update(14.0, (5.1, 5.0, 0.0)) is None
+    # timeout で失敗
+    r2 = routebook.RouteRunner(routebook.RouteBook([routebook.RouteStep(instruction="x", until={"distance": 5},
+                                                                        timeout=3.0)]))
+    r2.update(0.0, (0.0, 0.0, 0.0))
+    assert r2.update(2.0, (0.1, 0.0, 0.0)) is None
+    assert r2.update(3.5, (0.2, 0.0, 0.0)).startswith("route failed") and r2.failed and not r2.done
+    # move はオドメトリが無いと入力を作れない
+    r3 = routebook.RouteRunner(routebook.RouteBook([routebook.RouteStep(move=(1.0, 0.0, 0.0))]))
+    r3.update(0.0, None)
+    try:
+        r3.inputs(None)
+        raise AssertionError("move without odometry must fail")
+    except ValueError:
+        pass
+    assert r3.lines()[0].startswith("route step 1/1")
+
+
+def _l_path(east=4.0, north=3.0, ds=0.05):
+    a = np.stack([np.arange(0.0, east, ds), np.zeros(int(round(east / ds)))], axis=1)
+    b = np.stack([np.full(int(round(north / ds)) + 1, east), np.arange(0.0, north + 1e-9, ds)], axis=1)
+    return np.concatenate([a, b])
+
+
+def test_route_legs_on_simple_paths():
+    path = _l_path()
+    turns = routebook.find_turns(path)
+    assert len(turns) == 1 and math.isclose(math.degrees(turns[0].angle), 90.0, abs_tol=3.0)
+    legs = routebook.route_legs(path, start_yaw=0.0)
+    assert [lg.kind for lg in legs] == ["straight", "turn", "straight"]
+    assert math.isclose(legs[0].end[0], 3.5, abs_tol=0.1) and math.isclose(legs[2].end[1], 3.0, abs_tol=0.05)
+    assert math.isclose(math.degrees(legs[2].end[2]), 90.0, abs_tol=3.0)
+    # 逆向きに置いたら、まずその場で向きを合わせる
+    legs = routebook.route_legs(path, start_yaw=math.pi)
+    assert legs[0].kind == "turn" and legs[0].length == 0.0 and abs(math.degrees(legs[0].angle)) > 170
+    # 左右に振るだけの経路は直進 1 本
+    xs = np.arange(0.0, 8.0, 0.05)
+    wiggle = np.stack([xs, 0.25 * np.sin(xs * 2.0)], axis=1)
+    legs = routebook.route_legs(wiggle, start_yaw=0.0)
+    assert [lg.kind for lg in legs] == ["straight"], [(lg.kind, lg.angle) for lg in legs]
+    # 文言と判定の組み合わせ
+    for style in routebook.STYLES:
+        for switch in routebook.SWITCHES:
+            plan = routebook.plan_route_book(path, (0.0, 0.0, 0.0), style=style, switch=switch)
+            mods = [s.modality for s in plan.book.steps]
+            assert len(mods) == 3, (style, switch, mods)
+            assert set(mods) == {{"language": "language", "image": "image", "pose": "pose",
+                                  "language_pose": "language_pose"}[style]}
+            needs_images = style == "image" or (switch == "image" and style in ("language",))
+            assert bool(plan.key_poses) == needs_images, (style, switch)
+            for s in plan.book.steps:
+                assert routebook.RouteRunner(plan.book).until_of(s), (style, switch, s)
+            words = [s.instruction for s in plan.book.steps]
+            if style.startswith("language"):
+                assert words == ["go straight", "turn left", "go straight"]
+
+
+def _fake_similarity(pose_fn, key_poses):
+    def sim(name, image):
+        x, y, yaw = pose_fn()
+        kx, ky, kyaw = key_poses[name]
+        d = math.hypot(x - kx, y - ky)
+        return math.exp(-d * d / (2 * 0.5 ** 2)) * max(0.0, math.cos(geometry.wrap_angle(yaw - kyaw)))
+    return sim
+
+
+def _drive_route(plan, path, steps_limit=900, use_move_goal=True):
+    """要所の切り替えだけを確かめる運動学シミュレーション (3Hz で判定・指令).
+
+    指示どおり動く理想の VLA の代わりに: 相対位置 (move) があればそこへ直進, 無ければ計画経路を pure pursuit。
+    """
+    for name in plan.key_poses:  # 本来は要所で撮った画像 (ここでは類似度を位置から作るので中身は使わない)
+        plan.book.images[name] = Image.new("RGB", (8, 8))
+    runner = routebook.RouteRunner(plan.book)
+    follower = expert.PathFollower(path, expert.FollowerConfig(speed=0.3, goal_tolerance=0.08))
+    pose = tuple(plan.book.start)
+    state = {"pose": pose}
+    sim = _fake_similarity(lambda: state["pose"], plan.key_poses)
+    t = 0.0
+    for _ in range(steps_limit):
+        runner.update(t, pose, sim)
+        if runner.done or runner.failed:
+            break
+        inp = runner.inputs(pose)
+        for _ in range(10):  # 1/3 秒
+            if use_move_goal and inp.goal_pose is not None:
+                gx, gy = geometry.to_world(np.array(inp.goal_pose[:2]), pose[:2], pose[2])
+                loc = geometry.to_local(np.array([gx, gy]), pose[:2], pose[2])
+                ang = math.atan2(loc[1], loc[0])
+                v = 0.0 if abs(ang) > 0.6 else 0.3 * min(1.0, math.hypot(*loc) / 0.3)
+                w = float(np.clip(1.5 * ang, -0.8, 0.8))
+            else:
+                v, w, done = follower.step(pose)
+                if done:  # 言葉の指示ではゴールが分からないので、そのまま進み続ける
+                    v, w = 0.3, 0.0
+            pose = expert.unicycle_step(pose, v, w, 1.0 / 30.0)
+            state["pose"] = pose
+        t += 1.0 / 3.0
+    return runner, pose
+
+
+def test_routebook_closed_loop_switching():
+    """経路から作ったルート帳を、理想の VLA で走らせて要所の切り替えが正しく進み、ゴールで終わるか."""
+    setup = _office_setup()
+    if setup is None:
+        return
+    grid, planner, comp = setup
+    rng = np.random.default_rng(11)
+    combos = [("language", "image"), ("language", "odom"), ("language", "pose"), ("image", "image"),
+              ("pose", "odom"), ("language_pose", "pose")]
+    spawn = sim_map.robot_spawn_pose(os.path.join(WORLDS, "office_0.sdf"))
+    routes = [planner.plan(spawn[:2], (7.5, 4.0))]  # README のデモ (曲がり角が続く)
+    while len(routes) < 4:  # 曲がり角のある経路
+        route = _sample_task(planner, comp, rng, dmin=4.0, dmax=12.0)
+        if routebook.find_turns(route):
+            routes.append(route)
+    for ep, route in enumerate(routes):
+        start = (route[0][0], route[0][1], float(rng.uniform(-math.pi, math.pi)))
+        assert any(lg.kind == "turn" and lg.length > 0 for lg in routebook.route_legs(route, start_yaw=start[2]))
+        for style, switch in combos:
+            plan = routebook.plan_route_book(route, start, style=style, switch=switch)
+            runner, pose = _drive_route(plan, route)
+            d = math.hypot(pose[0] - route[-1][0], pose[1] - route[-1][1])
+            assert runner.done, (ep, style, switch, runner.index, runner.num_steps, runner.history[-1:])
+            assert d < 0.7, (ep, style, switch, d)
+            assert [h["index"] for h in runner.history] == list(range(runner.num_steps))
+
+
+def test_routebook_detects_ignored_instruction():
+    """曲がる指示を無視して止まる VLA なら、ステップの制限時間で失敗として止まる."""
+    path = _l_path()
+    plan = routebook.plan_route_book(path, (0.0, 0.0, 0.0), style="language", switch="odom", step_timeout=20.0)
+    runner = routebook.RouteRunner(plan.book)
+    pose, t = (0.0, 0.0, 0.0), 0.0
+    while not (runner.done or runner.failed) and t < 200:
+        runner.update(t, pose)
+        if runner.current.instruction == "go straight" and pose[0] < 3.9:
+            pose = (pose[0] + 0.1, pose[1], pose[2])
+        t += 1.0 / 3.0
+    assert runner.failed and runner.index == 1 and "timeout" in runner.last_reason
+
+
+# ---------------------------------------------------------------- language probe (言葉の指示の評価)
+def test_langprobe_objects_and_scoring():
+    office = os.path.join(WORLDS, "office_0.sdf")
+    if not os.path.exists(office):
+        return
+    objs = langprobe.scene_objects(office)
+    phrases = {o.phrase for o in objs}
+    assert {"blue sofa", "red sofa", "gray cabinet"} <= phrases, phrases
+    sofa = [o for o in objs if o.phrase == "blue sofa"][0]
+    c = sofa.center
+    assert sofa.distance(c[0], c[1]) == 0.0 and sofa.distance(c[0] + 5.0, c[1]) > 3.0
+    grid = sim_map.build_occupancy_from_sdf(office, resolution=0.05)
+    planner = sim_map.PathPlanner(grid, inflate=0.4)
+    comp = planner.component(*sim_map.robot_spawn_pose(office)[:2])
+    rng = np.random.default_rng(3)
+    found = 0
+    for o in objs[:12]:
+        st = langprobe.sample_object_start(planner, o, rng, comp, tries=200)
+        if st is None:
+            continue
+        found += 1
+        d = o.distance(st[0], st[1])
+        assert 1.7 <= d <= 4.1, d
+        oc = o.center
+        bearing = geometry.wrap_angle(math.atan2(oc[1] - st[1], oc[0] - st[0]) - st[2])
+        assert abs(math.degrees(bearing)) <= 21.0, math.degrees(bearing)
+    assert found >= 6, found
+    st = langprobe.sample_open_start(planner, rng, comp)
+    assert st is not None and grid.clearance(st[0], st[1]) > 0.9
+    # 判定
+    left = [(0.0, 0.0, math.radians(a)) for a in range(0, 100, 10)]
+    assert langprobe.score_probe("left", left)["success"] == 1
+    assert langprobe.score_probe("right", left)["success"] == 0
+    straight = [(0.1 * k, 0.0, 0.05) for k in range(10)]
+    assert langprobe.score_probe("straight", straight)["success"] == 1
+    r = langprobe.score_probe("straight", [(0.0, 0.0, 0.0)] * 5)
+    assert r["success"] == 0 and r["moved"] == 0
+    toward = [(c[0] - 3.0 + 0.25 * k, c[1], 0.0) for k in range(11)]
+    rr = langprobe.score_probe("object", toward, [sofa])
+    assert rr["success"] == 1 and rr["final_dist"] < rr["start_dist"]
+    assert langprobe.parse_instructions("left:turn left; straight : go") == [("left", "turn left"),
+                                                                          ("straight", "go")]
+    rows = [dict(kind="left", instruction="turn left", **langprobe.score_probe("left", left)),
+            dict(kind="object", instruction="move toward blue sofa", **rr)]
+    s = langprobe.summarize(rows)
+    assert s["by_kind"]["left"]["success_rate"] == 1.0 and "mean_final_dist" in s["by_kind"]["object"]
 
 if __name__ == "__main__":
     failed = 0

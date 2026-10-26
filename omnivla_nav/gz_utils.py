@@ -53,14 +53,19 @@ def main(argv: Optional[list] = None) -> int:
     ap.add_argument("--y", type=float)
     ap.add_argument("--yaw", type=float, default=0.0, help="[rad]")
     ap.add_argument("--goal_dir", default="",
-                    help="topomap ディレクトリ: poses.yaml に記録された走行開始姿勢に戻す")
+                    help="topomap / ルート帳のディレクトリ: poses.yaml / route.yaml に記録された走行開始姿勢に戻す")
     args = ap.parse_args(argv)
     if args.goal_dir:
+        from .routebook import is_route_book, load_route_book
         from .topomap import load_start_pose
 
-        start = load_start_pose(args.goal_dir)
+        if is_route_book(args.goal_dir):
+            start = load_route_book(args.goal_dir, load_images=False).start
+        else:
+            start = load_start_pose(args.goal_dir)
         if start is None:
-            print(f"no start pose in {args.goal_dir}/poses.yaml (route モードで作り直してください)")
+            print(f"no start pose in {args.goal_dir} (poses.yaml / route.yaml. "
+                  f"route / routebook モードで作り直してください)")
             return 1
         args.x, args.y, args.yaw = start
         print(f"start pose from {args.goal_dir}: x={args.x:.2f} y={args.y:.2f} yaw={args.yaw:.2f}")

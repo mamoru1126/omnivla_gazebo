@@ -23,6 +23,7 @@ x-omnivla: &omnivla
     GOAL_PATH: ${GOAL_PATH:-}
     FINETUNED_DIR: ${FINETUNED_DIR:-}
     MODALITY: ${MODALITY:-image}
+    INSTRUCTION: ${INSTRUCTION:-}
     # 古い .env の CONTROLLER=upstream に上書きされないよう別名にしている
     NAV_CONTROLLER: ${NAV_CONTROLLER:-trajectory}
     WORLD: ${WORLD:-office_0}
@@ -61,6 +62,7 @@ services:
         modality:=$${MODALITY} controller:=$${NAV_CONTROLLER} world:=$${WORLD}
         $${GOAL_PATH:+goal_path:=$$GOAL_PATH}
         $${FINETUNED_DIR:+finetuned_dir:=$$FINETUNED_DIR}
+        $${INSTRUCTION:+"instruction:=$$INSTRUCTION"}
 
   # 自動データ収集 (sim と同じ WORLD で起動)
   explore:

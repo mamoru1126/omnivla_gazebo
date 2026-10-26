@@ -46,6 +46,10 @@ jobs:
             }
             check ros2 launch omnivla_gazebo topomap.launch.py world:=office_0 out_dir:=/tmp/goals goal_x:=7.5 goal_y:=4.0
             check ros2 launch omnivla_gazebo topomap.launch.py mode:=distance out_dir:=/tmp/goals2
+            check ros2 launch omnivla_gazebo topomap.launch.py mode:=routebook style:=language switch:=image world:=office_0 out_dir:=/tmp/route goal_x:=7.5 goal_y:=4.0
+            check ros2 launch omnivla_gazebo eval.launch.py world:=office_0 mode:=language out_dir:=/tmp/eval_lang num_tasks:=1
+            check ros2 launch omnivla_gazebo eval.launch.py world:=office_0 mode:=routebook style:=pose switch:=odom out_dir:=/tmp/eval_rb num_tasks:=1
+            check python3 -c "import omnivla_gazebo.navigator_node, omnivla_gazebo.eval_runner_node, omnivla_gazebo.topomap_recorder_node; print(\"nodes import\")"
             check ros2 launch omnivla_gazebo explore.launch.py world:=office_0 out_dir:=/tmp/raw num_episodes:=1
             check ros2 launch omnivla_gazebo collect_teleop.launch.py out_dir:=/tmp/teleop
             check ros2 launch omnivla_gazebo eval.launch.py world:=office_0 out_dir:=/tmp/eval num_tasks:=1

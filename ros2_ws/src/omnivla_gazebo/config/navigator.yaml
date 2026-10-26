@@ -10,8 +10,8 @@ omnivla_navigator:
     merge_lora: true
     # ---- task ----
     modality: image                           # image | image_pose | pose | language | language_pose
-    instruction: ""                           # language 系: 例 "move toward blue trash bin"
-    goal_path: ""                             # ゴール画像 1 枚 or topomap ディレクトリ
+    instruction: ""                           # language 系: 例 "move toward blue trash bin" (ゴール無しなら言葉だけで走る)
+    goal_path: ""                             # ゴール画像 1 枚 / topomap ディレクトリ / ルート帳 (route.yaml のあるディレクトリ)
     reach_check: auto                         # auto(姿勢があれば真値, 無ければ画像類似度) | pose | image | none
     subgoal_radius: 0.3
     goal_radius: 0.4
@@ -22,6 +22,11 @@ omnivla_navigator:
     reach_angle_deg: 25.0                     # 途中のサブゴールは向きの差もこれ以内で到達 (曲がり角のショートカット防止, 0 で距離だけ)
     stop_at_goal: true
     autostart: true
+    # ルート帳 (要所ごとの指示, route.yaml) の既定値. ステップの until に書いた値が優先
+    route_image_threshold: 0.9                # 要所の景色が見えたとみなす類似度
+    route_reach_radius: 0.4                   # 相対位置 (move) のゴールに着いたとみなす距離 [m]
+    route_pose_radius: 0.5                    # 真値の位置 (until.pose) の判定半径 [m]
+    route_step_timeout: 0.0                   # 1 ステップの制限時間 [s] (0 = なし. 超えたら失敗で停止)
     # ---- control ----
     control_rate: 3.0
     # trajectory: 予測軌跡 (wp0..wp4) の旋回・速度をそのまま実行 (既定)
