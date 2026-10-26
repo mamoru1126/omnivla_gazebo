@@ -347,9 +347,11 @@ class EvalRunnerNode(Node):
             for kind, text in instructions:
                 probes.append({"kind": kind, "instruction": text, "start": [float(v) for v in start]})
         n_obj, tries = int(g("object_probes")), 0
+        phrases = sorted({o.phrase for o in objects})  # 言い方ごとに均等に (木ばかりにならないように)
         while n_obj > 0 and objects and tries < 50 * int(g("object_probes")):
             tries += 1
-            obj = objects[int(rng.integers(len(objects)))]
+            same = langprobe.same_phrase(objects, phrases[int(rng.integers(len(phrases)))])
+            obj = same[int(rng.integers(len(same)))]
             start = langprobe.sample_object_start(self.map.planner, obj, rng, comp)
             if start is None:
                 continue
