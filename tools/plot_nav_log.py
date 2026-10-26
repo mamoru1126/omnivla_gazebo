@@ -169,6 +169,9 @@ def write_report(run_dir, rows, meta, summary, pred_opp, cmd_opp) -> str:
 def plot_overview(run_dir, rows, meta, world_sdf, every: int):
     fig, ax = plt.subplots(figsize=(12, 9), dpi=110)
     nodes = [n for n in meta.get("nodes", []) if n.get("pose")]
+    if not nodes and isinstance(meta.get("route"), dict):  # ルート帳: 要所 (各ステップの終わり, 番号はステップ)
+        legs = (meta["route"].get("meta") or {}).get("legs") or []
+        nodes = [{"index": i + 1, "pose": lg["end"]} for i, lg in enumerate(legs) if lg.get("end")]
     pts = [(r["x"], r["y"]) for r in rows if not math.isnan(r["x"])]
     if world_sdf and os.path.exists(world_sdf):
         from omnivla_nav.sim_map import build_occupancy_from_sdf
@@ -209,7 +212,11 @@ def plot_overview(run_dir, rows, meta, world_sdf, every: int):
     ax.plot([], [], "s", color="#b7791f", label="subgoal (pose, heading)")
     ax.set_aspect("equal")
     ax.legend(loc="best", fontsize=8)
-    ax.set_title(f"{os.path.basename(run_dir)}  world={meta.get('world') or '?'}  modality={meta.get('modality')}")
+    mod = f"modality={meta.get('modality')}"
+    if isinstance(meta.get("route"), dict):  # ルート帳はステップごとに modality が変わる
+        rm = meta["route"].get("meta") or {}
+        mod = f"route book ({rm.get('style', '?')} / switch {rm.get('switch', '?')})"
+    ax.set_title(f"{os.path.basename(run_dir)}  world={meta.get('world') or '?'}  {mod}")
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     fig.tight_layout()
